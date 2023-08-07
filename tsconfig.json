@@ -1,0 +1,11 @@
+{
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "typed",
+    "target": "ES2020"
+  }
+}
