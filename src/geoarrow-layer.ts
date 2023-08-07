@@ -8,6 +8,7 @@ import {
   Unit,
   UpdateParameters,
   _ConstructorOf,
+  assert,
 } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
 import {
@@ -17,6 +18,7 @@ import {
   getDefaultProps,
   forwardProps,
 } from "./sub-layer-map";
+import { ScatterplotLayer } from "@deck.gl/layers/typed";
 
 /** All properties supported by GeoJsonLayer */
 export type GeoArrowLayerProps = _GeoArrowLayerProps & CompositeLayerProps;
@@ -228,7 +230,6 @@ const defaultProps: DefaultProps<GeoArrowLayerProps> = {
   getRadius: { deprecatedFor: "getPointRadius" },
 };
 
-
 /** GeoJsonLayer Properties forwarded to `ScatterPlotLayer` if `pointType` is `'circle'` */
 export type _GeoArrowLayerPointCircleProps = {
   getPointRadius?: Accessor<any, number>;
@@ -338,21 +339,134 @@ export default class GeoArrowLayer<
     changeFlags,
   }: UpdateParameters<this>): void {}
 
-  renderLayers() {
-    const { extruded } = this.props;
+  /**
+   * Render
+   *
+   * @return  {[type]}  [return description]
+   */
+  renderLayers(): Layer[] | null {
+    const { data } = this.props;
+    // TODO: fix this
+    const geometryColumnIndex = 0;
 
-    const polygonFillLayer = this._renderPolygonLayer();
-    const lineLayers = this._renderLineLayers();
-    const pointLayers = this._renderPointLayers();
+    if (data instanceof arrow.Table) {
+      return this.renderArrowTableLayers(data, geometryColumnIndex);
+    } else if (data instanceof arrow.Vector) {
+      // TODO: hack
+      const field = new arrow.Field("", new arrow.Float64());
+      return this.renderArrowVectorLayers(data, field);
+    }
 
-    return [
-      // If not extruded: flat fill layer is drawn below outlines
-      !extruded && polygonFillLayer,
-      lineLayers,
-      pointLayers,
-      // If extruded: draw fill layer last for correct blending behavior
-      extruded && polygonFillLayer,
-    ];
+    return null;
+  }
+
+  /** Render layers for a GeoArrow table. */
+  private renderArrowTableLayers(
+    table: arrow.Table,
+    geometryColumnIndex: number
+  ): Layer[] | null {
+    let vector = table.getChildAt(geometryColumnIndex);
+    let field = table.schema.fields[geometryColumnIndex];
+
+    if (!vector || !field) {
+      return null;
+    }
+
+    return this.renderArrowVectorLayers(vector, field);
+  }
+
+  /** Render layers for a single GeoArrow Vector. */
+  private renderArrowVectorLayers(
+    vector: arrow.Vector,
+    field: arrow.Field
+  ): Layer[] | null {
+    // TODO: support multi-geometry types
+    switch (field.metadata.get("ARROW:extension:name")) {
+      case "geoarrow.point":
+        return this.renderGeoArrowPointArray(vector);
+      case "geoarrow.linestring":
+        return this.renderGeoArrowLineStringArray(vector);
+      case "geoarrow.polygon":
+        return this.renderGeoArrowPolygonArray(vector);
+    }
+
+    return null;
+  }
+
+  /**
+   * Render Scatterplot Layer(s) from a GeoArrow Point Array
+   *
+   * Note that if the point array is internally chunked, multiple ScatterplotLayer instances will be
+   * generated: one for each internal chunk.
+   */
+  private renderGeoArrowPointArray(
+    vector: arrow.Vector<arrow.FixedSizeList<arrow.Float64>>
+  ): Layer[] | null {
+    const { layerProps } = this.state;
+    let { highlightedObjectIndex } = this.props;
+
+    const type: string = "circle";
+    const id = `points-${type}`;
+
+    const PointLayerMapping = POINT_LAYER[type];
+    const PointsLayer: _ConstructorOf<Layer> =
+      PointLayerMapping &&
+      this.shouldRenderSubLayer(id, layerProps.points.data) &&
+      this.getSubLayerClass(id, PointLayerMapping.type);
+
+    const pointLayers: Layer[] = [];
+
+    if (PointsLayer) {
+      const forwardedProps = forwardProps(this, PointLayerMapping.props);
+      let pointsLayerProps = layerProps.points;
+
+      for (const data of vector.data) {
+        assert(data.type instanceof arrow.FixedSizeList);
+
+        const childBuffers = data.children;
+        assert(childBuffers.length === 1);
+
+        const flatCoordinateArray = childBuffers[0].values;
+
+        const { instancePickingColors, ...rest } =
+          pointsLayerProps.data.attributes;
+
+        // We need to copy these props because each chunk of the arrow array is rendered as a
+        // separate layer
+        const newPointsLayerProps = {
+          ...pointsLayerProps,
+          data: {
+            // Assign the flat coordinate array to getPosition
+            getPosition: { value: flatCoordinateArray, size: 2 },
+            attributes: rest,
+          },
+        };
+
+        pointLayers.push(
+          new PointsLayer(
+            forwardedProps,
+            this.getSubLayerProps({
+              id,
+              updateTriggers: forwardedProps.updateTriggers,
+              highlightedObjectIndex,
+            }),
+            newPointsLayerProps
+          )
+        );
+      }
+
+      return pointLayers;
+    }
+
+    return null;
+  }
+
+  private renderGeoArrowLineStringArray(vector: arrow.Vector): Layer[] | null {
+    return null;
+  }
+
+  private renderGeoArrowPolygonArray(vector: arrow.Vector): Layer[] | null {
+    return null;
   }
 
   protected getSubLayerAccessor<In, Out>(
@@ -502,5 +616,9 @@ export default class GeoArrowLayer<
       }
     }
     return pointLayers;
+  }
+
+  private renderPointLayer(): ScatterplotLayer | null {
+    return null;
   }
 }
