@@ -3,6 +3,7 @@ import {
   Color,
   CompositeLayer,
   CompositeLayerProps,
+  DefaultProps,
   Layer,
   Material,
   Unit,
@@ -469,24 +470,24 @@ export default class GeoArrowLayer<
     return null;
   }
 
-  protected getSubLayerAccessor<In, Out>(
-    accessor: Accessor<In, Out>
-  ): Accessor<In, Out> {
-    const { binary } = this.state;
-    if (!binary || typeof accessor !== "function") {
-      return super.getSubLayerAccessor(accessor);
-    }
+  // protected getSubLayerAccessor<In, Out>(
+  //   accessor: Accessor<In, Out>
+  // ): Accessor<In, Out> {
+  //   const { binary } = this.state;
+  //   if (!binary || typeof accessor !== "function") {
+  //     return super.getSubLayerAccessor(accessor);
+  //   }
 
-    return (object, info) => {
-      const { data, index } = info;
-      const feature = binaryToFeatureForAccesor(
-        data as unknown as BinaryFeatureTypes,
-        index
-      );
-      // @ts-ignore (TS2349) accessor is always function
-      return accessor(feature, info);
-    };
-  }
+  //   return (object, info) => {
+  //     const { data, index } = info;
+  //     const feature = binaryToFeatureForAccesor(
+  //       data as unknown as BinaryFeatureTypes,
+  //       index
+  //     );
+  //     // @ts-ignore (TS2349) accessor is always function
+  //     return accessor(feature, info);
+  //   };
+  // }
 
   private _renderPolygonLayer(): Layer | null {
     const { extruded, wireframe } = this.props;
