@@ -1525,12 +1525,12 @@ __metadata:
 
 "deck.gl-geoarrow@file:../../modules/deck.gl-geoarrow::locator=deckgl-example-geoarrow-point-layer%40workspace%3A.":
   version: 0.1.0
-  resolution: "deck.gl-geoarrow@file:../../modules/deck.gl-geoarrow#../../modules/deck.gl-geoarrow::hash=32ca86&locator=deckgl-example-geoarrow-point-layer%40workspace%3A."
+  resolution: "deck.gl-geoarrow@file:../../modules/deck.gl-geoarrow#../../modules/deck.gl-geoarrow::hash=b1a445&locator=deckgl-example-geoarrow-point-layer%40workspace%3A."
   dependencies:
     "@deck.gl/core": ^8.9.23
     "@deck.gl/layers": ^8.9.23
     apache-arrow: ^13.0.0
-  checksum: 2b5d0cc2ff1c913c76178f3524f0ddf1e0d8e57c44c91291e6b1435d0e760bec681e86125937aefaadad78577f6cbb7c8fa1f2cf0d2684178dfcc057db18a28e
+  checksum: ec5c88607223faefe89312385c550a81fda02594103ed1a2510dec8af01ae20c5a3f6c6f5b26bf5ca3a53c4873d73dc51901be5c991409825ffa177256e6e91d
   languageName: node
   linkType: hard
 

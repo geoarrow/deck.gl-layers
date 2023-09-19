@@ -1,3 +1,7 @@
+// NOTE: having this file in the examples directory is a hack
+// Bundling isn't currently working to load the file from the src directory,
+// it fails because the code is getting transpiled to ES5 for some reason, and
+// you can't subclass an ES6 class from ES5.
 import {
   Accessor,
   CompositeLayer,
@@ -79,12 +83,14 @@ export class GeoArrowPointLayer<
       const flatCoordinateArray = childBuffers[0].values;
 
       const layer = new ScatterplotLayer({
-        id: `${this.props.id}-geoarrow-point-${i}`,
         ...this.props,
+        id: `${this.props.id}-geoarrow-point-${i}`,
         // @ts-ignore
         data: {
           getPosition: { value: flatCoordinateArray, size: 2 },
         },
+        getPointRadius: 10,
+        pointRadiusMinPixels: 0.8,
       });
       layers.push(layer);
     }

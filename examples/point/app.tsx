@@ -1,8 +1,9 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
-import DeckGL, { GeoJsonLayer, ArcLayer } from "deck.gl/typed";
-import {GeoArrowPointLayer} from "deck.gl-geoarrow"
+import DeckGL, { GeoJsonLayer, ArcLayer, Layer } from "deck.gl/typed";
+// import { GeoArrowPointLayer } from "deck.gl-geoarrow";
+import {GeoArrowPointLayer} from './point'
 import * as arrow from "apache-arrow";
 console.log(GeoArrowPointLayer);
 
@@ -56,7 +57,7 @@ function Root() {
     }
   });
 
-  const layers = [
+  const layers: Layer[] = [
     new GeoJsonLayer({
       id: "airports",
       data: AIR_PORTS,
@@ -83,10 +84,15 @@ function Root() {
       getTargetColor: [200, 0, 80],
       getWidth: 1,
     }),
-    // new GeoArrowPointLayer({
-
-    // }),
   ];
+
+  table &&
+    layers.push(
+      new GeoArrowPointLayer({
+        id: "geoarrow-points",
+        data: table,
+      })
+    );
 
   return (
     <DeckGL

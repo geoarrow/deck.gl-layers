@@ -1170,7 +1170,7 @@ __metadata:
     "@rollup/plugin-terser": ^0.4.3
     "@rollup/plugin-typescript": ^11.1.2
     apache-arrow: ^13.0.0
-    rollup: ^3.26.2
+    rollup: ^3.29.2
     rollup-plugin-dts: ^5.3.0
     typescript: ^4.7.4
     vitest: ^0.33.0
@@ -2217,7 +2217,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rollup@npm:^3.26.2, rollup@npm:^3.27.1":
+"rollup@npm:^3.27.1, rollup@npm:^3.29.2":
   version: 3.29.2
   resolution: "rollup@npm:3.29.2"
   dependencies:
