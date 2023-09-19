@@ -10,7 +10,7 @@
   "dependencies": {
     "apache-arrow": "^13.0.0",
     "deck.gl": "^8.9.23",
-    "deck.gl-geoarrow": "file:../../",
+    "deck.gl-geoarrow": "file:../../modules/deck.gl-geoarrow",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-map-gl": "^5.3.0"
@@ -21,6 +21,6 @@
     "vite": "^4.0.0"
   },
   "volta": {
-    "extends": "../../package.json"
+    "extends": "../../modules/deck.gl-geoarrow/package.json"
   }
 }

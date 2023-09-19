@@ -2,8 +2,9 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
 import DeckGL, { GeoJsonLayer, ArcLayer } from "deck.gl/typed";
-// import {GeoArrowPointLayer} from "deck.gl-geoarrow"
+import {GeoArrowPointLayer} from "deck.gl-geoarrow"
 import * as arrow from "apache-arrow";
+console.log(GeoArrowPointLayer);
 
 // source: Natural Earth http://www.naturalearthdata.com/ via geojson.xyz
 const AIR_PORTS =

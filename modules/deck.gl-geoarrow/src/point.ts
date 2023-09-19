@@ -80,7 +80,7 @@ export class GeoArrowPointLayer<
       const layer = new ScatterplotLayer({
         id: `${this.props.id}-geoarrow-point-${i}`,
         ...this.props,
-        // @ts-expect-error binary data
+        // @ts-ignore
         data: {
           getPosition: { value: flatCoordinateArray, size: 2 },
         },

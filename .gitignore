@@ -1,3 +1,5 @@
+*.yarn
+
 # Logs
 logs
 *.log
