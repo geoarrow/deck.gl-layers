@@ -1,3 +1,7 @@
+// NOTE: having this file in the examples directory is a hack
+// Bundling isn't currently working to load the file from the src directory,
+// it fails because the code is getting transpiled to ES5 for some reason, and
+// you can't subclass an ES6 class from ES5.
 import {
   Accessor,
   CompositeLayer,
@@ -51,7 +55,7 @@ export class GeoArrowPointLayer<
 > extends CompositeLayer<Required<GeoArrowPointLayerProps> & ExtraProps> {
   static layerName = "GeoArrowPointLayer";
 
-  renderLayers(): Layer<{}> | LayersList {
+  renderLayers(): Layer<{}> | LayersList | null {
     console.log("renderLayers");
     const { data } = this.props;
 
@@ -65,6 +69,9 @@ export class GeoArrowPointLayer<
     }
 
     const geometryColumn = data.getChildAt(geometryColumnIndex);
+    if (!geometryColumn) {
+      return null;
+    }
 
     const layers: ScatterplotLayer[] = [];
     for (let i = 0; i < geometryColumn.data.length; i++) {
@@ -79,12 +86,18 @@ export class GeoArrowPointLayer<
       const flatCoordinateArray = childBuffers[0].values;
 
       const layer = new ScatterplotLayer({
-        id: `${this.props.id}-geoarrow-point-${i}`,
         ...this.props,
-        // @ts-ignore
+        id: `${this.props.id}-geoarrow-point-${i}`,
+        // @ts-expect-error
         data: {
-          getPosition: { value: flatCoordinateArray, size: 2 },
+          length: arrowData.length,
+          attributes: {
+            getPosition: { value: flatCoordinateArray, size: 2 },
+          },
         },
+        getPointRadius: 10,
+        pointRadiusMinPixels: 0.8,
+        getFillColor: [100, 100, 100, 255],
       });
       layers.push(layer);
     }

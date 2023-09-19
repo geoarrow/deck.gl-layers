@@ -55,7 +55,7 @@ export class GeoArrowPointLayer<
 > extends CompositeLayer<Required<GeoArrowPointLayerProps> & ExtraProps> {
   static layerName = "GeoArrowPointLayer";
 
-  renderLayers(): Layer<{}> | LayersList {
+  renderLayers(): Layer<{}> | LayersList | null {
     console.log("renderLayers");
     const { data } = this.props;
 
@@ -69,6 +69,9 @@ export class GeoArrowPointLayer<
     }
 
     const geometryColumn = data.getChildAt(geometryColumnIndex);
+    if (!geometryColumn) {
+      return null;
+    }
 
     const layers: ScatterplotLayer[] = [];
     for (let i = 0; i < geometryColumn.data.length; i++) {
@@ -81,16 +84,21 @@ export class GeoArrowPointLayer<
       assert(childBuffers.length === 1);
 
       const flatCoordinateArray = childBuffers[0].values;
+      console.log(flatCoordinateArray);
 
       const layer = new ScatterplotLayer({
-        ...this.props,
+        // ...this.props,
         id: `${this.props.id}-geoarrow-point-${i}`,
-        // @ts-ignore
+        // @ts-expect-error
         data: {
-          getPosition: { value: flatCoordinateArray, size: 2 },
+          length: arrowData.length,
+          attributes: {
+            getPosition: { value: flatCoordinateArray, size: 2 },
+          },
         },
-        getPointRadius: 10,
-        pointRadiusMinPixels: 0.8,
+        getRadius: 10,
+        radiusMinPixels: 0.8,
+        getFillColor: [100, 100, 100, 255],
       });
       layers.push(layer);
     }

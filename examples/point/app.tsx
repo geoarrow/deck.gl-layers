@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
 import DeckGL, { GeoJsonLayer, ArcLayer, Layer } from "deck.gl/typed";
 // import { GeoArrowPointLayer } from "deck.gl-geoarrow";
-import {GeoArrowPointLayer} from './point'
+import { GeoArrowPointLayer } from "./point";
 import * as arrow from "apache-arrow";
 console.log(GeoArrowPointLayer);
 
@@ -40,9 +40,9 @@ function Root() {
     }
   };
 
-  const [table, setTable] = React.useState(null);
+  const [table, setTable] = useState<arrow.Table | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     // declare the data fetching function
     const fetchData = async () => {
       const data = await fetch(GEOARROW_POINT_DATA);
