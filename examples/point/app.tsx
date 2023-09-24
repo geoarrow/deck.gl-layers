@@ -5,7 +5,7 @@ import DeckGL, { GeoJsonLayer, ArcLayer, Layer } from "deck.gl/typed";
 // import { GeoArrowPointLayer } from "deck.gl-geoarrow";
 import { GeoArrowPointLayer } from "./point";
 import * as arrow from "apache-arrow";
-console.log(GeoArrowPointLayer);
+// console.log(GeoArrowPointLayer);
 
 // source: Natural Earth http://www.naturalearthdata.com/ via geojson.xyz
 const AIR_PORTS =
@@ -15,11 +15,11 @@ const GEOARROW_POINT_DATA =
   "http://localhost:8080/2019-01-01_performance_mobile_tiles.feather";
 
 const INITIAL_VIEW_STATE = {
-  latitude: 51.47,
-  longitude: 0.45,
-  zoom: 4,
+  latitude: 20,
+  longitude: 0,
+  zoom: 2,
   bearing: 0,
-  pitch: 30,
+  pitch: 0,
 };
 
 const MAP_STYLE =
@@ -49,7 +49,7 @@ function Root() {
       const buffer = await data.arrayBuffer();
       const table = arrow.tableFromIPC(buffer);
       setTable(table);
-      console.log(table);
+      // console.log(table);
     };
 
     if (!table) {
@@ -58,32 +58,32 @@ function Root() {
   });
 
   const layers: Layer[] = [
-    new GeoJsonLayer({
-      id: "airports",
-      data: AIR_PORTS,
-      // Styles
-      filled: true,
-      pointRadiusMinPixels: 2,
-      pointRadiusScale: 2000,
-      getPointRadius: (f) => 11 - f.properties.scalerank,
-      getFillColor: [200, 0, 80, 180],
-      // Interactive props
-      pickable: true,
-      autoHighlight: true,
-      onClick,
-    }),
-    new ArcLayer({
-      id: "arcs",
-      data: AIR_PORTS,
-      dataTransform: (d) =>
-        d.features.filter((f) => f.properties.scalerank < 4),
-      // Styles
-      getSourcePosition: (f) => [-0.4531566, 51.4709959], // London
-      getTargetPosition: (f) => f.geometry.coordinates,
-      getSourceColor: [0, 128, 200],
-      getTargetColor: [200, 0, 80],
-      getWidth: 1,
-    }),
+    // new GeoJsonLayer({
+    //   id: "airports",
+    //   data: AIR_PORTS,
+    //   // Styles
+    //   filled: true,
+    //   pointRadiusMinPixels: 2,
+    //   pointRadiusScale: 2000,
+    //   getPointRadius: (f) => 11 - f.properties.scalerank,
+    //   getFillColor: [200, 0, 80, 180],
+    //   // Interactive props
+    //   pickable: true,
+    //   autoHighlight: true,
+    //   onClick,
+    // }),
+    // new ArcLayer({
+    //   id: "arcs",
+    //   data: AIR_PORTS,
+    //   dataTransform: (d) =>
+    //     d.features.filter((f) => f.properties.scalerank < 4),
+    //   // Styles
+    //   getSourcePosition: (f) => [-0.4531566, 51.4709959], // London
+    //   getTargetPosition: (f) => f.geometry.coordinates,
+    //   getSourceColor: [0, 128, 200],
+    //   getTargetColor: [200, 0, 80],
+    //   getWidth: 1,
+    // }),
   ];
 
   table &&
@@ -91,6 +91,10 @@ function Root() {
       new GeoArrowPointLayer({
         id: "geoarrow-points",
         data: table,
+        getFillColor: [255, 0, 0],
+        radiusMinPixels: 10,
+        getPointRadius: 10,
+        pointRadiusMinPixels: 0.8,
       })
     );
 

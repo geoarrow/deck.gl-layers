@@ -1,3 +1,6 @@
+// NOTE: this file is not currently used until I figure out bundling
+// All updates happen in the examples/point/point.ts file
+
 // NOTE: having this file in the examples directory is a hack
 // Bundling isn't currently working to load the file from the src directory,
 // it fails because the code is getting transpiled to ES5 for some reason, and
