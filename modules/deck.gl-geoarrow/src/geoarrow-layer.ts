@@ -580,6 +580,7 @@ export default class GeoArrowLayer<
     // Avoid duplicate sub layer ids
     const types = new Set(pointType.split("+"));
     const pointLayers: Layer[] = [];
+    // @ts-ignore
     for (const type of types) {
       const id = `points-${type}`;
       const PointLayerMapping = POINT_LAYER[type];
