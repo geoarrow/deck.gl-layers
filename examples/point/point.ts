@@ -29,6 +29,12 @@ export type _GeoArrowPointLayerProps = {
   data: LayerDataSource<arrow.Table>;
 
   /**
+   * The name of the geometry column in the Arrow table. If not passed, expects
+   * the geometry column to have the extension type `geoarrow.point`.
+   */
+  geometryColumnName?: string;
+
+  /**
    * The units of the radius, one of `'meters'`, `'common'`, and `'pixels'`.
    * @default 'meters'
    */
@@ -193,12 +199,12 @@ export class GeoArrowPointLayer<ExtraProps extends {} = {}> extends CompositeLay
       const arrowData = geometryColumn.data[i];
       assert(arrowData.typeId === arrow.Type.FixedSizeList);
 
-      const childBuffers = arrowData.children;
+      const childArrays = arrowData.children;
       // Should always be length one because inside the loop this should be a
       // contiguous array
-      assert(childBuffers.length === 1);
+      assert(childArrays.length === 1);
 
-      const flatCoordinateArray = childBuffers[0].values;
+      const flatCoordinateArray = childArrays[0].values;
       // console.log(flatCoordinateArray);
 
       const layer = new ScatterplotLayer({
@@ -211,6 +217,8 @@ export class GeoArrowPointLayer<ExtraProps extends {} = {}> extends CompositeLay
           },
         },
         getFillColor: [255, 0, 0],
+        getLineColor: [0, 0, 255],
+        stroked: true,
         radiusMinPixels: 1,
         getPointRadius: 10,
         pointRadiusMinPixels: 0.8,
