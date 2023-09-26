@@ -4,10 +4,11 @@
   "type": "module",
   "description": "",
   "source": "src/index.ts",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     "types": "./dist/index.d.ts",
-    "default": "./dist/index.js"
+    "import": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -22,14 +23,13 @@
   "repository": "https://github.com/kylebarron/deck.gl-geoarrow",
   "author": "Kyle Barron <kylebarron2@gmail.com>",
   "license": "MIT",
-  "type": "module",
   "dependencies": {
     "@deck.gl/core": "^8.9.23",
     "@deck.gl/layers": "^8.9.23",
     "apache-arrow": "^13.0.0"
   },
   "devDependencies": {
-    "typescript": "^4.7.4",
+    "typescript": "^5.2.2",
     "vitest": "^0.33.0"
   },
   "resolutions": {
