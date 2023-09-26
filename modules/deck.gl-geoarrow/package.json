@@ -1,24 +1,18 @@
 {
   "name": "deck.gl-geoarrow",
   "version": "0.1.0",
+  "type": "module",
   "description": "",
   "source": "src/index.ts",
-  "umd:main": "dist/deck.gl-geoarrow.umd.js",
-  "unpkg": "dist/deck.gl-geoarrow.umd.js",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "browser": "dist/deck.gl-geoarrow.umd.js",
-  "jsdelivr": "dist/deck.gl-geoarrow.umd.js",
-  "module": "dist/deck.gl-geoarrow.es.mjs",
-  "main": "dist/deck.gl-geoarrow.cjs",
   "exports": {
     "types": "./dist/index.d.ts",
-    "require": "./dist/deck.gl-geoarrow.cjs",
-    "default": "./dist/deck.gl-geoarrow.es.mjs"
+    "import": "./dist/index.js"
   },
   "scripts": {
-    "build": "rollup -c rollup.config.js",
-    "watch": "rollup -c rollup.config.js --watch",
-    "watchold": "tsc --watch --declaration",
+    "build": "tsc",
+    "watch": "tsc --watch",
     "test": "vitest run"
   },
   "files": [
@@ -29,18 +23,13 @@
   "repository": "https://github.com/kylebarron/deck.gl-geoarrow",
   "author": "Kyle Barron <kylebarron2@gmail.com>",
   "license": "MIT",
-  "type": "module",
   "dependencies": {
     "@deck.gl/core": "^8.9.23",
     "@deck.gl/layers": "^8.9.23",
     "apache-arrow": "^13.0.0"
   },
   "devDependencies": {
-    "@rollup/plugin-terser": "^0.4.3",
-    "@rollup/plugin-typescript": "^11.1.2",
-    "rollup": "^3.29.2",
-    "rollup-plugin-dts": "^5.3.0",
-    "typescript": "^4.7.4",
+    "typescript": "^5.2.2",
     "vitest": "^0.33.0"
   },
   "resolutions": {

@@ -12,14 +12,14 @@ import {
   assert,
 } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
+import { ScatterplotLayer } from "@deck.gl/layers/typed";
 import {
   POINT_LAYER,
   LINE_LAYER,
   POLYGON_LAYER,
   getDefaultProps,
   forwardProps,
-} from "./sub-layer-map";
-import { ScatterplotLayer } from "@deck.gl/layers/typed";
+} from "./sub-layer-map.js";
 
 /** All properties supported by GeoJsonLayer */
 export type GeoArrowLayerProps = _GeoArrowLayerProps & CompositeLayerProps;

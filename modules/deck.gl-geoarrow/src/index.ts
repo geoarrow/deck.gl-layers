@@ -1,1 +1,1 @@
-export { GeoArrowPointLayer } from "./point.ts.bak";
+export { GeoArrowPointLayer } from "./point.js";
