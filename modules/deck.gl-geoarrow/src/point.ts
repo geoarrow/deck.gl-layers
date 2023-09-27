@@ -12,6 +12,7 @@ import {
 } from "@deck.gl/core/typed";
 import { ScatterplotLayer } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
+import { findGeometryColumnIndex } from "./utils.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
@@ -144,16 +145,6 @@ const defaultProps: DefaultProps<GeoArrowPointLayerProps> = {
   getLineColor: { type: "accessor", value: DEFAULT_COLOR },
   getLineWidth: { type: "accessor", value: 1 },
 };
-
-function findGeometryColumnIndex(
-  schema: arrow.Schema,
-  extensionName: string
-): number | null {
-  const index = schema.fields.findIndex(
-    (field) => field.metadata.get("ARROW:extension:name") === extensionName
-  );
-  return index !== -1 ? index : null;
-}
 
 // function convertCoordsToFixedSizeList(
 //   coords:

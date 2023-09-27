@@ -15,6 +15,7 @@ import {
 } from "@deck.gl/core/typed";
 import { SolidPolygonLayer } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
+import { findGeometryColumnIndex } from "./utils.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
@@ -107,16 +108,6 @@ const defaultProps: DefaultProps<GeoArrowPolygonLayerProps> = {
   material: true,
 };
 
-function findGeometryColumnIndex(
-  schema: arrow.Schema,
-  extensionName: string
-): number | null {
-  const index = schema.fields.findIndex(
-    (field) => field.metadata.get("ARROW:extension:name") === extensionName
-  );
-  return index !== -1 ? index : null;
-}
-
 // function convertCoordsToFixedSizeList(
 //   coords:
 //     | arrow.Data<arrow.FixedSizeList<arrow.Float64>>
@@ -134,7 +125,6 @@ export class GeoArrowPolygonLayer<
   static layerName = "GeoArrowPolygonLayer";
 
   renderLayers(): Layer<{}> | LayersList | null {
-    // console.log("renderLayers");
     const { data } = this.props;
 
     const geometryColumnIndex = findGeometryColumnIndex(
@@ -153,6 +143,7 @@ export class GeoArrowPolygonLayer<
 
     const layers: SolidPolygonLayer[] = [];
     for (let i = 0; i < geometryColumn.data.length; i++) {
+      // TODO: only make assertions once on schema, not on data
       const arrowData = geometryColumn.data[i];
       assert(arrowData.typeId === arrow.Type.List);
 
