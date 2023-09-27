@@ -3,8 +3,7 @@ import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
 import DeckGL, { GeoJsonLayer, ArcLayer, Layer } from "deck.gl/typed";
 // import { GeoArrowPointLayer } from "deck.gl-geoarrow";
-import { GeoArrowPointLayer } from "deck.gl-geoarrow";
-// import { GeoArrowPointLayer } from "./point";
+import { GeoArrowPointLayer } from "./point";
 import * as arrow from "apache-arrow";
 // console.log(GeoArrowPointLayer);
 
@@ -13,7 +12,7 @@ const AIR_PORTS =
   "https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_10m_airports.geojson";
 
 const GEOARROW_POINT_DATA =
-  "http://localhost:8080/2019-01-01_performance_mobile_tiles_color.feather";
+  "http://localhost:8080/2019-01-01_performance_mobile_tiles.feather";
 
 const INITIAL_VIEW_STATE = {
   latitude: 20,
