@@ -1,2 +1,3 @@
-# deck.gl-geoarrow
-deck.gl layer for rendering GeoArrow data
+# @geoarrow/deck.gl-layers
+
+[deck.gl](https://deck.gl) layers for rendering GeoArrow data.

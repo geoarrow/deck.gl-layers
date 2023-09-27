@@ -1,3 +1,20 @@
+todo: try portal again (had issue with mismatched deck.gl versions)
+
+```json
+"@geoarrow/deck.gl-layers": "portal:../../modules/deck.gl-geoarrow",
+```
+
+
+
+
+
+
+
+
+
+
+
+
 ## Example: Use deck.gl with react-map-gl and Webpack
 
 Uses [Vite](https://vitejs.dev/) to bundle and serve files.
