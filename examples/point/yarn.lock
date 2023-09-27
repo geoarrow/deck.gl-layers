@@ -1525,12 +1525,12 @@ __metadata:
 
 "deck.gl-geoarrow@file:../../modules/deck.gl-geoarrow::locator=deckgl-example-geoarrow-point-layer%40workspace%3A.":
   version: 0.1.0
-  resolution: "deck.gl-geoarrow@file:../../modules/deck.gl-geoarrow#../../modules/deck.gl-geoarrow::hash=b1a445&locator=deckgl-example-geoarrow-point-layer%40workspace%3A."
+  resolution: "deck.gl-geoarrow@file:../../modules/deck.gl-geoarrow#../../modules/deck.gl-geoarrow::hash=c1c42f&locator=deckgl-example-geoarrow-point-layer%40workspace%3A."
   dependencies:
     "@deck.gl/core": ^8.9.23
     "@deck.gl/layers": ^8.9.23
     apache-arrow: ^13.0.0
-  checksum: ec5c88607223faefe89312385c550a81fda02594103ed1a2510dec8af01ae20c5a3f6c6f5b26bf5ca3a53c4873d73dc51901be5c991409825ffa177256e6e91d
+  checksum: a396d4104f38a914d8c757b0711ac3d566b218f10266a3363f848a6eefad1fecb2d6e81a07402a8b98158c15c6fc6122c6499d1d3e33b82edb7b467764aff29e
   languageName: node
   linkType: hard
 
@@ -1562,7 +1562,7 @@ __metadata:
     "@types/react-dom": ^18.0.0
     apache-arrow: ^13.0.0
     deck.gl: ^8.9.23
-    deck.gl-geoarrow: "file:../../modules/deck.gl-geoarrow"
+    deck.gl-geoarrow: ../../modules/deck.gl-geoarrow
     react: ^18.0.0
     react-dom: ^18.0.0
     react-map-gl: ^5.3.0

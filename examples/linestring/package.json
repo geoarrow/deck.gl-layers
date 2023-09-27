@@ -1,5 +1,5 @@
 {
-  "name": "deckgl-example-geoarrow-point-layer",
+  "name": "deckgl-example-geoarrow-linestring-layer",
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
@@ -10,7 +10,7 @@
   "dependencies": {
     "apache-arrow": "^13.0.0",
     "deck.gl": "^8.9.23",
-    "deck.gl-geoarrow": "../../modules/deck.gl-geoarrow",
+    "deck.gl-geoarrow": "file:../../modules/deck.gl-geoarrow",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-map-gl": "^5.3.0"

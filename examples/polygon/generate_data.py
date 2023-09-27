@@ -8,7 +8,9 @@ def main():
     gdf = gpd.read_file("Utah.geojson")
     table = geopandas_to_geoarrow(gdf)
     # rechunk
-    table = pa.Table.from_batches(table.to_batches(max_chunksize=100_000))
+    # Note: write_feather automatically rechunks. Manual rechunking isn't necessary
+    # otherwise
+    # table = pa.Table.from_batches(table.to_batches(max_chunksize=100_000))
     feather.write_feather(table, "utah.feather", compression="uncompressed")
 
 

@@ -26,7 +26,7 @@ export type GeoArrowPointLayerProps = _GeoArrowPointLayerProps &
 
 /** Properties added by GeoArrowPointLayer */
 export type _GeoArrowPointLayerProps = {
-  data: LayerDataSource<arrow.Table>;
+  data: arrow.Table;
 
   /**
    * The name of the geometry column in the Arrow table. If not passed, expects
@@ -179,6 +179,7 @@ export class GeoArrowPointLayer<ExtraProps extends {} = {}> extends CompositeLay
   renderLayers(): Layer<{}> | LayersList | null {
     // console.log("renderLayers");
     const { data } = this.props;
+    console.log(data);
 
     const geometryColumnIndex = findGeometryColumnIndex(
       data.schema,
@@ -194,6 +195,8 @@ export class GeoArrowPointLayer<ExtraProps extends {} = {}> extends CompositeLay
       return null;
     }
 
+    const colorsColumn = data.getChild("colors");
+
     const layers: ScatterplotLayer[] = [];
     for (let i = 0; i < geometryColumn.data.length; i++) {
       const arrowData = geometryColumn.data[i];
@@ -207,6 +210,8 @@ export class GeoArrowPointLayer<ExtraProps extends {} = {}> extends CompositeLay
       const flatCoordinateArray = childArrays[0].values;
       // console.log(flatCoordinateArray);
 
+      const arrowColorData = colorsColumn.data[i].children[0].values;
+
       const layer = new ScatterplotLayer({
         // ...this.props,
         id: `${this.props.id}-geoarrow-point-${i}`,
@@ -214,11 +219,12 @@ export class GeoArrowPointLayer<ExtraProps extends {} = {}> extends CompositeLay
           length: arrowData.length,
           attributes: {
             getPosition: { value: flatCoordinateArray, size: 2 },
+            getFillColor: { value: arrowColorData, size: 3},
           },
         },
-        getFillColor: [255, 0, 0],
+        // getFillColor: [255, 0, 0],
         getLineColor: [0, 0, 255],
-        stroked: true,
+        stroked: false,
         radiusMinPixels: 1,
         getPointRadius: 10,
         pointRadiusMinPixels: 0.8,
