@@ -1,4 +1,5 @@
 *.DS_Store
+*.arrow
 *.geojson
 *.zip
 *.feather

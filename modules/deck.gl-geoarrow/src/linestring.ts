@@ -12,6 +12,7 @@ import {
 } from "@deck.gl/core/typed";
 import { PathLayer } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
+import { findGeometryColumnIndex } from "./utils.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
@@ -113,16 +114,6 @@ const defaultProps: DefaultProps<GeoArrowLineStringLayerProps> = {
   rounded: { deprecatedFor: ["jointRounded", "capRounded"] },
 };
 
-function findGeometryColumnIndex(
-  schema: arrow.Schema,
-  extensionName: string
-): number | null {
-  const index = schema.fields.findIndex(
-    (field) => field.metadata.get("ARROW:extension:name") === extensionName
-  );
-  return index !== -1 ? index : null;
-}
-
 // function convertCoordsToFixedSizeList(
 //   coords:
 //     | arrow.Data<arrow.FixedSizeList<arrow.Float64>>
@@ -166,8 +157,7 @@ export class GeoArrowLineStringLayer<
       assert(arrowData.children.length === 1);
       assert(arrowData.children[0].typeId === arrow.Type.FixedSizeList);
 
-      const flatCoordinateArray =
-        arrowData.children[0].children[0].values;
+      const flatCoordinateArray = arrowData.children[0].children[0].values;
 
       const layer = new PathLayer({
         // ...this.props,
@@ -179,8 +169,8 @@ export class GeoArrowLineStringLayer<
             getPath: { value: flatCoordinateArray, size: 2 },
           },
         },
-        _pathType: 'open', // this instructs the layer to skip normalization and use the binary as-is
-        widthUnits: 'pixels',
+        _pathType: "open", // this instructs the layer to skip normalization and use the binary as-is
+        widthUnits: "pixels",
         widthMinPixels: 1,
 
         getColor: [255, 0, 0],
