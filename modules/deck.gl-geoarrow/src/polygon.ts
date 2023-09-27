@@ -10,7 +10,6 @@ import {
   Material,
   DefaultProps,
   Layer,
-  LayerDataSource,
   LayersList,
   assert,
 } from "@deck.gl/core/typed";
@@ -25,7 +24,7 @@ export type GeoArrowPolygonLayerProps = _GeoArrowPolygonLayerProps &
 
 /** Properties added by GeoArrowPolygonLayer */
 export type _GeoArrowPolygonLayerProps = {
-  data: LayerDataSource<arrow.Table>;
+  data: arrow.Table;
 
   /**
    * The name of the geometry column in the Arrow table. If not passed, expects

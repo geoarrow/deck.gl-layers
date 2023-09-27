@@ -222,6 +222,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@geoarrow/deck.gl-layers@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@geoarrow/deck.gl-layers@workspace:."
+  dependencies:
+    "@deck.gl/core": ^8.9.23
+    "@deck.gl/layers": ^8.9.23
+    apache-arrow: ^13.0.0
+    typescript: ^5.2.2
+    vitest: ^0.33.0
+  peerDependencies:
+    "@deck.gl/core": ^8.9.23
+    "@deck.gl/layers": ^8.9.23
+  languageName: unknown
+  linkType: soft
+
 "@isaacs/cliui@npm:^8.0.2":
   version: 8.0.2
   resolution: "@isaacs/cliui@npm:8.0.2"
@@ -979,18 +994,6 @@ __metadata:
   checksum: 3dbad3f94ea64f34431a9cbf0bafb61853eda57bff2880036153438f50fb5a84f27683ba0d8e5426bf41a8c6ff03879488120cf5b3a761e77953169c0600a708
   languageName: node
   linkType: hard
-
-"deck.gl-geoarrow@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "deck.gl-geoarrow@workspace:."
-  dependencies:
-    "@deck.gl/core": ^8.9.23
-    "@deck.gl/layers": ^8.9.23
-    apache-arrow: ^13.0.0
-    typescript: ^5.2.2
-    vitest: ^0.33.0
-  languageName: unknown
-  linkType: soft
 
 "deep-eql@npm:^4.1.2":
   version: 4.1.3

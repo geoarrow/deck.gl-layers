@@ -72,7 +72,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@deck.gl/core@npm:8.9.30, @deck.gl/core@npm:^8.9.23":
+"@deck.gl/core@npm:8.9.30":
   version: 8.9.30
   resolution: "@deck.gl/core@npm:8.9.30"
   dependencies:
@@ -171,7 +171,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@deck.gl/layers@npm:8.9.30, @deck.gl/layers@npm:^8.9.23":
+"@deck.gl/layers@npm:8.9.30":
   version: 8.9.30
   resolution: "@deck.gl/layers@npm:8.9.30"
   dependencies:
@@ -385,6 +385,18 @@ __metadata:
   version: 0.18.20
   resolution: "@esbuild/win32-x64@npm:0.18.20"
   conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@geoarrow/deck.gl-layers@file:../../modules/deck.gl-geoarrow::locator=deckgl-example-geoarrow-polygon-layer%40workspace%3A.":
+  version: 0.1.0
+  resolution: "@geoarrow/deck.gl-layers@file:../../modules/deck.gl-geoarrow#../../modules/deck.gl-geoarrow::hash=c2533f&locator=deckgl-example-geoarrow-polygon-layer%40workspace%3A."
+  dependencies:
+    apache-arrow: ^13.0.0
+  peerDependencies:
+    "@deck.gl/core": ^8.9.23
+    "@deck.gl/layers": ^8.9.23
+  checksum: 966ed0b79a571fa2ab811237c2187a60b93f8fbc840a3bd74c0f34cf9fcba4a58f4f125ccf9681a70a53ec1dea506297298a134242fc7803f5ace33c8e9dd456
   languageName: node
   linkType: hard
 
@@ -1523,17 +1535,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"deck.gl-geoarrow@file:../../modules/deck.gl-geoarrow::locator=deckgl-example-geoarrow-polygon-layer%40workspace%3A.":
-  version: 0.1.0
-  resolution: "deck.gl-geoarrow@file:../../modules/deck.gl-geoarrow#../../modules/deck.gl-geoarrow::hash=f95523&locator=deckgl-example-geoarrow-polygon-layer%40workspace%3A."
-  dependencies:
-    "@deck.gl/core": ^8.9.23
-    "@deck.gl/layers": ^8.9.23
-    apache-arrow: ^13.0.0
-  checksum: 68b497b4e90e067ad9e93bb2d0ccbe9ff18a3872d7caede098cb0bd1b7087f16d9a603858f300619b945d427f36cea9b951349360ae67666c91de0cb8f4e0850
-  languageName: node
-  linkType: hard
-
 "deck.gl@npm:^8.9.23":
   version: 8.9.30
   resolution: "deck.gl@npm:8.9.30"
@@ -1558,11 +1559,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "deckgl-example-geoarrow-polygon-layer@workspace:."
   dependencies:
+    "@geoarrow/deck.gl-layers": ../../modules/deck.gl-geoarrow
     "@types/react": ^18.0.0
     "@types/react-dom": ^18.0.0
     apache-arrow: ^13.0.0
     deck.gl: ^8.9.23
-    deck.gl-geoarrow: "file:../../modules/deck.gl-geoarrow"
     react: ^18.0.0
     react-dom: ^18.0.0
     react-map-gl: ^5.3.0

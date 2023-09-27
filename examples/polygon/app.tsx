@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
 import DeckGL, { GeoJsonLayer, ArcLayer, Layer } from "deck.gl/typed";
 // import { GeoArrowPolygonLayer } from "deck.gl-geoarrow";
-import { GeoArrowPolygonLayer } from "./polygon";
+import { GeoArrowPolygonLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 // console.log(GeoArrowPolygonLayer);
 
