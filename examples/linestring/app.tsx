@@ -2,17 +2,15 @@ import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
 import DeckGL, { GeoJsonLayer, ArcLayer, Layer } from "deck.gl/typed";
-// import { GeoArrowPointLayer } from "deck.gl-geoarrow";
-import { GeoArrowPointLayer } from "./point";
+import { GeoArrowLineStringLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
-// console.log(GeoArrowPointLayer);
 
 // source: Natural Earth http://www.naturalearthdata.com/ via geojson.xyz
 const AIR_PORTS =
   "https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_10m_airports.geojson";
 
 const GEOARROW_POINT_DATA =
-  "http://localhost:8080/2019-01-01_performance_mobile_tiles.feather";
+  "http://localhost:8080/ne_10m_roads_north_america.arrow";
 
 const INITIAL_VIEW_STATE = {
   latitude: 20,
@@ -85,11 +83,12 @@ function Root() {
     //   getWidth: 1,
     // }),
   ];
+  table && console.log(table);
 
   table &&
     layers.push(
-      new GeoArrowPointLayer({
-        id: "geoarrow-points",
+      new GeoArrowLineStringLayer({
+        id: "geoarrow-linestring",
         data: table,
         getFillColor: [255, 0, 0],
         radiusMinPixels: 10,
@@ -104,6 +103,9 @@ function Root() {
       controller={true}
       layers={layers}
       ContextProvider={MapContext.Provider}
+      glOptions={{
+        powerPreference: "high-performance"
+      }}
     >
       <StaticMap mapStyle={MAP_STYLE} />
       <NavigationControl style={NAV_CONTROL_STYLE} />
