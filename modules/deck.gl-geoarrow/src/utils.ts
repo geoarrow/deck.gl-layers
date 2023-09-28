@@ -1,6 +1,17 @@
 import { assert } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
 
+export type TypedArray =
+  | Uint8Array
+  | Uint8ClampedArray
+  | Uint16Array
+  | Uint32Array
+  | Int8Array
+  | Int16Array
+  | Int32Array
+  | Float32Array
+  | Float64Array;
+
 export function findGeometryColumnIndex(
   schema: arrow.Schema,
   extensionName: string
@@ -10,6 +21,31 @@ export function findGeometryColumnIndex(
   );
   return index !== -1 ? index : null;
 }
+
+export function isColumn(input: any): input is string {}
+
+export function resolveColorAccessor(
+  prop: any,
+  table: arrow.Table,
+  dataIdx: number
+) {
+  if (isColumn(this.props.getFillColor)) {
+    const columnName = this.props.getFillColor;
+    const column = table.getChild(columnName);
+    const dataChunk: arrow.Data<arrow.FixedSizeList> = column.data[dataIdx];
+    assert(dataChunk.typeId === arrow.Type.FixedSizeList);
+    assert(dataChunk.type.listSize === 3 || dataChunk.type.listSize === 4);
+    props.getFillColor = {
+      // @ts-expect-error
+      value: dataChunk.children[0].values,
+      size: dataChunk.type.listSize,
+    };
+  } else {
+    props.getFillColor = this.props.getFillColor;
+  }
+}
+
+// export function resolveFloatAccessor(value)
 
 function isDataInterleavedCoords(
   data: arrow.Data
@@ -70,4 +106,44 @@ function convertStructToFixedSizeList(
   }
 
   assert(false);
+}
+
+/**
+ * Expand an array from "one element per geometry" to "one element per coordinate"
+ *
+ * @param input: the input array to expand
+ * @param size : the number of nested elements in the input array per geometry. So for example, for RGB data this would be 3, for RGBA this would be 4. For radius, this would be 1.
+ * @param geomOffsets : an offsets array mapping from the geometry to the coordinate indexes. So in the case of a LineStringArray, this is retrieved directly from the GeoArrow storage. In the case of a PolygonArray, this comes from the resolved indexes that need to be given to the SolidPolygonLayer anyways.
+ *
+ * @return  {TypedArray} values expanded to be per-coordinate
+ */
+export function expandArrayToCoords<T extends TypedArray>(
+  input: T,
+  size: number,
+  geomOffsets: Int32Array
+): T {
+  const numCoords = geomOffsets[geomOffsets.length - 1];
+  // @ts-expect-error
+  const outputArray: T = new input.constructor(numCoords * size);
+
+  // geomIdx is an index into the geomOffsets array
+  // geomIdx is also the geometry/table index
+  for (let geomIdx = 0; geomIdx < geomOffsets.length - 1; geomIdx++) {
+    // geomOffsets maps from the geometry index to the coord index
+    // So here we get the range of coords that this geometry covers
+    const lastCoordIdx = geomOffsets[geomIdx];
+    const nextCoordIdx = geomOffsets[geomIdx + 1];
+
+    // Iterate over this range of coord indices
+    for (let coordIdx = lastCoordIdx; coordIdx < nextCoordIdx; coordIdx++) {
+      // Iterate over size
+      for (let i = 0; i < size; i++) {
+        // Copy from the geometry index in `input` to the coord index in
+        // `output`
+        outputArray[coordIdx * size + i] = input[geomIdx * size + i];
+      }
+    }
+  }
+
+  return outputArray;
 }

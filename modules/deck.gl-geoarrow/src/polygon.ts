@@ -170,7 +170,10 @@ export class GeoArrowPolygonLayer<
             getPolygon: { value: flatCoordinateArray, size: 2 },
           },
         },
+        // Skip normalization for binary data
         _normalize: false,
+        // Counter-clockwise winding order
+        // TODO: the layer should probably check and fix winding order for unknown input
         _windingOrder: "CCW",
         getFillColor: [0, 100, 60, 160],
       });
