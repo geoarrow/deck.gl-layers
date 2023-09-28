@@ -114,15 +114,6 @@ const defaultProps: DefaultProps<GeoArrowLineStringLayerProps> = {
   rounded: { deprecatedFor: ["jointRounded", "capRounded"] },
 };
 
-// function convertCoordsToFixedSizeList(
-//   coords:
-//     | arrow.Data<arrow.FixedSizeList<arrow.Float64>>
-//     | arrow.Data<arrow.Struct<{ x: arrow.Float64; y: arrow.Float64 }>>
-// ): arrow.Data<arrow.FixedSizeList<arrow.Float64>> {
-//   if (coords.type instanceof arrow.FixedSizeList) {
-//     coords.
-//   }
-// }
 
 export class GeoArrowLineStringLayer<
   ExtraProps extends {} = {}

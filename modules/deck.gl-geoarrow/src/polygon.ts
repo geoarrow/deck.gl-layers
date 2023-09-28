@@ -108,16 +108,6 @@ const defaultProps: DefaultProps<GeoArrowPolygonLayerProps> = {
   material: true,
 };
 
-// function convertCoordsToFixedSizeList(
-//   coords:
-//     | arrow.Data<arrow.FixedSizeList<arrow.Float64>>
-//     | arrow.Data<arrow.Struct<{ x: arrow.Float64; y: arrow.Float64 }>>
-// ): arrow.Data<arrow.FixedSizeList<arrow.Float64>> {
-//   if (coords.type instanceof arrow.FixedSizeList) {
-//     coords.
-//   }
-// }
-
 export class GeoArrowPolygonLayer<
   ExtraProps extends {} = {}
 > extends CompositeLayer<Required<GeoArrowPolygonLayerProps> & ExtraProps> {
