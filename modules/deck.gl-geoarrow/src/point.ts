@@ -146,16 +146,6 @@ const defaultProps: DefaultProps<GeoArrowPointLayerProps> = {
   getLineWidth: { type: "accessor", value: 1 },
 };
 
-// function convertCoordsToFixedSizeList(
-//   coords:
-//     | arrow.Data<arrow.FixedSizeList<arrow.Float64>>
-//     | arrow.Data<arrow.Struct<{ x: arrow.Float64; y: arrow.Float64 }>>
-// ): arrow.Data<arrow.FixedSizeList<arrow.Float64>> {
-//   if (coords.type instanceof arrow.FixedSizeList) {
-//     coords.
-//   }
-// }
-
 export class GeoArrowPointLayer<
   ExtraProps extends {} = {}
 > extends CompositeLayer<Required<GeoArrowPointLayerProps> & ExtraProps> {
