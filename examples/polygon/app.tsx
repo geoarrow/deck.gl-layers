@@ -56,10 +56,7 @@ function Root() {
       new GeoArrowPolygonLayer({
         id: "geoarrow-polygons",
         data: table,
-        // getFillColor: [255, 0, 0],
-        // radiusMinPixels: 10,
-        // getPointRadius: 10,
-        // pointRadiusMinPixels: 0.8,
+        getFillColor: [0, 100, 60, 160],
       })
     );
 

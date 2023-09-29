@@ -6,13 +6,12 @@ import {
   DefaultProps,
   Layer,
   LayersList,
-  Position,
   Unit,
   assert,
 } from "@deck.gl/core/typed";
-import { ScatterplotLayer } from "@deck.gl/layers/typed";
+import { ScatterplotLayer, ScatterplotLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
-import { findGeometryColumnIndex } from "./utils.js";
+import { assignAccessor, findGeometryColumnIndex } from "./utils.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
@@ -92,31 +91,26 @@ export type _GeoArrowPointLayerProps = {
    * @default true
    */
   antialiasing?: boolean;
-
-  /**
-   * Center position accessor.
-   */
-  getPosition?: Accessor<arrow.Table, Position>;
   /**
    * Radius accessor.
    * @default 1
    */
-  getRadius?: Accessor<arrow.Table, number>;
+  getRadius?: string | Accessor<arrow.Table, number>;
   /**
    * Fill color accessor.
    * @default [0, 0, 0, 255]
    */
-  getFillColor?: Accessor<arrow.Table, Color>;
+  getFillColor?: string | Accessor<arrow.Table, Color>;
   /**
    * Stroke color accessor.
    * @default [0, 0, 0, 255]
    */
-  getLineColor?: Accessor<arrow.Table, Color>;
+  getLineColor?: string | Accessor<arrow.Table, Color>;
   /**
    * Stroke width accessor.
    * @default 1
    */
-  getLineWidth?: Accessor<arrow.Table, number>;
+  getLineWidth?: string | Accessor<arrow.Table, number>;
 };
 
 const defaultProps: DefaultProps<GeoArrowPointLayerProps> = {
@@ -139,7 +133,6 @@ const defaultProps: DefaultProps<GeoArrowPointLayerProps> = {
   billboard: false,
   antialiasing: true,
 
-  // getPosition: { type: "accessor", value: (x) => x.position },
   getRadius: { type: "accessor", value: 1 },
   getFillColor: { type: "accessor", value: DEFAULT_COLOR },
   getLineColor: { type: "accessor", value: DEFAULT_COLOR },
@@ -153,52 +146,84 @@ export class GeoArrowPointLayer<
   static layerName = "GeoArrowPointLayer";
 
   renderLayers(): Layer<{}> | LayersList | null {
-    // console.log("renderLayers");
     const { data } = this.props;
 
-    const geometryColumnIndex = findGeometryColumnIndex(
+    // TODO: add validation before the loop
+
+    const geometryColumnIdx = findGeometryColumnIndex(
       data.schema,
       "geoarrow.point"
     );
-    if (geometryColumnIndex === null) {
+    if (geometryColumnIdx === null) {
       console.warn("No geoarrow.point column found.");
       return null;
     }
 
-    const geometryColumn = data.getChildAt(geometryColumnIndex);
-    if (!geometryColumn) {
-      return null;
-    }
-
     const layers: ScatterplotLayer[] = [];
-    for (let i = 0; i < geometryColumn.data.length; i++) {
-      const arrowData = geometryColumn.data[i];
-      assert(arrowData.typeId === arrow.Type.FixedSizeList);
+    for (
+      let recordBatchIdx = 0;
+      recordBatchIdx < data.batches.length;
+      recordBatchIdx++
+    ) {
+      const recordBatch = data.batches[recordBatchIdx];
 
-      const childArrays = arrowData.children;
-      // Should always be length one because inside the loop this should be a
-      // contiguous array
-      assert(childArrays.length === 1);
+      const geometryColumn = recordBatch.getChildAt(geometryColumnIdx);
+      assert(geometryColumn.data.length === 1);
 
-      const flatCoordinateArray = childArrays[0].values;
-      // console.log(flatCoordinateArray);
+      const geometryData = geometryColumn.data[0];
+      assert(arrow.DataType.isFixedSizeList(geometryData));
+      assert(geometryData.children.length === 1);
 
-      const layer = new ScatterplotLayer({
-        // ...this.props,
-        id: `${this.props.id}-geoarrow-point-${i}`,
+      const coordsArray = geometryData.children[0].values;
+
+      const props: ScatterplotLayerProps = {
+        id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
+        radiusUnits: this.props.radiusUnits,
+        radiusScale: this.props.radiusScale,
+        radiusMinPixels: this.props.radiusMinPixels,
+        radiusMaxPixels: this.props.radiusMaxPixels,
+        lineWidthUnits: this.props.lineWidthUnits,
+        lineWidthScale: this.props.lineWidthScale,
+        lineWidthMinPixels: this.props.lineWidthMinPixels,
+        lineWidthMaxPixels: this.props.lineWidthMaxPixels,
+        stroked: this.props.stroked,
+        filled: this.props.filled,
+        billboard: this.props.billboard,
+        antialiasing: this.props.antialiasing,
         data: {
-          length: arrowData.length,
+          length: recordBatch.numRows,
           attributes: {
-            getPosition: { value: flatCoordinateArray, size: 2 },
+            getPosition: { value: coordsArray, size: 2 },
           },
         },
-        getFillColor: [255, 0, 0],
-        getLineColor: [0, 0, 255],
-        stroked: false,
-        radiusMinPixels: 1,
-        getPointRadius: 10,
-        pointRadiusMinPixels: 0.8,
+      };
+
+      assignAccessor({
+        props,
+        propName: "getRadius",
+        propInput: this.props.getRadius,
+        recordBatch,
       });
+      assignAccessor({
+        props,
+        propName: "getFillColor",
+        propInput: this.props.getFillColor,
+        recordBatch,
+      });
+      assignAccessor({
+        props,
+        propName: "getLineColor",
+        propInput: this.props.getLineColor,
+        recordBatch,
+      });
+      assignAccessor({
+        props,
+        propName: "getLineWidth",
+        propInput: this.props.getLineWidth,
+        recordBatch,
+      });
+
+      const layer = new ScatterplotLayer(props);
       layers.push(layer);
     }
 

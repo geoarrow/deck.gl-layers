@@ -9,9 +9,9 @@ const GEOARROW_POINT_DATA =
   "http://localhost:8080/ne_10m_roads_north_america.arrow";
 
 const INITIAL_VIEW_STATE = {
-  latitude: 20,
-  longitude: 0,
-  zoom: 2,
+  latitude: 40,
+  longitude: -95,
+  zoom: 4,
   bearing: 0,
   pitch: 0,
 };
@@ -57,10 +57,8 @@ function Root() {
       new GeoArrowLineStringLayer({
         id: "geoarrow-linestring",
         data: table,
-        getFillColor: [255, 0, 0],
-        radiusMinPixels: 10,
-        getPointRadius: 10,
-        pointRadiusMinPixels: 0.8,
+        getColor: [255, 0, 0],
+        widthMinPixels: 1,
       })
     );
 

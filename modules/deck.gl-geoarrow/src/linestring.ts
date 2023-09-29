@@ -6,13 +6,12 @@ import {
   DefaultProps,
   Layer,
   LayersList,
-  Position,
   Unit,
   assert,
 } from "@deck.gl/core/typed";
-import { PathLayer } from "@deck.gl/layers/typed";
+import { PathLayer, PathLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
-import { findGeometryColumnIndex } from "./utils.js";
+import { assignAccessor, findGeometryColumnIndex } from "./utils.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
@@ -75,24 +74,16 @@ export type _GeoArrowLineStringLayerProps = {
    * @default null
    */
   _pathType?: null | "loop" | "open";
-  // /**
-  //  * Path geometry accessor.
-  //  */
-  // getPath?: AccessorFunction<DataT, PathGeometry>;
   /**
    * Path color accessor.
    * @default [0, 0, 0, 255]
    */
-  getColor?: Accessor<arrow.Table, Color | Color[]>;
+  getColor?: string | Accessor<arrow.Table, Color | Color[]>;
   /**
    * Path width accessor.
    * @default 1
    */
-  getWidth?: Accessor<arrow.Table, number | number[]>;
-  /**
-   * @deprecated Use `jointRounded` and `capRounded` instead
-   */
-  rounded?: boolean;
+  getWidth?: string | Accessor<arrow.Table, number | number[]>;
 };
 
 const defaultProps: DefaultProps<GeoArrowLineStringLayerProps> = {
@@ -104,16 +95,15 @@ const defaultProps: DefaultProps<GeoArrowLineStringLayerProps> = {
   capRounded: false,
   miterLimit: { type: "number", min: 0, value: 4 },
   billboard: false,
-  _pathType: null,
+  // Note: this diverges from upstream, where here we _default into_ binary
+  // rendering
+  // This instructs the layer to skip normalization and use the binary
+  // as-is
+  _pathType: "open",
 
-  // getPath: { type: "accessor", value: (object) => object.path },
   getColor: { type: "accessor", value: DEFAULT_COLOR },
   getWidth: { type: "accessor", value: 1 },
-
-  // deprecated props
-  rounded: { deprecatedFor: ["jointRounded", "capRounded"] },
 };
-
 
 export class GeoArrowLineStringLayer<
   ExtraProps extends {} = {}
@@ -122,55 +112,76 @@ export class GeoArrowLineStringLayer<
   static layerName = "GeoArrowLineStringLayer";
 
   renderLayers(): Layer<{}> | LayersList | null {
-    // console.log("renderLayers");
     const { data } = this.props;
 
-    const geometryColumnIndex = findGeometryColumnIndex(
+    // TODO: add validation before the loop
+
+    const geometryColumnIdx = findGeometryColumnIndex(
       data.schema,
       "geoarrow.linestring"
     );
-    if (geometryColumnIndex === null) {
+    if (geometryColumnIdx === null) {
       console.warn("No geoarrow.linestring column found.");
       return null;
     }
 
-    const geometryColumn = data.getChildAt(geometryColumnIndex);
-    if (!geometryColumn) {
-      return null;
-    }
-
     const layers: PathLayer[] = [];
-    for (let i = 0; i < geometryColumn.data.length; i++) {
-      const arrowData = geometryColumn.data[i];
-      assert(arrowData.typeId === arrow.Type.List);
+    for (
+      let recordBatchIdx = 0;
+      recordBatchIdx < data.batches.length;
+      recordBatchIdx++
+    ) {
+      const recordBatch = data.batches[recordBatchIdx];
 
-      const geomOffsets = arrowData.valueOffsets;
-      assert(arrowData.children.length === 1);
-      assert(arrowData.children[0].typeId === arrow.Type.FixedSizeList);
+      const geometryColumn = recordBatch.getChildAt(geometryColumnIdx);
+      assert(geometryColumn.data.length === 1);
 
-      const flatCoordinateArray = arrowData.children[0].children[0].values;
+      const geometryData = geometryColumn.data[0];
+      assert(arrow.DataType.isList(geometryData));
 
-      const layer = new PathLayer({
-        // ...this.props,
-        id: `${this.props.id}-geoarrow-linestring-${i}`,
+      const geomOffsets = geometryData.valueOffsets;
+      assert(geometryData.children.length === 1);
+      assert(arrow.DataType.isFixedSizeList(geometryData.children[0]));
+
+      const coordsArray = geometryData.children[0].children[0].values;
+
+      const props: PathLayerProps = {
+        id: `${this.props.id}-geoarrow-linestring-${recordBatchIdx}`,
+        widthUnits: this.props.widthUnits,
+        widthScale: this.props.widthScale,
+        widthMinPixels: this.props.widthMinPixels,
+        widthMaxPixels: this.props.widthMaxPixels,
+        jointRounded: this.props.jointRounded,
+        capRounded: this.props.capRounded,
+        miterLimit: this.props.miterLimit,
+        billboard: this.props.billboard,
+        _pathType: this.props._pathType,
         data: {
-          length: arrowData.length,
+          length: recordBatch.numRows,
+          // @ts-ignore
           startIndices: geomOffsets,
           attributes: {
-            getPath: { value: flatCoordinateArray, size: 2 },
+            getPath: { value: coordsArray, size: 2 },
           },
         },
-        _pathType: "open", // this instructs the layer to skip normalization and use the binary as-is
-        widthUnits: "pixels",
-        widthMinPixels: 1,
+      };
 
-        getColor: [255, 0, 0],
-        // // getLineColor: [0, 0, 255],
-        // stroked: false,
-        // radiusMinPixels: 1,
-        // getPointRadius: 10,
-        // pointRadiusMinPixels: 0.8,
+      assignAccessor({
+        props,
+        propName: "getColor",
+        propInput: this.props.getColor,
+        recordBatch,
+        geomCoordOffsets: geomOffsets,
       });
+      assignAccessor({
+        props,
+        propName: "getWidth",
+        propInput: this.props.getWidth,
+        recordBatch,
+        geomCoordOffsets: geomOffsets,
+      });
+
+      const layer = new PathLayer(props);
       layers.push(layer);
     }
 

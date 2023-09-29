@@ -390,13 +390,13 @@ __metadata:
 
 "@geoarrow/deck.gl-layers@file:../../modules/deck.gl-geoarrow::locator=deckgl-example-geoarrow-linestring-layer%40workspace%3A.":
   version: 0.1.0
-  resolution: "@geoarrow/deck.gl-layers@file:../../modules/deck.gl-geoarrow#../../modules/deck.gl-geoarrow::hash=cad8cd&locator=deckgl-example-geoarrow-linestring-layer%40workspace%3A."
+  resolution: "@geoarrow/deck.gl-layers@file:../../modules/deck.gl-geoarrow#../../modules/deck.gl-geoarrow::hash=9b6cda&locator=deckgl-example-geoarrow-linestring-layer%40workspace%3A."
   dependencies:
     apache-arrow: ^13.0.0
   peerDependencies:
     "@deck.gl/core": ^8.9.23
     "@deck.gl/layers": ^8.9.23
-  checksum: 9f2dcd4ccf293d3322b43739eb6930895d8b765dd249170bca6e5a42e3dddfbb0f820c2111f26e58d5765cebd9009575a9fb2f848573f9907c6f751ad91d0062
+  checksum: 43833fa5b04e24050fe8cf3e62eba94f92c5cb9efd3a2347d43d2e023bd47bfec89206c94262020ff7cd4f2fbb891f6089a94ca60ccc29d76d350719b9ab491f
   languageName: node
   linkType: hard
 
