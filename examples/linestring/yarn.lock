@@ -388,15 +388,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@geoarrow/deck.gl-layers@file:../../modules/deck.gl-geoarrow::locator=deckgl-example-geoarrow-linestring-layer%40workspace%3A.":
+"@geoarrow/deck.gl-layers@file:../../::locator=deckgl-example-geoarrow-linestring-layer%40workspace%3A.":
   version: 0.1.0
-  resolution: "@geoarrow/deck.gl-layers@file:../../modules/deck.gl-geoarrow#../../modules/deck.gl-geoarrow::hash=9b6cda&locator=deckgl-example-geoarrow-linestring-layer%40workspace%3A."
+  resolution: "@geoarrow/deck.gl-layers@file:../../#../../::hash=ddf772&locator=deckgl-example-geoarrow-linestring-layer%40workspace%3A."
   dependencies:
     apache-arrow: ^13.0.0
   peerDependencies:
     "@deck.gl/core": ^8.9.23
     "@deck.gl/layers": ^8.9.23
-  checksum: 43833fa5b04e24050fe8cf3e62eba94f92c5cb9efd3a2347d43d2e023bd47bfec89206c94262020ff7cd4f2fbb891f6089a94ca60ccc29d76d350719b9ab491f
+  checksum: d9d959bfaf7f806cacebc10cb63164f548db61985d9abf1c1257e98cc3ec71230219c0e54b0807f818e01f3ea6b22dc2a5ecd096c6d1d0c558e8e9d7d3439639
   languageName: node
   linkType: hard
 
@@ -1559,7 +1559,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "deckgl-example-geoarrow-linestring-layer@workspace:."
   dependencies:
-    "@geoarrow/deck.gl-layers": ../../modules/deck.gl-geoarrow
+    "@geoarrow/deck.gl-layers": ../../
     "@types/react": ^18.0.0
     "@types/react-dom": ^18.0.0
     apache-arrow: ^13.0.0

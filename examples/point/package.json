@@ -8,7 +8,7 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@geoarrow/deck.gl-layers": "../../modules/deck.gl-geoarrow",
+    "@geoarrow/deck.gl-layers": "../..",
     "apache-arrow": "^13.0.0",
     "deck.gl": "^8.9.23",
     "react": "^18.0.0",
@@ -21,6 +21,6 @@
     "vite": "^4.0.0"
   },
   "volta": {
-    "extends": "../../modules/deck.gl-geoarrow/package.json"
+    "extends": "../../package.json"
   }
 }

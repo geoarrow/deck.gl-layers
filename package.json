@@ -20,7 +20,7 @@
     "src/"
   ],
   "packageManager": "yarn@3.3.1",
-  "repository": "https://github.com/kylebarron/deck.gl-geoarrow",
+  "repository": "https://github.com/geoarrow/deck.gl-geoarrow",
   "author": "Kyle Barron <kylebarron2@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
