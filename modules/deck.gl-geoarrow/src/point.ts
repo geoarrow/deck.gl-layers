@@ -95,22 +95,22 @@ export type _GeoArrowPointLayerProps = {
    * Radius accessor.
    * @default 1
    */
-  getRadius?: Accessor<arrow.Table, number>;
+  getRadius?: string | Accessor<arrow.Table, number>;
   /**
    * Fill color accessor.
    * @default [0, 0, 0, 255]
    */
-  getFillColor?: Accessor<arrow.Table, Color>;
+  getFillColor?: string | Accessor<arrow.Table, Color>;
   /**
    * Stroke color accessor.
    * @default [0, 0, 0, 255]
    */
-  getLineColor?: Accessor<arrow.Table, Color>;
+  getLineColor?: string | Accessor<arrow.Table, Color>;
   /**
    * Stroke width accessor.
    * @default 1
    */
-  getLineWidth?: Accessor<arrow.Table, number>;
+  getLineWidth?: string | Accessor<arrow.Table, number>;
 };
 
 const defaultProps: DefaultProps<GeoArrowPointLayerProps> = {
@@ -222,6 +222,9 @@ export class GeoArrowPointLayer<
         propInput: this.props.getLineWidth,
         recordBatch,
       });
+
+      console.log(props);
+
 
       const layer = new ScatterplotLayer(props);
       // const layer = new ScatterplotLayer({

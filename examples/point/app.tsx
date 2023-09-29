@@ -58,7 +58,8 @@ function Root() {
         id: "geoarrow-points",
         data: table,
         getFillColor: [255, 0, 0],
-        radiusMinPixels: 10,
+        // getFillColor: "colors",
+        radiusMinPixels: 1,
         getPointRadius: 10,
         pointRadiusMinPixels: 0.8,
       })

@@ -70,15 +70,15 @@ export type _GeoArrowPolygonLayerProps = {
   /** Extrusion height accessor.
    * @default 1000
    */
-  getElevation?: Accessor<arrow.Table, number>;
+  getElevation?: string | Accessor<arrow.Table, number>;
   /** Fill color accessor.
    * @default [0, 0, 0, 255]
    */
-  getFillColor?: Accessor<arrow.Table, Color>;
+  getFillColor?: string | Accessor<arrow.Table, Color>;
   /** Stroke color accessor.
    * @default [0, 0, 0, 255]
    */
-  getLineColor?: Accessor<arrow.Table, Color>;
+  getLineColor?: string | Accessor<arrow.Table, Color>;
 
   /**
    * Material settings for lighting effect. Applies if `extruded: true`

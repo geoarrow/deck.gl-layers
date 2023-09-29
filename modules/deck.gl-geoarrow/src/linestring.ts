@@ -78,12 +78,12 @@ export type _GeoArrowLineStringLayerProps = {
    * Path color accessor.
    * @default [0, 0, 0, 255]
    */
-  getColor?: Accessor<arrow.Table, Color | Color[]>;
+  getColor?: string | Accessor<arrow.Table, Color | Color[]>;
   /**
    * Path width accessor.
    * @default 1
    */
-  getWidth?: Accessor<arrow.Table, number | number[]>;
+  getWidth?: string | Accessor<arrow.Table, number | number[]>;
 };
 
 const defaultProps: DefaultProps<GeoArrowLineStringLayerProps> = {
