@@ -29,8 +29,6 @@ export function isColumnReference(input: any): input is string {
   return typeof input === "string";
 }
 
-// export function resolveFloatAccessor(value)
-
 function isDataInterleavedCoords(
   data: arrow.Data
 ): data is arrow.Data<arrow.FixedSizeList<arrow.Float64>> {
