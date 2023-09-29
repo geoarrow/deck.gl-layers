@@ -1,4 +1,8 @@
 {
+  "workspaces": [
+    ".",
+    "examples/*"
+  ],
   "name": "@geoarrow/deck.gl-layers",
   "version": "0.1.0",
   "type": "module",
@@ -20,7 +24,7 @@
     "src/"
   ],
   "packageManager": "yarn@3.3.1",
-  "repository": "https://github.com/kylebarron/deck.gl-geoarrow",
+  "repository": "https://github.com/geoarrow/deck.gl-geoarrow",
   "author": "Kyle Barron <kylebarron2@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
@@ -43,6 +47,6 @@
   },
   "volta": {
     "node": "20.5.0",
-    "yarn": "3.6.1"
+    "yarn": "3.6.3"
   }
 }
