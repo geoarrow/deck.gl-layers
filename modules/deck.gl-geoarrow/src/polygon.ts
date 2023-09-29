@@ -185,25 +185,27 @@ export class GeoArrowPolygonLayer<
         },
       };
 
-      // TODO: these have to also be expanded to vertex positions!
-      assignAccessor(
+      assignAccessor({
         props,
-        "getElevation",
-        this.props.getElevation,
-        recordBatch
-      );
-      assignAccessor(
+        propName: "getElevation",
+        propInput: this.props.getElevation,
+        recordBatch,
+        geomCoordOffsets: resolvedRingOffsets,
+      });
+      assignAccessor({
         props,
-        "getFillColor",
-        this.props.getFillColor,
-        recordBatch
-      );
-      assignAccessor(
+        propName: "getFillColor",
+        propInput: this.props.getFillColor,
+        recordBatch,
+        geomCoordOffsets: resolvedRingOffsets,
+      });
+      assignAccessor({
         props,
-        "getLineColor",
-        this.props.getLineColor,
-        recordBatch
-      );
+        propName: "getLineColor",
+        propInput: this.props.getLineColor,
+        recordBatch,
+        geomCoordOffsets: resolvedRingOffsets,
+      });
 
       const layer = new SolidPolygonLayer(props);
       // const layer = new SolidPolygonLayer({

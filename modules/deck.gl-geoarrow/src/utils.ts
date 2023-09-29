@@ -92,23 +92,33 @@ function convertStructToFixedSizeList(
   assert(false);
 }
 
+type AssignAccessorProps = {
+  /** The object on which to assign the resolved accesor */
+  props: object;
+  /** The name of the prop to set */
+  propName: string;
+  /** The user-supplied input to the layer. Must either be a scalar value or a reference to a column in the table. */
+  propInput: any;
+  /** A single arrow.RecordBatch of the table */
+  recordBatch: arrow.RecordBatch;
+  /** a map from the geometry index to the coord offsets for that geometry. */
+  geomCoordOffsets?: Int32Array | null;
+};
+
 /**
  * Resolve accessor and assign to props object
  *
  * This is useful as a helper function because a scalar prop is set at the top
  * level while a vectorized prop is set inside data.attributes
  *
- * @param props : The object on which to assign the resolved accesor
- * @param propName : The name of the prop to set
- * @param propInput : The user-supplied input to the layer. Must either be a scalar value or a reference to a column in the table.
- * @param recordBatch : A single arrow.RecordBatch of the table
+ * @param props :
+ * @param propName :
+ * @param propInput :
+ * @param recordBatch :
  */
-export function assignAccessor(
-  props: object,
-  propName: string,
-  propInput: any,
-  recordBatch: arrow.RecordBatch
-) {
+export function assignAccessor(args: AssignAccessorProps) {
+  const { props, propName, propInput, recordBatch, geomCoordOffsets } = args;
+
   if (propInput === undefined) {
     return;
   }
@@ -121,15 +131,31 @@ export function assignAccessor(
 
     if (arrow.DataType.isFixedSizeList(columnData)) {
       assert(columnData.children.length === 1);
+      let values = columnData.children[0].values;
+
+      if (geomCoordOffsets) {
+        values = expandArrayToCoords(
+          values,
+          columnData.type.listSize,
+          geomCoordOffsets
+        );
+      }
+
       // @ts-expect-error Property 'data' does not exist on type 'object'.
       props.data.attributes[propName] = {
-        value: columnData.children[0].values,
+        value: values,
         size: columnData.type.listSize,
       };
     } else if (arrow.DataType.isFloat(columnData)) {
+      let values = columnData.values;
+
+      if (geomCoordOffsets) {
+        values = expandArrayToCoords(values, 1, geomCoordOffsets);
+      }
+
       // @ts-expect-error Property 'data' does not exist on type 'object'.
       props.data.attributes[propName] = {
-        value: columnData.values,
+        value: values,
         size: 1,
       };
     }

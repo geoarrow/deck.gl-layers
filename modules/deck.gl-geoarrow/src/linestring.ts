@@ -166,9 +166,20 @@ export class GeoArrowLineStringLayer<
         },
       };
 
-      // TODO: these have to also be expanded to vertex positions!
-      assignAccessor(props, "getColor", this.props.getColor, recordBatch);
-      assignAccessor(props, "getWidth", this.props.getWidth, recordBatch);
+      assignAccessor({
+        props,
+        propName: "getColor",
+        propInput: this.props.getColor,
+        recordBatch,
+        geomCoordOffsets: geomOffsets,
+      });
+      assignAccessor({
+        props,
+        propName: "getWidth",
+        propInput: this.props.getWidth,
+        recordBatch,
+        geomCoordOffsets: geomOffsets,
+      });
 
       const layer = new PathLayer(props);
       // const layer = new PathLayer({

@@ -198,25 +198,30 @@ export class GeoArrowPointLayer<
         },
       };
 
-      assignAccessor(props, "getRadius", this.props.getRadius, recordBatch);
-      assignAccessor(
+      assignAccessor({
         props,
-        "getFillColor",
-        this.props.getFillColor,
-        recordBatch
-      );
-      assignAccessor(
+        propName: "getRadius",
+        propInput: this.props.getRadius,
+        recordBatch,
+      });
+      assignAccessor({
         props,
-        "getLineColor",
-        this.props.getLineColor,
-        recordBatch
-      );
-      assignAccessor(
+        propName: "getFillColor",
+        propInput: this.props.getFillColor,
+        recordBatch,
+      });
+      assignAccessor({
         props,
-        "getLineWidth",
-        this.props.getLineWidth,
-        recordBatch
-      );
+        propName: "getLineColor",
+        propInput: this.props.getLineColor,
+        recordBatch,
+      });
+      assignAccessor({
+        props,
+        propName: "getLineWidth",
+        propInput: this.props.getLineWidth,
+        recordBatch,
+      });
 
       const layer = new ScatterplotLayer(props);
       // const layer = new ScatterplotLayer({
