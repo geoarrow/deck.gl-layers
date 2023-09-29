@@ -14,10 +14,13 @@ export type TypedArray =
 
 export function findGeometryColumnIndex(
   schema: arrow.Schema,
-  extensionName: string
+  extensionName: string,
+  geometryColumnName?: string | null
 ): number | null {
   const index = schema.fields.findIndex(
-    (field) => field.metadata.get("ARROW:extension:name") === extensionName
+    (field) =>
+      field.name === geometryColumnName ||
+      field.metadata.get("ARROW:extension:name") === extensionName
   );
   return index !== -1 ? index : null;
 }

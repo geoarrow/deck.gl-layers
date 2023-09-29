@@ -102,7 +102,6 @@ const defaultProps: DefaultProps<GeoArrowPolygonLayerProps> = {
 
   elevationScale: { type: "number", min: 0, value: 1 },
 
-  // getPolygon: { type: "accessor", value: (f) => f.polygon },
   getElevation: { type: "accessor", value: 1000 },
   getFillColor: { type: "accessor", value: DEFAULT_COLOR },
   getLineColor: { type: "accessor", value: DEFAULT_COLOR },
@@ -121,10 +120,13 @@ export class GeoArrowPolygonLayer<
 
     const geometryColumnIdx = findGeometryColumnIndex(
       data.schema,
-      "geoarrow.polygon"
+      "geoarrow.polygon",
+      this.props.geometryColumnName
     );
     if (geometryColumnIdx === null) {
-      console.warn("No geoarrow.polygon column found.");
+      console.warn(
+        "No geoarrow.polygon column found; pass geometryColumnName."
+      );
       return null;
     }
 
