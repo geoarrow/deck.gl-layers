@@ -176,7 +176,7 @@ export class GeoArrowPointLayer<
 
       const coordsArray = geometryData.children[0].values;
 
-      const props: Partial<ScatterplotLayerProps> = {
+      const props: ScatterplotLayerProps = {
         id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
         radiusUnits: this.props.radiusUnits,
         radiusScale: this.props.radiusScale,
