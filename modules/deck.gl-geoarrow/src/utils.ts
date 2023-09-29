@@ -22,27 +22,11 @@ export function findGeometryColumnIndex(
   return index !== -1 ? index : null;
 }
 
-export function isColumn(input: any): input is string {}
-
-export function resolveColorAccessor(
-  prop: any,
-  table: arrow.Table,
-  dataIdx: number
-) {
-  if (isColumn(this.props.getFillColor)) {
-    const columnName = this.props.getFillColor;
-    const column = table.getChild(columnName);
-    const dataChunk: arrow.Data<arrow.FixedSizeList> = column.data[dataIdx];
-    assert(dataChunk.typeId === arrow.Type.FixedSizeList);
-    assert(dataChunk.type.listSize === 3 || dataChunk.type.listSize === 4);
-    props.getFillColor = {
-      // @ts-expect-error
-      value: dataChunk.children[0].values,
-      size: dataChunk.type.listSize,
-    };
-  } else {
-    props.getFillColor = this.props.getFillColor;
-  }
+/**
+ * Returns `true` if the input is a reference to a column in the table
+ */
+export function isColumnReference(input: any): input is string {
+  return typeof input === "string";
 }
 
 // export function resolveFloatAccessor(value)
@@ -106,6 +90,52 @@ function convertStructToFixedSizeList(
   }
 
   assert(false);
+}
+
+/**
+ * Resolve accessor and assign to props object
+ *
+ * This is useful as a helper function because a scalar prop is set at the top
+ * level while a vectorized prop is set inside data.attributes
+ *
+ * @param props : The object on which to assign the resolved accesor
+ * @param propName : The name of the prop to set
+ * @param propInput : The user-supplied input to the layer. Must either be a scalar value or a reference to a column in the table.
+ * @param recordBatch : A single arrow.RecordBatch of the table
+ */
+export function assignAccessor(
+  props: object,
+  propName: string,
+  propInput: any,
+  recordBatch: arrow.RecordBatch
+) {
+  if (propInput === undefined) {
+    return;
+  }
+
+  if (isColumnReference(propInput)) {
+    const column = recordBatch.getChild(propInput);
+    // The underlying data should always be contiguous in a record batch
+    assert(column.data.length === 1);
+    const columnData = column.data[0];
+
+    if (arrow.DataType.isFixedSizeList(columnData)) {
+      assert(columnData.children.length === 1);
+      // @ts-expect-error Property 'data' does not exist on type 'object'.
+      props.data.attributes[propName] = {
+        value: columnData.children[0].values,
+        size: columnData.type.listSize,
+      };
+    } else if (arrow.DataType.isFloat(columnData)) {
+      // @ts-expect-error Property 'data' does not exist on type 'object'.
+      props.data.attributes[propName] = {
+        value: columnData.values,
+        size: 1,
+      };
+    }
+  } else {
+    props[propName] = propInput;
+  }
 }
 
 /**
