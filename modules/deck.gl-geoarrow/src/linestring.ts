@@ -182,27 +182,6 @@ export class GeoArrowLineStringLayer<
       });
 
       const layer = new PathLayer(props);
-      // const layer = new PathLayer({
-      //   // ...this.props,
-      //   id: `${this.props.id}-geoarrow-linestring-${i}`,
-      //   data: {
-      //     length: arrowData.length,
-      //     startIndices: geomOffsets,
-      //     attributes: {
-      //       getPath: { value: flatCoordinateArray, size: 2 },
-      //     },
-      //   },
-      //   _pathType: "open", // this instructs the layer to skip normalization and use the binary as-is
-      //   widthUnits: "pixels",
-      //   widthMinPixels: 1,
-
-      //   getColor: [255, 0, 0],
-      //   // // getLineColor: [0, 0, 255],
-      //   // stroked: false,
-      //   // radiusMinPixels: 1,
-      //   // getPointRadius: 10,
-      //   // pointRadiusMinPixels: 0.8,
-      // });
       layers.push(layer);
     }
 

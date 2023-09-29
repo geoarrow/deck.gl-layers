@@ -208,24 +208,6 @@ export class GeoArrowPolygonLayer<
       });
 
       const layer = new SolidPolygonLayer(props);
-      // const layer = new SolidPolygonLayer({
-      //   // ...this.props,
-      //   id: `${this.props.id}-geoarrow-point-${i}`,
-      //   data: {
-      //     // Number of geometries
-      //     length: arrowData.length,
-      //     // Offsets into coordinateArray where each polygon starts
-      //     startIndices: resolvedRingOffsets,
-
-      //     attributes: {
-      //       getPolygon: { value: flatCoordinateArray, size: 2 },
-      //     },
-      //   },
-      //   // Counter-clockwise winding order
-      //   // TODO: the layer should probably check and fix winding order for unknown input
-      //   _windingOrder: "CCW",
-      //   getFillColor: [0, 100, 60, 160],
-      // });
       layers.push(layer);
     }
 

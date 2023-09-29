@@ -223,27 +223,7 @@ export class GeoArrowPointLayer<
         recordBatch,
       });
 
-      console.log(props);
-
-
       const layer = new ScatterplotLayer(props);
-      // const layer = new ScatterplotLayer({
-      //   // ...this.props,
-      //   id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
-      //   data: {
-      //     length: recordBatch.numRows,
-      //     attributes: {
-      //       getPosition: { value: coordsArray, size: 2 },
-      //       // ...()
-      //     },
-      //   },
-      //   getFillColor: [255, 0, 0],
-      //   getLineColor: [0, 0, 255],
-      //   stroked: false,
-      //   radiusMinPixels: 1,
-      //   getPointRadius: 10,
-      //   pointRadiusMinPixels: 0.8,
-      // });
       layers.push(layer);
     }
 
