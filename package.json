@@ -1,4 +1,8 @@
 {
+  "workspaces": [
+    ".",
+    "examples/*"
+  ],
   "name": "@geoarrow/deck.gl-layers",
   "version": "0.1.0",
   "type": "module",
@@ -43,6 +47,6 @@
   },
   "volta": {
     "node": "20.5.0",
-    "yarn": "3.6.1"
+    "yarn": "3.6.3"
   }
 }
