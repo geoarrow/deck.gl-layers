@@ -118,10 +118,13 @@ export class GeoArrowLineStringLayer<
 
     const geometryColumnIdx = findGeometryColumnIndex(
       data.schema,
-      "geoarrow.linestring"
+      "geoarrow.linestring",
+      this.props.geometryColumnName
     );
     if (geometryColumnIdx === null) {
-      console.warn("No geoarrow.linestring column found.");
+      console.warn(
+        "No geoarrow.linestring column found; pass geometryColumnName."
+      );
       return null;
     }
 

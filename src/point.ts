@@ -152,10 +152,11 @@ export class GeoArrowPointLayer<
 
     const geometryColumnIdx = findGeometryColumnIndex(
       data.schema,
-      "geoarrow.point"
+      "geoarrow.point",
+      this.props.geometryColumnName
     );
     if (geometryColumnIdx === null) {
-      console.warn("No geoarrow.point column found.");
+      console.warn("No geoarrow.point column found; pass geometryColumnName.");
       return null;
     }
 
