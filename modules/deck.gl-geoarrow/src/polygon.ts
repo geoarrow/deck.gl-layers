@@ -1,7 +1,3 @@
-// NOTE: having this file in the examples directory is a hack
-// Bundling isn't currently working to load the file from the src directory,
-// it fails because the code is getting transpiled to ES5 for some reason, and
-// you can't subclass an ES6 class from ES5.
 import {
   Accessor,
   Color,
@@ -13,9 +9,12 @@ import {
   LayersList,
   assert,
 } from "@deck.gl/core/typed";
-import { SolidPolygonLayer } from "@deck.gl/layers/typed";
+import {
+  SolidPolygonLayer,
+  SolidPolygonLayerProps,
+} from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
-import { findGeometryColumnIndex } from "./utils.js";
+import { assignAccessor, findGeometryColumnIndex } from "./utils.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
@@ -94,8 +93,11 @@ const defaultProps: DefaultProps<GeoArrowPolygonLayerProps> = {
   filled: true,
   extruded: false,
   wireframe: false,
-  _normalize: true,
-  _windingOrder: "CW",
+  // Note: this diverges from upstream, where here we default to no
+  // normalization
+  _normalize: false,
+  // Note: this diverges from upstream, where here we default to CCW
+  _windingOrder: "CCW",
   _full3d: false,
 
   elevationScale: { type: "number", min: 0, value: 1 },
@@ -117,38 +119,42 @@ export class GeoArrowPolygonLayer<
   renderLayers(): Layer<{}> | LayersList | null {
     const { data } = this.props;
 
-    const geometryColumnIndex = findGeometryColumnIndex(
+    const geometryColumnIdx = findGeometryColumnIndex(
       data.schema,
       "geoarrow.polygon"
     );
-    if (geometryColumnIndex === null) {
+    if (geometryColumnIdx === null) {
       console.warn("No geoarrow.polygon column found.");
       return null;
     }
 
-    const geometryColumn = data.getChildAt(geometryColumnIndex);
-    if (!geometryColumn) {
-      return null;
-    }
-
     const layers: SolidPolygonLayer[] = [];
-    for (let i = 0; i < geometryColumn.data.length; i++) {
+    for (
+      let recordBatchIdx = 0;
+      recordBatchIdx < data.batches.length;
+      recordBatchIdx++
+    ) {
+      const recordBatch = data.batches[recordBatchIdx];
+
+      const geometryColumn = recordBatch.getChildAt(geometryColumnIdx);
+      assert(geometryColumn.data.length === 1);
+
       // TODO: only make assertions once on schema, not on data
-      const arrowData = geometryColumn.data[i];
-      assert(arrowData.typeId === arrow.Type.List);
+      const geometryData = geometryColumn.data[0];
+      assert(arrow.DataType.isList(geometryData));
 
-      const geomOffsets = arrowData.valueOffsets;
-      assert(arrowData.children.length === 1);
-      assert(arrowData.children[0].typeId === arrow.Type.List);
+      const geomOffsets = geometryData.valueOffsets;
+      assert(geometryData.children.length === 1);
+      assert(arrow.DataType.isList(geometryData.children[0]));
 
-      const ringOffsets = arrowData.children[0].valueOffsets;
-      assert(arrowData.children[0].children.length === 1);
+      const ringOffsets = geometryData.children[0].valueOffsets;
+      assert(geometryData.children[0].children.length === 1);
       assert(
-        arrowData.children[0].children[0].typeId === arrow.Type.FixedSizeList
+        arrow.DataType.isFixedSizeList(geometryData.children[0].children[0])
       );
 
       const flatCoordinateArray =
-        arrowData.children[0].children[0].children[0].values;
+        geometryData.children[0].children[0].children[0].values;
 
       const resolvedRingOffsets = new Int32Array(geomOffsets.length);
       for (let i = 0; i < resolvedRingOffsets.length; ++i) {
@@ -157,26 +163,67 @@ export class GeoArrowPolygonLayer<
         resolvedRingOffsets[i] = ringOffsets[geomOffsets[i]];
       }
 
-      const layer = new SolidPolygonLayer({
-        // ...this.props,
-        id: `${this.props.id}-geoarrow-point-${i}`,
+      const props: SolidPolygonLayerProps = {
+        id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
+        filled: this.props.filled,
+        extruded: this.props.extruded,
+        wireframe: this.props.wireframe,
+        _normalize: this.props._normalize,
+        _windingOrder: this.props._windingOrder,
+        _full3d: this.props._full3d,
+        elevationScale: this.props.elevationScale,
+        material: this.props.material,
         data: {
           // Number of geometries
-          length: arrowData.length,
+          length: recordBatch.numRows,
           // Offsets into coordinateArray where each polygon starts
+          // @ts-ignore
           startIndices: resolvedRingOffsets,
-
           attributes: {
             getPolygon: { value: flatCoordinateArray, size: 2 },
           },
         },
-        // Skip normalization for binary data
-        _normalize: false,
-        // Counter-clockwise winding order
-        // TODO: the layer should probably check and fix winding order for unknown input
-        _windingOrder: "CCW",
-        getFillColor: [0, 100, 60, 160],
-      });
+      };
+
+      // TODO: these have to also be expanded to vertex positions!
+      assignAccessor(
+        props,
+        "getElevation",
+        this.props.getElevation,
+        recordBatch
+      );
+      assignAccessor(
+        props,
+        "getFillColor",
+        this.props.getFillColor,
+        recordBatch
+      );
+      assignAccessor(
+        props,
+        "getLineColor",
+        this.props.getLineColor,
+        recordBatch
+      );
+
+      const layer = new SolidPolygonLayer(props);
+      // const layer = new SolidPolygonLayer({
+      //   // ...this.props,
+      //   id: `${this.props.id}-geoarrow-point-${i}`,
+      //   data: {
+      //     // Number of geometries
+      //     length: arrowData.length,
+      //     // Offsets into coordinateArray where each polygon starts
+      //     startIndices: resolvedRingOffsets,
+
+      //     attributes: {
+      //       getPolygon: { value: flatCoordinateArray, size: 2 },
+      //     },
+      //   },
+      //   // Counter-clockwise winding order
+      //   // TODO: the layer should probably check and fix winding order for unknown input
+      //   _windingOrder: "CCW",
+      //   getFillColor: [0, 100, 60, 160],
+      // });
       layers.push(layer);
     }
 

@@ -166,6 +166,7 @@ export class GeoArrowLineStringLayer<
         },
       };
 
+      // TODO: these have to also be expanded to vertex positions!
       assignAccessor(props, "getColor", this.props.getColor, recordBatch);
       assignAccessor(props, "getWidth", this.props.getWidth, recordBatch);
 
