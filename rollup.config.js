@@ -4,16 +4,22 @@ import dts from "rollup-plugin-dts";
 
 const input = "./src/index.ts";
 const sourcemap = true;
+const external = [
+  "apache-arrow",
+  "@deck.gl/core/typed",
+  "@deck.gl/layers/typed",
+];
 
 export default [
   {
     input,
     output: {
-      file: "dist/deck.gl-geoarrow.es.mjs",
+      file: "dist/dist.es.mjs",
       format: "es",
       sourcemap,
     },
     plugins: [typescript()],
+    external,
   },
   {
     input,
@@ -22,24 +28,32 @@ export default [
       format: "es",
     },
     plugins: [dts()],
+    external,
   },
   {
     input,
     output: {
-      file: "dist/deck.gl-geoarrow.cjs",
+      file: "dist/dist.cjs",
       format: "cjs",
       sourcemap,
     },
     plugins: [typescript()],
+    external,
   },
   {
     input,
     output: {
-      file: "dist/deck.gl-geoarrow.umd.js",
+      file: "dist/dist.umd.js",
       format: "umd",
-      name: "arrowJsFFI",
+      name: "@geoarrow/deck.gl-geoarrow",
       sourcemap,
+      globals: {
+        "@deck.gl/core/typed": "deck",
+        "@deck.gl/layers/typed": "deck",
+        "apache-arrow": "arrow",
+      },
     },
     plugins: [typescript(), terser()],
+    external,
   },
 ];
