@@ -27,7 +27,7 @@ export type GeoArrowScatterplotLayerProps = _GeoArrowScatterplotLayerProps &
   CompositeLayerProps;
 
 /** Properties added by GeoArrowScatterplotLayer */
-export type _GeoArrowScatterplotLayerProps = {
+type _GeoArrowScatterplotLayerProps = {
   data: arrow.Table;
 
   /**

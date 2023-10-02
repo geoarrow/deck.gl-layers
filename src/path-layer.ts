@@ -27,7 +27,7 @@ export type GeoArrowPathLayerProps = _GeoArrowPathLayerProps &
   CompositeLayerProps;
 
 /** Properties added by GeoArrowPathLayer */
-export type _GeoArrowPathLayerProps = {
+type _GeoArrowPathLayerProps = {
   data: arrow.Table;
 
   /** The units of the line width, one of `'meters'`, `'common'`, and `'pixels'`
@@ -89,12 +89,16 @@ export type _GeoArrowPathLayerProps = {
    * Path color accessor.
    * @default [0, 0, 0, 255]
    */
-  getColor?: string | Accessor<arrow.Table, Color | Color[]>;
+  getColor?:
+    | arrow.Vector<arrow.FixedSizeList<arrow.Uint8>>
+    | Accessor<arrow.Table, Color | Color[]>;
   /**
    * Path width accessor.
    * @default 1
    */
-  getWidth?: string | Accessor<arrow.Table, number | number[]>;
+  getWidth?:
+    | arrow.Vector<arrow.Float>
+    | Accessor<arrow.Table, number | number[]>;
 };
 
 const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
