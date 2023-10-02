@@ -1,21 +1,27 @@
 {
-  "workspaces": [
-    ".",
-    "examples/*"
-  ],
   "name": "@geoarrow/deck.gl-layers",
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0-beta.3",
   "type": "module",
   "description": "",
   "source": "src/index.ts",
-  "main": "dist/index.js",
+  "umd:main": "dist/dist.umd.js",
+  "unpkg": "dist/dist.umd.js",
   "types": "dist/index.d.ts",
+  "browser": "dist/dist.umd.js",
+  "jsdelivr": "dist/dist.umd.js",
+  "module": "dist/dist.es.mjs",
+  "main": "dist/index.js",
   "exports": {
     "types": "./dist/index.d.ts",
-    "import": "./dist/index.js"
+    "import": "./dist/index.js",
+    "require": "./dist/dist.cjs",
+    "default": "./dist/dist.es.mjs"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build:tsc && npm run build:rollup",
+    "build:tsc": "tsc",
+    "build:rollup": "rollup -c rollup.config.js",
+    "clean": "rimraf dist",
     "watch": "tsc --watch",
     "test": "vitest run"
   },
@@ -32,11 +38,15 @@
     "@deck.gl/layers": "^8.9.23",
     "apache-arrow": "^13.0.0"
   },
-  "dependencies": {},
   "devDependencies": {
     "@deck.gl/core": "^8.9.23",
     "@deck.gl/layers": "^8.9.23",
+    "@rollup/plugin-terser": "^0.4.3",
+    "@rollup/plugin-typescript": "^11.1.2",
     "apache-arrow": "^13.0.0",
+    "rimraf": "^5.0.5",
+    "rollup": "^3.26.2",
+    "rollup-plugin-dts": "^5.3.0",
     "typescript": "^5.2.2",
     "vitest": "^0.33.0"
   },
