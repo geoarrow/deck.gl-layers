@@ -14,7 +14,7 @@ import {
   assignAccessor,
   getGeometryVector,
   validateColorVector,
-  validatePointVector,
+  validatePointType,
   validateVectorAccessors,
 } from "./utils.js";
 import { PointVector } from "./types.js";
@@ -163,7 +163,6 @@ export class GeoArrowScatterplotLayer<
 
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
-    console.log(table);
 
     const geometryColumn =
       this.props.getPosition || getGeometryVector(table, "geoarrow.point");
@@ -181,7 +180,7 @@ export class GeoArrowScatterplotLayer<
         }
       }
 
-      validatePointVector(geometryColumn);
+      validatePointType(geometryColumn.type);
       validateVectorAccessors(table, vectorAccessors);
 
       if (this.props.getFillColor instanceof arrow.Vector) {

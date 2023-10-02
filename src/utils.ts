@@ -1,6 +1,6 @@
 import { assert } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
-import { PointVector } from "./types";
+import { Coord, LineString } from "./types";
 
 export type TypedArray =
   | Uint8Array
@@ -263,18 +263,28 @@ export function validateColorVector(vector: arrow.Vector) {
   assert(vector.type.children[0].type.bitWidth === 8);
 }
 
-export function validatePointVector(
-  vector: arrow.Vector
-): vector is PointVector {
+export function validatePointType(type: arrow.DataType): type is Coord {
   // Assert the point vector is a FixedSizeList
   // TODO: support struct
-  assert(arrow.DataType.isFixedSizeList(vector.type));
+  assert(arrow.DataType.isFixedSizeList(type));
 
   // Assert it has 2 or 3 values
-  assert(vector.type.listSize === 2 || vector.type.listSize === 3);
+  assert(type.listSize === 2 || type.listSize === 3);
 
   // Assert the child type is a float
-  assert(arrow.DataType.isFloat(vector.type.children[0]));
+  assert(arrow.DataType.isFloat(type.children[0]));
+
+  return true;
+}
+
+export function validateLineStringType(
+  type: arrow.DataType
+): type is LineString {
+  // Assert the outer vector is a List
+  assert(arrow.DataType.isList(type));
+
+  // Assert its inner vector is a point type
+  validatePointType(type.children[0].type);
 
   return true;
 }
