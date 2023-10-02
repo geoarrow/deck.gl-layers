@@ -1,6 +1,6 @@
 import { assert } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
-import { Coord, LineString } from "./types";
+import { Coord, LineString, Polygon } from "./types";
 
 export type TypedArray =
   | Uint8Array
@@ -283,8 +283,18 @@ export function validateLineStringType(
   // Assert the outer vector is a List
   assert(arrow.DataType.isList(type));
 
-  // Assert its inner vector is a point type
+  // Assert its inner vector is a point layout
   validatePointType(type.children[0].type);
+
+  return true;
+}
+
+export function validatePolygonType(type: arrow.DataType): type is Polygon {
+  // Assert the outer vector is a List
+  assert(arrow.DataType.isList(type));
+
+  // Assert its inner vector is a linestring layout
+  validateLineStringType(type.children[0].type);
 
   return true;
 }

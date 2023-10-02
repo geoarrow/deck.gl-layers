@@ -8,7 +8,8 @@ import {
   LayersList,
   Unit,
 } from "@deck.gl/core/typed";
-import { PathLayer, PathLayerProps } from "@deck.gl/layers/typed";
+import { PathLayer } from "@deck.gl/layers/typed";
+import type { PathLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
 import {
   assignAccessor,
@@ -110,6 +111,7 @@ const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
   // This instructs the layer to skip normalization and use the binary
   // as-is
   _pathType: "open",
+  _validate: true,
 
   getColor: { type: "accessor", value: DEFAULT_COLOR },
   getWidth: { type: "accessor", value: 1 },
@@ -152,7 +154,7 @@ export class GeoArrowPathLayer<
       recordBatchIdx < table.batches.length;
       recordBatchIdx++
     ) {
-      const geometryData = geometryColumn.data[0];
+      const geometryData = geometryColumn.data[recordBatchIdx];
       const geomOffsets = geometryData.valueOffsets;
       const coordsArray = geometryData.children[0].children[0].values;
 

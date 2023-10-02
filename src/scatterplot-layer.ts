@@ -8,7 +8,8 @@ import {
   LayersList,
   Unit,
 } from "@deck.gl/core/typed";
-import { ScatterplotLayer, ScatterplotLayerProps } from "@deck.gl/layers/typed";
+import { ScatterplotLayer } from "@deck.gl/layers/typed";
+import type { ScatterplotLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
 import {
   assignAccessor,
