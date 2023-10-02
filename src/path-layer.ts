@@ -15,12 +15,12 @@ import { assignAccessor, findGeometryColumnIndex } from "./utils.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
-/** All properties supported by GeoArrowLineStringLayer */
-export type GeoArrowLineStringLayerProps = _GeoArrowLineStringLayerProps &
+/** All properties supported by GeoArrowPathLayer */
+export type GeoArrowPathLayerProps = _GeoArrowPathLayerProps &
   CompositeLayerProps;
 
-/** Properties added by GeoArrowLineStringLayer */
-export type _GeoArrowLineStringLayerProps = {
+/** Properties added by GeoArrowPathLayer */
+export type _GeoArrowPathLayerProps = {
   data: arrow.Table;
 
   /**
@@ -86,7 +86,7 @@ export type _GeoArrowLineStringLayerProps = {
   getWidth?: string | Accessor<arrow.Table, number | number[]>;
 };
 
-const defaultProps: DefaultProps<GeoArrowLineStringLayerProps> = {
+const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
   widthUnits: "meters",
   widthScale: { type: "number", min: 0, value: 1 },
   widthMinPixels: { type: "number", min: 0, value: 0 },
@@ -105,11 +105,14 @@ const defaultProps: DefaultProps<GeoArrowLineStringLayerProps> = {
   getWidth: { type: "accessor", value: 1 },
 };
 
-export class GeoArrowLineStringLayer<
+/**
+ * Render lists of coordinate points as extruded polylines with mitering.
+ */
+export class GeoArrowPathLayer<
   ExtraProps extends {} = {}
-> extends CompositeLayer<Required<GeoArrowLineStringLayerProps> & ExtraProps> {
+> extends CompositeLayer<Required<GeoArrowPathLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
-  static layerName = "GeoArrowLineStringLayer";
+  static layerName = "GeoArrowPathLayer";
 
   renderLayers(): Layer<{}> | LayersList | null {
     const { data } = this.props;

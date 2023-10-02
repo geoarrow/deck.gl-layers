@@ -18,12 +18,12 @@ import { assignAccessor, findGeometryColumnIndex } from "./utils.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
-/** All properties supported by GeoArrowPolygonLayer */
-export type GeoArrowPolygonLayerProps = _GeoArrowPolygonLayerProps &
+/** All properties supported by GeoArrowSolidPolygonLayer */
+export type GeoArrowSolidPolygonLayerProps = _GeoArrowSolidPolygonLayerProps &
   CompositeLayerProps;
 
-/** Properties added by GeoArrowPolygonLayer */
-export type _GeoArrowPolygonLayerProps = {
+/** Properties added by GeoArrowSolidPolygonLayer */
+export type _GeoArrowSolidPolygonLayerProps = {
   data: arrow.Table;
 
   /**
@@ -89,7 +89,7 @@ export type _GeoArrowPolygonLayerProps = {
   material?: Material;
 };
 
-const defaultProps: DefaultProps<GeoArrowPolygonLayerProps> = {
+const defaultProps: DefaultProps<GeoArrowSolidPolygonLayerProps> = {
   filled: true,
   extruded: false,
   wireframe: false,
@@ -109,11 +109,11 @@ const defaultProps: DefaultProps<GeoArrowPolygonLayerProps> = {
   material: true,
 };
 
-export class GeoArrowPolygonLayer<
+export class GeoArrowSolidPolygonLayer<
   ExtraProps extends {} = {}
-> extends CompositeLayer<Required<GeoArrowPolygonLayerProps> & ExtraProps> {
+> extends CompositeLayer<Required<GeoArrowSolidPolygonLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
-  static layerName = "GeoArrowPolygonLayer";
+  static layerName = "GeoArrowSolidPolygonLayer";
 
   renderLayers(): Layer<{}> | LayersList | null {
     const { data } = this.props;
