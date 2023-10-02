@@ -15,12 +15,12 @@ import { assignAccessor, findGeometryColumnIndex } from "./utils.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
-/** All properties supported by GeoArrowPointLayer */
-export type GeoArrowPointLayerProps = _GeoArrowPointLayerProps &
+/** All properties supported by GeoArrowScatterplotLayer */
+export type GeoArrowScatterplotLayerProps = _GeoArrowScatterplotLayerProps &
   CompositeLayerProps;
 
-/** Properties added by GeoArrowPointLayer */
-export type _GeoArrowPointLayerProps = {
+/** Properties added by GeoArrowScatterplotLayer */
+export type _GeoArrowScatterplotLayerProps = {
   data: arrow.Table;
 
   /**
@@ -113,7 +113,7 @@ export type _GeoArrowPointLayerProps = {
   getLineWidth?: string | Accessor<arrow.Table, number>;
 };
 
-const defaultProps: DefaultProps<GeoArrowPointLayerProps> = {
+const defaultProps: DefaultProps<GeoArrowScatterplotLayerProps> = {
   radiusUnits: "meters",
   radiusScale: { type: "number", min: 0, value: 1 },
   radiusMinPixels: { type: "number", min: 0, value: 0 }, //  min point radius in pixels
@@ -139,11 +139,11 @@ const defaultProps: DefaultProps<GeoArrowPointLayerProps> = {
   getLineWidth: { type: "accessor", value: 1 },
 };
 
-export class GeoArrowPointLayer<
+export class GeoArrowScatterplotLayer<
   ExtraProps extends {} = {}
-> extends CompositeLayer<Required<GeoArrowPointLayerProps> & ExtraProps> {
+> extends CompositeLayer<Required<GeoArrowScatterplotLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
-  static layerName = "GeoArrowPointLayer";
+  static layerName = "GeoArrowScatterplotLayer";
 
   renderLayers(): Layer<{}> | LayersList | null {
     const { data } = this.props;
@@ -178,7 +178,7 @@ export class GeoArrowPointLayer<
       const coordsArray = geometryData.children[0].values;
 
       const props: ScatterplotLayerProps = {
-        id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
+        id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,
         radiusUnits: this.props.radiusUnits,
         radiusScale: this.props.radiusScale,
         radiusMinPixels: this.props.radiusMinPixels,
