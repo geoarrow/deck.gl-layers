@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
 import DeckGL, { Layer } from "deck.gl/typed";
-import { GeoArrowPointLayer } from "@geoarrow/deck.gl-layers";
+import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 
 const GEOARROW_POINT_DATA =
@@ -54,7 +54,7 @@ function Root() {
 
   table &&
     layers.push(
-      new GeoArrowPointLayer({
+      new GeoArrowScatterplotLayer({
         id: "geoarrow-points",
         data: table,
         getFillColor: [255, 0, 0],

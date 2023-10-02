@@ -1,5 +1,6 @@
 import { assert } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
+import { PointVector } from "./types";
 
 export type TypedArray =
   | Uint8Array
@@ -100,8 +101,8 @@ type AssignAccessorProps = {
   propName: string;
   /** The user-supplied input to the layer. Must either be a scalar value or a reference to a column in the table. */
   propInput: any;
-  /** A single arrow.RecordBatch of the table */
-  recordBatch: arrow.RecordBatch;
+  /** Numeric index in the table */
+  chunkIdx: number;
   /** a map from the geometry index to the coord offsets for that geometry. */
   geomCoordOffsets?: Int32Array | null;
 };
@@ -112,23 +113,16 @@ type AssignAccessorProps = {
  * This is useful as a helper function because a scalar prop is set at the top
  * level while a vectorized prop is set inside data.attributes
  *
- * @param props :
- * @param propName :
- * @param propInput :
- * @param recordBatch :
  */
 export function assignAccessor(args: AssignAccessorProps) {
-  const { props, propName, propInput, recordBatch, geomCoordOffsets } = args;
+  const { props, propName, propInput, chunkIdx, geomCoordOffsets } = args;
 
   if (propInput === undefined) {
     return;
   }
 
-  if (isColumnReference(propInput)) {
-    const column = recordBatch.getChild(propInput);
-    // The underlying data should always be contiguous in a record batch
-    assert(column.data.length === 1);
-    const columnData = column.data[0];
+  if (propInput instanceof arrow.Vector) {
+    const columnData = propInput.data[chunkIdx];
 
     if (arrow.DataType.isFixedSizeList(columnData)) {
       assert(columnData.children.length === 1);
@@ -146,6 +140,10 @@ export function assignAccessor(args: AssignAccessorProps) {
       props.data.attributes[propName] = {
         value: values,
         size: columnData.type.listSize,
+        // Set to `true` to signify that colors are already 0-255, and deck/luma
+        // does not need to rescale
+        // https://github.com/visgl/deck.gl/blob/401d624c0529faaa62125714c376b3ba3b8f379f/docs/api-reference/core/attribute-manager.md?plain=1#L66
+        normalized: true,
       };
     } else if (arrow.DataType.isFloat(columnData)) {
       let values = columnData.values;
@@ -203,4 +201,80 @@ export function expandArrayToCoords<T extends TypedArray>(
   }
 
   return outputArray;
+}
+
+/**
+ * Get a geometry vector with the specified extension type name from the table.
+ */
+export function getGeometryVector(
+  table: arrow.Table,
+  geoarrowTypeName: string
+): arrow.Vector {
+  const geometryColumnIdx = findGeometryColumnIndex(
+    table.schema,
+    geoarrowTypeName
+  );
+
+  if (geometryColumnIdx === null) {
+    throw new Error(`No column found with extension type ${geoarrowTypeName}`);
+  }
+
+  return table.getChildAt(geometryColumnIdx);
+}
+
+/**
+ * Provide validation for accessors provided
+ *
+ * - Assert that all vectors have the same number of chunks as the main table
+ * - Assert that all chunks in each vector have the same number of rows as the
+ *   relevant batch in the main table.
+ *
+ */
+export function validateVectorAccessors(
+  table: arrow.Table,
+  vectorAccessors: arrow.Vector[]
+) {
+  // Check the same number of chunks as the table's batches
+  for (const vectorAccessor of vectorAccessors) {
+    assert(table.batches.length === vectorAccessor.data.length);
+  }
+
+  // Check that each table batch/vector data has the same number of rows
+  for (const vectorAccessor of vectorAccessors) {
+    for (let i = 0; i < table.batches.length; i++) {
+      assert(table.batches[i].numRows === vectorAccessor.data[i].length);
+    }
+  }
+}
+
+export function validateColorVector(vector: arrow.Vector) {
+  // Assert the color vector is a FixedSizeList
+  assert(arrow.DataType.isFixedSizeList(vector.type));
+
+  // Assert it has 3 or 4 values
+  assert(vector.type.listSize === 3 || vector.type.listSize === 4);
+
+  // Assert the child type is an integer
+  assert(arrow.DataType.isInt(vector.type.children[0]));
+
+  // Assert the child type is a Uint8
+  // @ts-ignore
+  // Property 'type' does not exist on type 'Int_<Ints>'. Did you mean 'TType'?
+  assert(vector.type.children[0].type.bitWidth === 8);
+}
+
+export function validatePointVector(
+  vector: arrow.Vector
+): vector is PointVector {
+  // Assert the point vector is a FixedSizeList
+  // TODO: support struct
+  assert(arrow.DataType.isFixedSizeList(vector.type));
+
+  // Assert it has 2 or 3 values
+  assert(vector.type.listSize === 2 || vector.type.listSize === 3);
+
+  // Assert the child type is a float
+  assert(arrow.DataType.isFloat(vector.type.children[0]));
+
+  return true;
 }

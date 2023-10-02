@@ -29,14 +29,14 @@
   "license": "MIT",
   "peerDependencies": {
     "@deck.gl/core": "^8.9.23",
-    "@deck.gl/layers": "^8.9.23"
-  },
-  "dependencies": {
+    "@deck.gl/layers": "^8.9.23",
     "apache-arrow": "^13.0.0"
   },
+  "dependencies": {},
   "devDependencies": {
     "@deck.gl/core": "^8.9.23",
     "@deck.gl/layers": "^8.9.23",
+    "apache-arrow": "^13.0.0",
     "typescript": "^5.2.2",
     "vitest": "^0.33.0"
   },

@@ -7,11 +7,17 @@ import {
   Layer,
   LayersList,
   Unit,
-  assert,
 } from "@deck.gl/core/typed";
 import { ScatterplotLayer, ScatterplotLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
-import { assignAccessor, findGeometryColumnIndex } from "./utils.js";
+import {
+  assignAccessor,
+  getGeometryVector,
+  validateColorVector,
+  validatePointVector,
+  validateVectorAccessors,
+} from "./utils.js";
+import { PointVector } from "./types.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
@@ -22,12 +28,6 @@ export type GeoArrowScatterplotLayerProps = _GeoArrowScatterplotLayerProps &
 /** Properties added by GeoArrowScatterplotLayer */
 export type _GeoArrowScatterplotLayerProps = {
   data: arrow.Table;
-
-  /**
-   * The name of the geometry column in the Arrow table. If not passed, expects
-   * the geometry column to have the extension type `geoarrow.point`.
-   */
-  geometryColumnName?: string;
 
   /**
    * The units of the radius, one of `'meters'`, `'common'`, and `'pixels'`.
@@ -92,25 +92,40 @@ export type _GeoArrowScatterplotLayerProps = {
    */
   antialiasing?: boolean;
   /**
+   * If `true`, validate the arrays provided (e.g. chunk lengths)
+   * @default true
+   */
+  _validate?: boolean;
+  /**
+   * Center position accessor.
+   * If not provided, will be inferred by finding a column with extension type
+   * `"geoarrow.point"`
+   */
+  getPosition?: PointVector;
+  /**
    * Radius accessor.
    * @default 1
    */
-  getRadius?: string | Accessor<arrow.Table, number>;
+  getRadius?: arrow.Vector<arrow.Float> | Accessor<arrow.Table, number>;
   /**
    * Fill color accessor.
    * @default [0, 0, 0, 255]
    */
-  getFillColor?: string | Accessor<arrow.Table, Color>;
+  getFillColor?:
+    | arrow.Vector<arrow.FixedSizeList<arrow.Uint8>>
+    | Accessor<arrow.Table, Color>;
   /**
    * Stroke color accessor.
    * @default [0, 0, 0, 255]
    */
-  getLineColor?: string | Accessor<arrow.Table, Color>;
+  getLineColor?:
+    | arrow.Vector<arrow.FixedSizeList<arrow.Uint8>>
+    | Accessor<arrow.Table, Color>;
   /**
    * Stroke width accessor.
    * @default 1
    */
-  getLineWidth?: string | Accessor<arrow.Table, number>;
+  getLineWidth?: arrow.Vector<arrow.Float> | Accessor<arrow.Table, number>;
 };
 
 const defaultProps: DefaultProps<GeoArrowScatterplotLayerProps> = {
@@ -132,6 +147,7 @@ const defaultProps: DefaultProps<GeoArrowScatterplotLayerProps> = {
   filled: true,
   billboard: false,
   antialiasing: true,
+  _validate: true,
 
   getRadius: { type: "accessor", value: 1 },
   getFillColor: { type: "accessor", value: DEFAULT_COLOR },
@@ -146,35 +162,43 @@ export class GeoArrowScatterplotLayer<
   static layerName = "GeoArrowScatterplotLayer";
 
   renderLayers(): Layer<{}> | LayersList | null {
-    const { data } = this.props;
+    const { data: table } = this.props;
+    console.log(table);
 
-    // TODO: add validation before the loop
+    const geometryColumn =
+      this.props.getPosition || getGeometryVector(table, "geoarrow.point");
 
-    const geometryColumnIdx = findGeometryColumnIndex(
-      data.schema,
-      "geoarrow.point",
-      this.props.geometryColumnName
-    );
-    if (geometryColumnIdx === null) {
-      console.warn("No geoarrow.point column found; pass geometryColumnName.");
-      return null;
+    if (this.props._validate) {
+      const vectorAccessors: arrow.Vector[] = [geometryColumn];
+      for (const accessor of [
+        this.props.getRadius,
+        this.props.getFillColor,
+        this.props.getLineColor,
+        this.props.getLineWidth,
+      ]) {
+        if (accessor instanceof arrow.Vector) {
+          vectorAccessors.push(accessor);
+        }
+      }
+
+      validatePointVector(geometryColumn);
+      validateVectorAccessors(table, vectorAccessors);
+
+      if (this.props.getFillColor instanceof arrow.Vector) {
+        validateColorVector(this.props.getFillColor);
+      }
+      if (this.props.getLineColor instanceof arrow.Vector) {
+        validateColorVector(this.props.getLineColor);
+      }
     }
 
     const layers: ScatterplotLayer[] = [];
     for (
       let recordBatchIdx = 0;
-      recordBatchIdx < data.batches.length;
+      recordBatchIdx < table.batches.length;
       recordBatchIdx++
     ) {
-      const recordBatch = data.batches[recordBatchIdx];
-
-      const geometryColumn = recordBatch.getChildAt(geometryColumnIdx);
-      assert(geometryColumn.data.length === 1);
-
-      const geometryData = geometryColumn.data[0];
-      assert(arrow.DataType.isFixedSizeList(geometryData));
-      assert(geometryData.children.length === 1);
-
+      const geometryData = geometryColumn.data[recordBatchIdx];
       const coordsArray = geometryData.children[0].values;
 
       const props: ScatterplotLayerProps = {
@@ -192,7 +216,7 @@ export class GeoArrowScatterplotLayer<
         billboard: this.props.billboard,
         antialiasing: this.props.antialiasing,
         data: {
-          length: recordBatch.numRows,
+          length: geometryData.length,
           attributes: {
             getPosition: { value: coordsArray, size: 2 },
           },
@@ -203,25 +227,25 @@ export class GeoArrowScatterplotLayer<
         props,
         propName: "getRadius",
         propInput: this.props.getRadius,
-        recordBatch,
+        chunkIdx: recordBatchIdx,
       });
       assignAccessor({
         props,
         propName: "getFillColor",
         propInput: this.props.getFillColor,
-        recordBatch,
+        chunkIdx: recordBatchIdx,
       });
       assignAccessor({
         props,
         propName: "getLineColor",
         propInput: this.props.getLineColor,
-        recordBatch,
+        chunkIdx: recordBatchIdx,
       });
       assignAccessor({
         props,
         propName: "getLineWidth",
         propInput: this.props.getLineWidth,
-        recordBatch,
+        chunkIdx: recordBatchIdx,
       });
 
       const layer = new ScatterplotLayer(props);
