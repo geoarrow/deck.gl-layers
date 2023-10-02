@@ -15,7 +15,8 @@
     "import": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build:tsc && npm run build:rollup",
+    "build:tsc": "tsc",
     "build:rollup": "rollup -c rollup.config.js",
     "watch": "tsc --watch",
     "test": "vitest run"
