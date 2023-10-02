@@ -27,7 +27,7 @@ export type GeoArrowSolidPolygonLayerProps = _GeoArrowSolidPolygonLayerProps &
   CompositeLayerProps;
 
 /** Properties added by GeoArrowSolidPolygonLayer */
-export type _GeoArrowSolidPolygonLayerProps = {
+type _GeoArrowSolidPolygonLayerProps = {
   data: arrow.Table;
 
   /** Whether to fill the polygons
