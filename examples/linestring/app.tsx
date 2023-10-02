@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
 import DeckGL, { Layer } from "deck.gl/typed";
-import { GeoArrowLineStringLayer } from "@geoarrow/deck.gl-layers";
+import { GeoArrowPathLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 
 const GEOARROW_POINT_DATA =
@@ -54,7 +54,7 @@ function Root() {
 
   table &&
     layers.push(
-      new GeoArrowLineStringLayer({
+      new GeoArrowPathLayer({
         id: "geoarrow-linestring",
         data: table,
         getColor: [255, 0, 0],

@@ -7,11 +7,18 @@ import {
   Layer,
   LayersList,
   Unit,
-  assert,
 } from "@deck.gl/core/typed";
-import { PathLayer, PathLayerProps } from "@deck.gl/layers/typed";
+import { PathLayer } from "@deck.gl/layers/typed";
+import type { PathLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
-import { assignAccessor, findGeometryColumnIndex } from "./utils.js";
+import {
+  assignAccessor,
+  getGeometryVector,
+  validateColorVector,
+  validateLineStringType,
+  validateVectorAccessors,
+} from "./utils.js";
+import { LineStringVector } from "./types.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
@@ -23,11 +30,6 @@ export type GeoArrowPathLayerProps = _GeoArrowPathLayerProps &
 export type _GeoArrowPathLayerProps = {
   data: arrow.Table;
 
-  /**
-   * The name of the geometry column in the Arrow table. If not passed, expects
-   * the geometry column to have the extension type `geoarrow.point`.
-   */
-  geometryColumnName?: string;
   /** The units of the line width, one of `'meters'`, `'common'`, and `'pixels'`
    * @default 'meters'
    */
@@ -75,6 +77,15 @@ export type _GeoArrowPathLayerProps = {
    */
   _pathType?: null | "loop" | "open";
   /**
+   * If `true`, validate the arrays provided (e.g. chunk lengths)
+   * @default true
+   */
+  _validate?: boolean;
+  /**
+   * Path geometry accessor.
+   */
+  getPath?: LineStringVector;
+  /**
    * Path color accessor.
    * @default [0, 0, 0, 255]
    */
@@ -100,6 +111,7 @@ const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
   // This instructs the layer to skip normalization and use the binary
   // as-is
   _pathType: "open",
+  _validate: true,
 
   getColor: { type: "accessor", value: DEFAULT_COLOR },
   getWidth: { type: "accessor", value: 1 },
@@ -115,40 +127,35 @@ export class GeoArrowPathLayer<
   static layerName = "GeoArrowPathLayer";
 
   renderLayers(): Layer<{}> | LayersList | null {
-    const { data } = this.props;
+    const { data: table } = this.props;
 
-    // TODO: add validation before the loop
+    const geometryColumn =
+      this.props.getPath || getGeometryVector(table, "geoarrow.linestring");
 
-    const geometryColumnIdx = findGeometryColumnIndex(
-      data.schema,
-      "geoarrow.linestring",
-      this.props.geometryColumnName
-    );
-    if (geometryColumnIdx === null) {
-      console.warn(
-        "No geoarrow.linestring column found; pass geometryColumnName."
-      );
-      return null;
+    if (this.props._validate) {
+      const vectorAccessors: arrow.Vector[] = [geometryColumn];
+      for (const accessor of [this.props.getColor, this.props.getWidth]) {
+        if (accessor instanceof arrow.Vector) {
+          vectorAccessors.push(accessor);
+        }
+      }
+
+      validateLineStringType(geometryColumn.type);
+      validateVectorAccessors(table, vectorAccessors);
+
+      if (this.props.getColor instanceof arrow.Vector) {
+        validateColorVector(this.props.getColor);
+      }
     }
 
     const layers: PathLayer[] = [];
     for (
       let recordBatchIdx = 0;
-      recordBatchIdx < data.batches.length;
+      recordBatchIdx < table.batches.length;
       recordBatchIdx++
     ) {
-      const recordBatch = data.batches[recordBatchIdx];
-
-      const geometryColumn = recordBatch.getChildAt(geometryColumnIdx);
-      assert(geometryColumn.data.length === 1);
-
-      const geometryData = geometryColumn.data[0];
-      assert(arrow.DataType.isList(geometryData));
-
+      const geometryData = geometryColumn.data[recordBatchIdx];
       const geomOffsets = geometryData.valueOffsets;
-      assert(geometryData.children.length === 1);
-      assert(arrow.DataType.isFixedSizeList(geometryData.children[0]));
-
       const coordsArray = geometryData.children[0].children[0].values;
 
       const props: PathLayerProps = {
@@ -163,7 +170,7 @@ export class GeoArrowPathLayer<
         billboard: this.props.billboard,
         _pathType: this.props._pathType,
         data: {
-          length: recordBatch.numRows,
+          length: geometryData.length,
           // @ts-ignore
           startIndices: geomOffsets,
           attributes: {
@@ -176,14 +183,14 @@ export class GeoArrowPathLayer<
         props,
         propName: "getColor",
         propInput: this.props.getColor,
-        recordBatch,
+        chunkIdx: recordBatchIdx,
         geomCoordOffsets: geomOffsets,
       });
       assignAccessor({
         props,
         propName: "getWidth",
         propInput: this.props.getWidth,
-        recordBatch,
+        chunkIdx: recordBatchIdx,
         geomCoordOffsets: geomOffsets,
       });
 

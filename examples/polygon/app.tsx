@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
 import DeckGL, { Layer } from "deck.gl/typed";
-import { GeoArrowPolygonLayer } from "@geoarrow/deck.gl-layers";
+import { GeoArrowSolidPolygonLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 
 const GEOARROW_POLYGON_DATA = "http://localhost:8080/utah.feather";
@@ -53,7 +53,7 @@ function Root() {
 
   table &&
     layers.push(
-      new GeoArrowPolygonLayer({
+      new GeoArrowSolidPolygonLayer({
         id: "geoarrow-polygons",
         data: table,
         getFillColor: [0, 100, 60, 160],
