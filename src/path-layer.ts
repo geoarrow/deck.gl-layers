@@ -133,7 +133,7 @@ export class GeoArrowPathLayer<
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
-    const geometryColumn =
+    const geometryColumn: LineStringVector =
       this.props.getPath || getGeometryVector(table, "geoarrow.linestring");
 
     if (this.props._validate) {
@@ -160,7 +160,8 @@ export class GeoArrowPathLayer<
     ) {
       const geometryData = geometryColumn.data[recordBatchIdx];
       const geomOffsets = geometryData.valueOffsets;
-      const coordsArray = geometryData.children[0].children[0].values;
+      const nDim = geometryData.type.children[0].type.listSize;
+      const flatCoordinateArray = geometryData.children[0].children[0].values;
 
       const props: PathLayerProps = {
         id: `${this.props.id}-geoarrow-linestring-${recordBatchIdx}`,
@@ -178,7 +179,7 @@ export class GeoArrowPathLayer<
           // @ts-ignore
           startIndices: geomOffsets,
           attributes: {
-            getPath: { value: coordsArray, size: 2 },
+            getPath: { value: flatCoordinateArray, size: nDim },
           },
         },
       };
