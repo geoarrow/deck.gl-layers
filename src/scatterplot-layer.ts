@@ -165,7 +165,7 @@ export class GeoArrowScatterplotLayer<
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
-    const geometryColumn =
+    const geometryColumn: PointVector =
       this.props.getPosition || getGeometryVector(table, "geoarrow.point");
 
     if (this.props._validate) {
@@ -199,7 +199,7 @@ export class GeoArrowScatterplotLayer<
       recordBatchIdx++
     ) {
       const geometryData = geometryColumn.data[recordBatchIdx];
-      const coordsArray = geometryData.children[0].values;
+      const flatCoordinateArray = geometryData.children[0].values;
 
       const props: ScatterplotLayerProps = {
         id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,
@@ -218,7 +218,10 @@ export class GeoArrowScatterplotLayer<
         data: {
           length: geometryData.length,
           attributes: {
-            getPosition: { value: coordsArray, size: 2 },
+            getPosition: {
+              value: flatCoordinateArray,
+              size: geometryData.type.listSize,
+            },
           },
         },
       };

@@ -132,7 +132,7 @@ export class GeoArrowSolidPolygonLayer<
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
-    const geometryColumn =
+    const geometryColumn: PolygonVector =
       this.props.getPolygon || getGeometryVector(table, "geoarrow.polygon");
 
     if (this.props._validate) {
@@ -165,6 +165,7 @@ export class GeoArrowSolidPolygonLayer<
       recordBatchIdx++
     ) {
       const geometryData = geometryColumn.data[recordBatchIdx];
+      const nDim = geometryData.type.children[0].type.children[0].type.listSize;
       const geomOffsets = geometryData.valueOffsets;
       const ringOffsets = geometryData.children[0].valueOffsets;
       const flatCoordinateArray =
@@ -194,7 +195,7 @@ export class GeoArrowSolidPolygonLayer<
           // @ts-ignore
           startIndices: resolvedRingOffsets,
           attributes: {
-            getPolygon: { value: flatCoordinateArray, size: 2 },
+            getPolygon: { value: flatCoordinateArray, size: nDim },
           },
         },
       };
