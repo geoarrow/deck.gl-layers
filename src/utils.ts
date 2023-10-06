@@ -1,6 +1,6 @@
 import { assert } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
-import { Coord, LineString, Polygon } from "./types";
+import { Coord, LineString, MultiPoint, Polygon } from "./types";
 
 export type TypedArray =
   | Uint8Array
@@ -263,6 +263,19 @@ export function validateColorVector(vector: arrow.Vector) {
   assert(vector.type.children[0].type.bitWidth === 8);
 }
 
+// Note: this is the same as validateLineStringType
+export function validateMultiPointType(
+  type: arrow.DataType
+): type is MultiPoint {
+  // Assert the outer vector is a List
+  assert(arrow.DataType.isList(type));
+
+  // Assert its inner vector is a point layout
+  validatePointType(type.children[0].type);
+
+  return true;
+}
+
 export function validatePointType(type: arrow.DataType): type is Coord {
   // Assert the point vector is a FixedSizeList
   // TODO: support struct
@@ -297,4 +310,13 @@ export function validatePolygonType(type: arrow.DataType): type is Polygon {
   validateLineStringType(type.children[0].type);
 
   return true;
+}
+
+export function getListNestingLevels(data: arrow.Data): number {
+  let nestingLevels = 0;
+  if (arrow.DataType.isList(data.type)) {
+    nestingLevels += 1;
+    data = data.children[0];
+  }
+  return nestingLevels;
 }

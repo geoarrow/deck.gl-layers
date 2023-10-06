@@ -18,7 +18,7 @@ import {
   validatePointType,
   validateVectorAccessors,
 } from "./utils.js";
-import { PointVector } from "./types.js";
+import { MultiPointVector, PointVector } from "./types.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
@@ -100,9 +100,9 @@ type _GeoArrowScatterplotLayerProps = {
   /**
    * Center position accessor.
    * If not provided, will be inferred by finding a column with extension type
-   * `"geoarrow.point"`
+   * `"geoarrow.point"` or `"geoarrow.multipoint"`.
    */
-  getPosition?: PointVector;
+  getPosition?: PointVector | MultiPointVector;
   /**
    * Radius accessor.
    * @default 1
@@ -156,6 +156,35 @@ const defaultProps: DefaultProps<GeoArrowScatterplotLayerProps> = {
   getLineWidth: { type: "accessor", value: 1 },
 };
 
+function validateProps(
+  geometryColumn: PointVector | MultiPointVector,
+  props: Required<GeoArrowScatterplotLayerProps>
+) {
+  const { data: table } = props;
+
+  const vectorAccessors: arrow.Vector[] = [geometryColumn];
+  for (const accessor of [
+    props.getRadius,
+    props.getFillColor,
+    props.getLineColor,
+    props.getLineWidth,
+  ]) {
+    if (accessor instanceof arrow.Vector) {
+      vectorAccessors.push(accessor);
+    }
+  }
+
+  validatePointType(geometryColumn.type);
+  validateVectorAccessors(table, vectorAccessors);
+
+  if (props.getFillColor instanceof arrow.Vector) {
+    validateColorVector(props.getFillColor);
+  }
+  if (props.getLineColor instanceof arrow.Vector) {
+    validateColorVector(props.getLineColor);
+  }
+}
+
 export class GeoArrowScatterplotLayer<
   ExtraProps extends {} = {}
 > extends CompositeLayer<Required<GeoArrowScatterplotLayerProps> & ExtraProps> {
@@ -165,31 +194,14 @@ export class GeoArrowScatterplotLayer<
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
-    const geometryColumn: PointVector =
-      this.props.getPosition || getGeometryVector(table, "geoarrow.point");
+    const geometryColumn: PointVector | MultiPointVector =
+      this.props.getPosition ||
+      // TODO: combine into one call
+      getGeometryVector(table, "geoarrow.point") ||
+      getGeometryVector(table, "geoarrow.multipoint");
 
     if (this.props._validate) {
-      const vectorAccessors: arrow.Vector[] = [geometryColumn];
-      for (const accessor of [
-        this.props.getRadius,
-        this.props.getFillColor,
-        this.props.getLineColor,
-        this.props.getLineWidth,
-      ]) {
-        if (accessor instanceof arrow.Vector) {
-          vectorAccessors.push(accessor);
-        }
-      }
-
-      validatePointType(geometryColumn.type);
-      validateVectorAccessors(table, vectorAccessors);
-
-      if (this.props.getFillColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getFillColor);
-      }
-      if (this.props.getLineColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getLineColor);
-      }
+      validateProps(geometryColumn, this.props);
     }
 
     const layers: ScatterplotLayer[] = [];
@@ -199,7 +211,10 @@ export class GeoArrowScatterplotLayer<
       recordBatchIdx++
     ) {
       const geometryData = geometryColumn.data[recordBatchIdx];
-      const flatCoordinateArray = geometryData.children[0].values;
+
+      const flatCoordinateArray = getMaybeMultiPointCoordinateArray(geometryData);
+      const coordOffsets = getMaybeMultiPointOffsets(geometryData)
+      // const flatCoordinateArray = geometryData.children[0].values;
 
       const props: ScatterplotLayerProps = {
         id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,
