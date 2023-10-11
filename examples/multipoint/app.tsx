@@ -65,7 +65,7 @@ function Root() {
         getFillColor: [255, 0, 0],
         // getFillColor: table.getChild("colors")!,
         // getLineColor: table.getChild("colors")!,
-        radiusMinPixels: 10,
+        radiusMinPixels: 4,
         getPointRadius: 10,
         pointRadiusMinPixels: 0.8,
       })
@@ -76,6 +76,7 @@ function Root() {
       initialViewState={INITIAL_VIEW_STATE}
       controller={true}
       layers={layers}
+      // @ts-expect-error
       ContextProvider={MapContext.Provider}
     >
       <StaticMap mapStyle={MAP_STYLE} />

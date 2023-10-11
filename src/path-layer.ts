@@ -14,11 +14,17 @@ import * as arrow from "apache-arrow";
 import {
   assignAccessor,
   getGeometryVector,
+  getLineStringChild,
+  getMultiLineStringChild,
+  getMultiLineStringResolvedOffsets,
+  getPointChild,
+  isLineStringVector,
+  isMultiLineStringVector,
   validateColorVector,
   validateLineStringType,
   validateVectorAccessors,
 } from "./utils.js";
-import { LineStringVector } from "./types.js";
+import { LineStringVector, MultiLineStringVector } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
@@ -85,7 +91,7 @@ type _GeoArrowPathLayerProps = {
   /**
    * Path geometry accessor.
    */
-  getPath?: LineStringVector;
+  getPath?: LineStringVector | MultiLineStringVector;
   /**
    * Path color accessor.
    * @default [0, 0, 0, 255]
@@ -134,9 +140,41 @@ export class GeoArrowPathLayer<
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
-    const geometryColumn: LineStringVector =
-      this.props.getPath || getGeometryVector(table, EXTENSION_NAME.LINESTRING);
+    const lineStringVector = getGeometryVector(
+      table,
+      EXTENSION_NAME.LINESTRING
+    );
+    if (lineStringVector !== null) {
+      return this._renderLayersLineString(lineStringVector);
+    }
 
+    const multiLineStringVector = getGeometryVector(
+      table,
+      EXTENSION_NAME.MULTILINESTRING
+    );
+    if (multiLineStringVector !== null) {
+      return this._renderLayersMultiLineString(multiLineStringVector);
+    }
+
+    const geometryColumn = this.props.getPath;
+    if (isLineStringVector(geometryColumn)) {
+      return this._renderLayersLineString(geometryColumn);
+    }
+
+    if (isMultiLineStringVector(geometryColumn)) {
+      return this._renderLayersMultiLineString(geometryColumn);
+    }
+
+    throw new Error("geometryColumn not point or multipoint");
+  }
+
+  _renderLayersLineString(
+    geometryColumn: LineStringVector
+  ): Layer<{}> | LayersList | null {
+    const { data: table } = this.props;
+
+    // TODO: validate that if nested, accessor props have the same nesting
+    // structure as the main geometry column.
     if (this.props._validate) {
       const vectorAccessors: arrow.Vector[] = [geometryColumn];
       for (const accessor of [this.props.getColor, this.props.getWidth]) {
@@ -159,10 +197,12 @@ export class GeoArrowPathLayer<
       recordBatchIdx < table.batches.length;
       recordBatchIdx++
     ) {
-      const geometryData = geometryColumn.data[recordBatchIdx];
-      const geomOffsets = geometryData.valueOffsets;
-      const nDim = geometryData.type.children[0].type.listSize;
-      const flatCoordinateArray = geometryData.children[0].children[0].values;
+      const lineStringData = geometryColumn.data[recordBatchIdx];
+      const geomOffsets = lineStringData.valueOffsets;
+      const pointData = getLineStringChild(lineStringData);
+      const nDim = pointData.type.listSize;
+      const coordData = getPointChild(pointData);
+      const flatCoordinateArray = coordData.values;
 
       const props: PathLayerProps = {
         id: `${this.props.id}-geoarrow-path-${recordBatchIdx}`,
@@ -176,8 +216,8 @@ export class GeoArrowPathLayer<
         billboard: this.props.billboard,
         _pathType: this.props._pathType,
         data: {
-          length: geometryData.length,
-          // @ts-ignore
+          length: lineStringData.length,
+          // @ts-expect-error
           startIndices: geomOffsets,
           attributes: {
             getPath: { value: flatCoordinateArray, size: nDim },
@@ -198,6 +238,91 @@ export class GeoArrowPathLayer<
         propInput: this.props.getWidth,
         chunkIdx: recordBatchIdx,
         geomCoordOffsets: geomOffsets,
+      });
+
+      const layer = new PathLayer(props);
+      layers.push(layer);
+    }
+
+    return layers;
+  }
+
+  _renderLayersMultiLineString(
+    geometryColumn: MultiLineStringVector
+  ): Layer<{}> | LayersList | null {
+    const { data: table } = this.props;
+
+    // TODO: validate that if nested, accessor props have the same nesting
+    // structure as the main geometry column.
+    if (this.props._validate) {
+      const vectorAccessors: arrow.Vector[] = [geometryColumn];
+      for (const accessor of [this.props.getColor, this.props.getWidth]) {
+        if (accessor instanceof arrow.Vector) {
+          vectorAccessors.push(accessor);
+        }
+      }
+
+      validateLineStringType(geometryColumn.type);
+      validateVectorAccessors(table, vectorAccessors);
+
+      if (this.props.getColor instanceof arrow.Vector) {
+        validateColorVector(this.props.getColor);
+      }
+    }
+
+    const layers: PathLayer[] = [];
+    for (
+      let recordBatchIdx = 0;
+      recordBatchIdx < table.batches.length;
+      recordBatchIdx++
+    ) {
+      const multiLineStringData = geometryColumn.data[recordBatchIdx];
+      const lineStringData = getMultiLineStringChild(multiLineStringData);
+      const pointData = getLineStringChild(lineStringData);
+      const coordData = getPointChild(pointData);
+
+      const ringOffsets = lineStringData.valueOffsets;
+
+      const nDim = pointData.type.listSize;
+      const flatCoordinateArray = coordData.values;
+      const resolvedRingOffsets =
+        getMultiLineStringResolvedOffsets(multiLineStringData);
+
+      const props: PathLayerProps = {
+        id: `${this.props.id}-geoarrow-path-${recordBatchIdx}`,
+        widthUnits: this.props.widthUnits,
+        widthScale: this.props.widthScale,
+        widthMinPixels: this.props.widthMinPixels,
+        widthMaxPixels: this.props.widthMaxPixels,
+        jointRounded: this.props.jointRounded,
+        capRounded: this.props.capRounded,
+        miterLimit: this.props.miterLimit,
+        billboard: this.props.billboard,
+        _pathType: this.props._pathType,
+        data: {
+          // Note: this needs to be the length one level down.
+          length: lineStringData.length,
+          // @ts-ignore
+          startIndices: ringOffsets,
+          attributes: {
+            getPath: { value: flatCoordinateArray, size: nDim },
+          },
+        },
+      };
+
+      assignAccessor({
+        props,
+        propName: "getColor",
+        propInput: this.props.getColor,
+        chunkIdx: recordBatchIdx,
+        geomCoordOffsets: resolvedRingOffsets,
+      });
+      assignAccessor({
+        props,
+        propName: "getWidth",
+        propInput: this.props.getWidth,
+        chunkIdx: recordBatchIdx,
+        geomCoordOffsets: resolvedRingOffsets,
       });
 
       const layer = new PathLayer(props);

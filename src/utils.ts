@@ -4,12 +4,19 @@ import {
   Coord,
   LineString,
   LineStringData,
+  LineStringVector,
+  MultiLineStringData,
+  MultiLineStringVector,
   MultiPoint,
   MultiPointData,
   MultiPointVector,
+  MultiPolygonData,
+  MultiPolygonVector,
   PointData,
   PointVector,
   Polygon,
+  PolygonData,
+  PolygonVector,
 } from "./types";
 
 export type TypedArray =
@@ -293,6 +300,36 @@ export function isPointVector(vector: arrow.Vector): vector is PointVector {
   return true;
 }
 
+export function isLineStringVector(
+  vector: arrow.Vector
+): vector is LineStringVector {
+  // Check the outer vector is a List
+  if (!arrow.DataType.isList(vector.type)) {
+    return false;
+  }
+
+  // Check the child is a point vector
+  if (!isPointVector(vector.getChildAt(0))) {
+    return false;
+  }
+
+  return true;
+}
+
+export function isPolygonVector(vector: arrow.Vector): vector is PolygonVector {
+  // Check the outer vector is a List
+  if (!arrow.DataType.isList(vector.type)) {
+    return false;
+  }
+
+  // Check the child is a linestring vector
+  if (!isLineStringVector(vector.getChildAt(0))) {
+    return false;
+  }
+
+  return true;
+}
+
 export function isMultiPointVector(
   vector: arrow.Vector
 ): vector is MultiPointVector {
@@ -303,6 +340,38 @@ export function isMultiPointVector(
 
   // Check the child is a point vector
   if (!isPointVector(vector.getChildAt(0))) {
+    return false;
+  }
+
+  return true;
+}
+
+export function isMultiLineStringVector(
+  vector: arrow.Vector
+): vector is MultiLineStringVector {
+  // Check the outer vector is a List
+  if (!arrow.DataType.isList(vector.type)) {
+    return false;
+  }
+
+  // Check the child is a linestring vector
+  if (!isLineStringVector(vector.getChildAt(0))) {
+    return false;
+  }
+
+  return true;
+}
+
+export function isMultiPolygonVector(
+  vector: arrow.Vector
+): vector is MultiPolygonVector {
+  // Check the outer vector is a List
+  if (!arrow.DataType.isList(vector.type)) {
+    return false;
+  }
+
+  // Check the child is a polygon vector
+  if (!isPolygonVector(vector.getChildAt(0))) {
     return false;
   }
 
@@ -372,12 +441,46 @@ export function getPointChild(data: PointData): arrow.Data<arrow.Float> {
   return data.children[0];
 }
 
+export function getLineStringChild(data: LineStringData): PointData {
+  // @ts-expect-error
+  return data.children[0];
+}
+
+export function getPolygonChild(data: PolygonData): LineStringData {
+  // @ts-expect-error
+  return data.children[0];
+}
+
 export function getMultiPointChild(data: MultiPointData): PointData {
   // @ts-expect-error
   return data.children[0];
 }
 
-export function getLineStringChild(data: LineStringData): PointData {
+export function getMultiLineStringChild(
+  data: MultiLineStringData
+): LineStringData {
   // @ts-expect-error
   return data.children[0];
+}
+
+export function getMultiPolygonChild(data: MultiPolygonData): PolygonData {
+  // @ts-expect-error
+  return data.children[0];
+}
+
+export function getMultiLineStringResolvedOffsets(
+  data: MultiLineStringData
+): Int32Array {
+  const geomOffsets = data.valueOffsets;
+  const lineStringData = getMultiLineStringChild(data);
+  const ringOffsets = lineStringData.valueOffsets;
+
+  const resolvedRingOffsets = new Int32Array(geomOffsets.length);
+  for (let i = 0; i < resolvedRingOffsets.length; ++i) {
+    // Perform the lookup into the ringIndices array using the geomOffsets
+    // array
+    resolvedRingOffsets[i] = ringOffsets[geomOffsets[i]];
+  }
+
+  return resolvedRingOffsets;
 }
