@@ -20,3 +20,10 @@ export type PolygonVector = arrow.Vector<Polygon>;
 export type MultiPointVector = arrow.Vector<MultiPoint>;
 export type MultiLineStringVector = arrow.Vector<MultiLineString>;
 export type MultiPolygonVector = arrow.Vector<MultiPolygon>;
+
+export type PointData = arrow.Data<Point>;
+export type LineStringData = arrow.Data<LineString>;
+export type PolygonData = arrow.Data<Polygon>;
+export type MultiPointData = arrow.Data<MultiPoint>;
+export type MultiLineStringData = arrow.Data<MultiLineString>;
+export type MultiPolygonData = arrow.Data<MultiPolygon>;

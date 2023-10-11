@@ -19,6 +19,7 @@ import {
   validateVectorAccessors,
 } from "./utils.js";
 import { LineStringVector } from "./types.js";
+import { EXTENSION_NAME } from "./constants.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
@@ -134,7 +135,7 @@ export class GeoArrowPathLayer<
     const { data: table } = this.props;
 
     const geometryColumn: LineStringVector =
-      this.props.getPath || getGeometryVector(table, "geoarrow.linestring");
+      this.props.getPath || getGeometryVector(table, EXTENSION_NAME.LINESTRING);
 
     if (this.props._validate) {
       const vectorAccessors: arrow.Vector[] = [geometryColumn];
@@ -164,7 +165,7 @@ export class GeoArrowPathLayer<
       const flatCoordinateArray = geometryData.children[0].children[0].values;
 
       const props: PathLayerProps = {
-        id: `${this.props.id}-geoarrow-linestring-${recordBatchIdx}`,
+        id: `${this.props.id}-geoarrow-path-${recordBatchIdx}`,
         widthUnits: this.props.widthUnits,
         widthScale: this.props.widthScale,
         widthMinPixels: this.props.widthMinPixels,

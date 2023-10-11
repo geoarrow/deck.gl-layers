@@ -1,6 +1,16 @@
 import { assert } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
-import { Coord, LineString, MultiPoint, Polygon } from "./types";
+import {
+  Coord,
+  LineString,
+  LineStringData,
+  MultiPoint,
+  MultiPointData,
+  MultiPointVector,
+  PointData,
+  PointVector,
+  Polygon,
+} from "./types";
 
 export type TypedArray =
   | Uint8Array
@@ -209,14 +219,15 @@ export function expandArrayToCoords<T extends TypedArray>(
 export function getGeometryVector(
   table: arrow.Table,
   geoarrowTypeName: string
-): arrow.Vector {
+): arrow.Vector | null {
   const geometryColumnIdx = findGeometryColumnIndex(
     table.schema,
     geoarrowTypeName
   );
 
   if (geometryColumnIdx === null) {
-    throw new Error(`No column found with extension type ${geoarrowTypeName}`);
+    return null;
+    // throw new Error(`No column found with extension type ${geoarrowTypeName}`);
   }
 
   return table.getChildAt(geometryColumnIdx);
@@ -263,15 +274,37 @@ export function validateColorVector(vector: arrow.Vector) {
   assert(vector.type.children[0].type.bitWidth === 8);
 }
 
-// Note: this is the same as validateLineStringType
-export function validateMultiPointType(
-  type: arrow.DataType
-): type is MultiPoint {
-  // Assert the outer vector is a List
-  assert(arrow.DataType.isList(type));
+export function isPointVector(vector: arrow.Vector): vector is PointVector {
+  // Check FixedSizeList
+  if (!arrow.DataType.isFixedSizeList(vector.type)) {
+    return false;
+  }
 
-  // Assert its inner vector is a point layout
-  validatePointType(type.children[0].type);
+  // Check list size of 2 or 3
+  if (vector.type.listSize !== 2 && vector.type.listSize !== 3) {
+    return false;
+  }
+
+  // Check child of FixedSizeList is floating type
+  if (!arrow.DataType.isFloat(vector.type.children[0])) {
+    return false;
+  }
+
+  return true;
+}
+
+export function isMultiPointVector(
+  vector: arrow.Vector
+): vector is MultiPointVector {
+  // Check the outer vector is a List
+  if (!arrow.DataType.isList(vector.type)) {
+    return false;
+  }
+
+  // Check the child is a point vector
+  if (!isPointVector(vector.getChildAt(0))) {
+    return false;
+  }
 
   return true;
 }
@@ -312,6 +345,19 @@ export function validatePolygonType(type: arrow.DataType): type is Polygon {
   return true;
 }
 
+// Note: this is the same as validateLineStringType
+export function validateMultiPointType(
+  type: arrow.DataType
+): type is MultiPoint {
+  // Assert the outer vector is a List
+  assert(arrow.DataType.isList(type));
+
+  // Assert its inner vector is a point layout
+  validatePointType(type.children[0].type);
+
+  return true;
+}
+
 export function getListNestingLevels(data: arrow.Data): number {
   let nestingLevels = 0;
   if (arrow.DataType.isList(data.type)) {
@@ -319,4 +365,19 @@ export function getListNestingLevels(data: arrow.Data): number {
     data = data.children[0];
   }
   return nestingLevels;
+}
+
+export function getPointChild(data: PointData): arrow.Data<arrow.Float> {
+  // @ts-expect-error
+  return data.children[0];
+}
+
+export function getMultiPointChild(data: MultiPointData): PointData {
+  // @ts-expect-error
+  return data.children[0];
+}
+
+export function getLineStringChild(data: LineStringData): PointData {
+  // @ts-expect-error
+  return data.children[0];
 }

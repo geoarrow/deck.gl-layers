@@ -19,6 +19,7 @@ import {
   validateVectorAccessors,
 } from "./utils.js";
 import { PolygonVector } from "./types.js";
+import { EXTENSION_NAME } from "./constants.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
@@ -133,7 +134,7 @@ export class GeoArrowSolidPolygonLayer<
     const { data: table } = this.props;
 
     const geometryColumn: PolygonVector =
-      this.props.getPolygon || getGeometryVector(table, "geoarrow.polygon");
+      this.props.getPolygon || getGeometryVector(table, EXTENSION_NAME.POLYGON);
 
     if (this.props._validate) {
       const vectorAccessors: arrow.Vector[] = [geometryColumn];
