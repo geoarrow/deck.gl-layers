@@ -165,7 +165,7 @@ export class GeoArrowPathLayer<
       return this._renderLayersMultiLineString(geometryColumn);
     }
 
-    throw new Error("geometryColumn not point or multipoint");
+    throw new Error("geometryColumn not LineString or MultiLineString");
   }
 
   _renderLayersLineString(
@@ -302,6 +302,8 @@ export class GeoArrowPathLayer<
         data: {
           // Note: this needs to be the length one level down.
           length: lineStringData.length,
+          // Note: this is ringOffsets, not geomOffsets because we're rendering
+          // the individual paths on the map.
           // @ts-ignore
           startIndices: ringOffsets,
           attributes: {

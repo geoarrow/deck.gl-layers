@@ -14,11 +14,19 @@ import * as arrow from "apache-arrow";
 import {
   assignAccessor,
   getGeometryVector,
+  getLineStringChild,
+  getMultiPolygonChild,
+  getMultiPolygonResolvedOffsets,
+  getPointChild,
+  getPolygonChild,
+  getPolygonResolvedOffsets,
+  isMultiPolygonVector,
+  isPolygonVector,
   validateColorVector,
   validatePolygonType,
   validateVectorAccessors,
 } from "./utils.js";
-import { PolygonVector } from "./types.js";
+import { MultiPolygonVector, PolygonVector } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
@@ -73,7 +81,7 @@ type _GeoArrowSolidPolygonLayerProps = {
   elevationScale?: number;
 
   /** Polygon geometry accessor. */
-  getPolygon?: PolygonVector;
+  getPolygon?: PolygonVector | MultiPolygonVector;
 
   /** Extrusion height accessor.
    * @default 1000
@@ -133,8 +141,35 @@ export class GeoArrowSolidPolygonLayer<
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
-    const geometryColumn: PolygonVector =
-      this.props.getPolygon || getGeometryVector(table, EXTENSION_NAME.POLYGON);
+    const polygonVector = getGeometryVector(table, EXTENSION_NAME.POLYGON);
+    if (polygonVector !== null) {
+      return this._renderLayersPolygon(polygonVector);
+    }
+
+    const MultiPolygonVector = getGeometryVector(
+      table,
+      EXTENSION_NAME.MULTIPOLYGON
+    );
+    if (MultiPolygonVector !== null) {
+      return this._renderLayersMultiPolygon(MultiPolygonVector);
+    }
+
+    const geometryColumn = this.props.getPolygon;
+    if (isPolygonVector(geometryColumn)) {
+      return this._renderLayersPolygon(geometryColumn);
+    }
+
+    if (isMultiPolygonVector(geometryColumn)) {
+      return this._renderLayersMultiPolygon(geometryColumn);
+    }
+
+    throw new Error("geometryColumn not Polygon or MultiPolygon");
+  }
+
+  _renderLayersPolygon(
+    geometryColumn: PolygonVector
+  ): Layer<{}> | LayersList | null {
+    const { data: table } = this.props;
 
     if (this.props._validate) {
       const vectorAccessors: arrow.Vector[] = [geometryColumn];
@@ -165,19 +200,18 @@ export class GeoArrowSolidPolygonLayer<
       recordBatchIdx < table.batches.length;
       recordBatchIdx++
     ) {
-      const geometryData = geometryColumn.data[recordBatchIdx];
-      const nDim = geometryData.type.children[0].type.children[0].type.listSize;
-      const geomOffsets = geometryData.valueOffsets;
-      const ringOffsets = geometryData.children[0].valueOffsets;
-      const flatCoordinateArray =
-        geometryData.children[0].children[0].children[0].values;
+      const polygonData = geometryColumn.data[recordBatchIdx];
+      const ringData = getPolygonChild(polygonData);
+      const pointData = getLineStringChild(ringData);
+      const coordData = getPointChild(pointData);
 
-      const resolvedRingOffsets = new Int32Array(geomOffsets.length);
-      for (let i = 0; i < resolvedRingOffsets.length; ++i) {
-        // Perform the lookup into the ringIndices array using the geomOffsets
-        // array
-        resolvedRingOffsets[i] = ringOffsets[geomOffsets[i]];
-      }
+      const nDim = pointData.type.listSize;
+
+      // const geomOffsets = polygonData.valueOffsets;
+      // const ringOffsets = ringData.valueOffsets;
+      const flatCoordinateArray = coordData.values;
+
+      const resolvedRingOffsets = getPolygonResolvedOffsets(polygonData);
 
       const props: SolidPolygonLayerProps = {
         id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
@@ -191,10 +225,115 @@ export class GeoArrowSolidPolygonLayer<
         material: this.props.material,
         data: {
           // Number of geometries
-          length: geometryData.length,
+          length: polygonData.length,
           // Offsets into coordinateArray where each polygon starts
           // @ts-ignore
           startIndices: resolvedRingOffsets,
+          attributes: {
+            getPolygon: { value: flatCoordinateArray, size: nDim },
+          },
+        },
+      };
+
+      assignAccessor({
+        props,
+        propName: "getElevation",
+        propInput: this.props.getElevation,
+        chunkIdx: recordBatchIdx,
+        geomCoordOffsets: resolvedRingOffsets,
+      });
+      assignAccessor({
+        props,
+        propName: "getFillColor",
+        propInput: this.props.getFillColor,
+        chunkIdx: recordBatchIdx,
+        geomCoordOffsets: resolvedRingOffsets,
+      });
+      assignAccessor({
+        props,
+        propName: "getLineColor",
+        propInput: this.props.getLineColor,
+        chunkIdx: recordBatchIdx,
+        geomCoordOffsets: resolvedRingOffsets,
+      });
+
+      const layer = new SolidPolygonLayer(props);
+      layers.push(layer);
+    }
+
+    return layers;
+  }
+
+  _renderLayersMultiPolygon(
+    geometryColumn: MultiPolygonVector
+  ): Layer<{}> | LayersList | null {
+    const { data: table } = this.props;
+
+    if (this.props._validate) {
+      const vectorAccessors: arrow.Vector[] = [geometryColumn];
+      for (const accessor of [
+        this.props.getElevation,
+        this.props.getFillColor,
+        this.props.getLineColor,
+      ]) {
+        if (accessor instanceof arrow.Vector) {
+          vectorAccessors.push(accessor);
+        }
+      }
+
+      validatePolygonType(geometryColumn.type);
+      validateVectorAccessors(table, vectorAccessors);
+
+      if (this.props.getFillColor instanceof arrow.Vector) {
+        validateColorVector(this.props.getFillColor);
+      }
+      if (this.props.getLineColor instanceof arrow.Vector) {
+        validateColorVector(this.props.getLineColor);
+      }
+    }
+
+    const layers: SolidPolygonLayer[] = [];
+    for (
+      let recordBatchIdx = 0;
+      recordBatchIdx < table.batches.length;
+      recordBatchIdx++
+    ) {
+      const multiPolygonData = geometryColumn.data[recordBatchIdx];
+      const polygonData = getMultiPolygonChild(multiPolygonData);
+      const ringData = getPolygonChild(polygonData);
+      const pointData = getLineStringChild(ringData);
+      const coordData = getPointChild(pointData);
+
+      const nDim = pointData.type.listSize;
+
+      // const geomOffsets = multiPolygonData.valueOffsets;
+      const polygonOffsets = polygonData.valueOffsets;
+      // const ringOffsets = ringData.valueOffsets;
+      const flatCoordinateArray = coordData.values;
+
+      const resolvedRingOffsets =
+        getMultiPolygonResolvedOffsets(multiPolygonData);
+
+      const props: SolidPolygonLayerProps = {
+        id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
+        filled: this.props.filled,
+        extruded: this.props.extruded,
+        wireframe: this.props.wireframe,
+        _normalize: this.props._normalize,
+        _windingOrder: this.props._windingOrder,
+        _full3d: this.props._full3d,
+        elevationScale: this.props.elevationScale,
+        material: this.props.material,
+        data: {
+          // Number of polygons
+          // Note: this needs to be the length one level down, because we're
+          // rendering the polygons, not the multipolygons
+          length: polygonData.length,
+          // Offsets into coordinateArray where each polygon starts
+          // Note: this is polygonOffsets, not geomOffsets because we're
+          // rendering the individual polygons on the map.
+          // @ts-ignore
+          startIndices: polygonOffsets,
           attributes: {
             getPolygon: { value: flatCoordinateArray, size: nDim },
           },
