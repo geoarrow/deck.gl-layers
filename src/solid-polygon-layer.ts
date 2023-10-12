@@ -23,6 +23,7 @@ import {
   isMultiPolygonVector,
   isPolygonVector,
   validateColorVector,
+  validateMultiPolygonType,
   validatePolygonType,
   validateVectorAccessors,
 } from "./utils.js";
@@ -281,7 +282,7 @@ export class GeoArrowSolidPolygonLayer<
         }
       }
 
-      validatePolygonType(geometryColumn.type);
+      validateMultiPolygonType(geometryColumn.type);
       validateVectorAccessors(table, vectorAccessors);
 
       if (this.props.getFillColor instanceof arrow.Vector) {
