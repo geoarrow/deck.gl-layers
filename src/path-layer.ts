@@ -22,6 +22,7 @@ import {
   isMultiLineStringVector,
   validateColorVector,
   validateLineStringType,
+  validateMultiLineStringType,
   validateVectorAccessors,
 } from "./utils.js";
 import { LineStringVector, MultiLineStringVector } from "./types.js";
@@ -262,7 +263,7 @@ export class GeoArrowPathLayer<
         }
       }
 
-      validateLineStringType(geometryColumn.type);
+      validateMultiLineStringType(geometryColumn.type);
       validateVectorAccessors(table, vectorAccessors);
 
       if (this.props.getColor instanceof arrow.Vector) {
