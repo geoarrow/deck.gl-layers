@@ -439,6 +439,18 @@ export function validateMultiLineStringType(
   return true;
 }
 
+export function validateMultiPolygonType(
+  type: arrow.DataType
+): type is Polygon {
+  // Assert the outer vector is a List
+  assert(arrow.DataType.isList(type));
+
+  // Assert its inner vector is a linestring layout
+  validatePolygonType(type.children[0].type);
+
+  return true;
+}
+
 export function getListNestingLevels(data: arrow.Data): number {
   let nestingLevels = 0;
   if (arrow.DataType.isList(data.type)) {
