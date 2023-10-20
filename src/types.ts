@@ -1,6 +1,7 @@
+import { PickingInfo } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
 
-export type InterleavedCoord = arrow.FixedSizeList<arrow.Float>;
+export type InterleavedCoord = arrow.FixedSizeList<arrow.Float64>;
 export type SeparatedCoord = arrow.Struct<{
   x: arrow.Float;
   y: arrow.Float;
@@ -27,3 +28,7 @@ export type PolygonData = arrow.Data<Polygon>;
 export type MultiPointData = arrow.Data<MultiPoint>;
 export type MultiLineStringData = arrow.Data<MultiLineString>;
 export type MultiPolygonData = arrow.Data<MultiPolygon>;
+
+export type GeoArrowPickingInfo = PickingInfo & {
+  object: arrow.StructRowProxy
+}
