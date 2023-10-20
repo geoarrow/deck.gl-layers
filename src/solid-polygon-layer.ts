@@ -7,6 +7,8 @@ import {
   DefaultProps,
   Layer,
   LayersList,
+  GetPickingInfoParams,
+  PickingInfo,
 } from "@deck.gl/core/typed";
 import { SolidPolygonLayer } from "@deck.gl/layers/typed";
 import type { SolidPolygonLayerProps } from "@deck.gl/layers/typed";
@@ -139,6 +141,25 @@ export class GeoArrowSolidPolygonLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowSolidPolygonLayer";
 
+  getPickingInfo({ info, sourceLayer }: GetPickingInfoParams): PickingInfo {
+    const { data: table } = this.props;
+
+    // @ts-expect-error `recordBatchIdx` is manually set on layer props
+    const recordBatchIdx: number = sourceLayer.props.recordBatchIdx;
+    const batch = table.batches[recordBatchIdx];
+    const row = batch.get(info.index);
+
+    // @ts-expect-error hack: using private method to avoid recomputing via
+    // batch lengths on each iteration
+    const offsets: number[] = table._offsets;
+    const currentBatchOffset = offsets[recordBatchIdx];
+
+    info.object = row;
+    // Update index to be _global_ index, not within the specific record batch
+    info.index += currentBatchOffset;
+    return info;
+  }
+
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
@@ -215,6 +236,9 @@ export class GeoArrowSolidPolygonLayer<
       const resolvedRingOffsets = getPolygonResolvedOffsets(polygonData);
 
       const props: SolidPolygonLayerProps = {
+        // used for picking purposes
+        recordBatchIdx,
+
         id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
         filled: this.props.filled,
         extruded: this.props.extruded,
@@ -316,6 +340,9 @@ export class GeoArrowSolidPolygonLayer<
         getMultiPolygonResolvedOffsets(multiPolygonData);
 
       const props: SolidPolygonLayerProps = {
+        // used for picking purposes
+        recordBatchIdx,
+
         id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
         filled: this.props.filled,
         extruded: this.props.extruded,

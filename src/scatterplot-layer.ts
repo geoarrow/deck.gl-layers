@@ -4,8 +4,10 @@ import {
   CompositeLayer,
   CompositeLayerProps,
   DefaultProps,
+  GetPickingInfoParams,
   Layer,
   LayersList,
+  PickingInfo,
   Unit,
 } from "@deck.gl/core/typed";
 import { ScatterplotLayer } from "@deck.gl/layers/typed";
@@ -168,6 +170,25 @@ export class GeoArrowScatterplotLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowScatterplotLayer";
 
+  getPickingInfo({ info, sourceLayer }: GetPickingInfoParams): PickingInfo {
+    const { data: table } = this.props;
+
+    // @ts-expect-error `recordBatchIdx` is manually set on layer props
+    const recordBatchIdx: number = sourceLayer.props.recordBatchIdx;
+    const batch = table.batches[recordBatchIdx];
+    const row = batch.get(info.index);
+
+    // @ts-expect-error hack: using private method to avoid recomputing via
+    // batch lengths on each iteration
+    const offsets: number[] = table._offsets;
+    const currentBatchOffset = offsets[recordBatchIdx];
+
+    info.object = row;
+    // Update index to be _global_ index, not within the specific record batch
+    info.index += currentBatchOffset;
+    return info;
+  }
+
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
@@ -235,6 +256,9 @@ export class GeoArrowScatterplotLayer<
       const flatCoordinateArray = geometryData.children[0].values;
 
       const props: ScatterplotLayerProps = {
+        // @ts-expect-error used for picking purposes
+        recordBatchIdx,
+
         id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,
         radiusUnits: this.props.radiusUnits,
         radiusScale: this.props.radiusScale,
@@ -335,6 +359,9 @@ export class GeoArrowScatterplotLayer<
       const flatCoordinateArray = flatCoordsData.values;
 
       const props: ScatterplotLayerProps = {
+        // @ts-expect-error used for picking purposes
+        recordBatchIdx,
+
         id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,
         radiusUnits: this.props.radiusUnits,
         radiusScale: this.props.radiusScale,
