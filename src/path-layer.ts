@@ -286,7 +286,7 @@ export class GeoArrowPathLayer<
 
       const nDim = pointData.type.listSize;
       const flatCoordinateArray = coordData.values;
-      const resolvedRingOffsets =
+      const multiLineStringToCoordOffsets =
         getMultiLineStringResolvedOffsets(multiLineStringData);
 
       const props: PathLayerProps = {
@@ -303,6 +303,8 @@ export class GeoArrowPathLayer<
         data: {
           // Note: this needs to be the length one level down.
           length: lineStringData.length,
+          // Offsets into coordinateArray where each single-line string starts
+          //
           // Note: this is ringOffsets, not geomOffsets because we're rendering
           // the individual paths on the map.
           // @ts-ignore
@@ -313,19 +315,21 @@ export class GeoArrowPathLayer<
         },
       };
 
+      // Note: here we use multiLineStringToCoordOffsets, not ringOffsets,
+      // because we want the mapping from the _feature_ to the vertex
       assignAccessor({
         props,
         propName: "getColor",
         propInput: this.props.getColor,
         chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedRingOffsets,
+        geomCoordOffsets: multiLineStringToCoordOffsets,
       });
       assignAccessor({
         props,
         propName: "getWidth",
         propInput: this.props.getWidth,
         chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedRingOffsets,
+        geomCoordOffsets: multiLineStringToCoordOffsets,
       });
 
       const layer = new PathLayer(this.getSubLayerProps(props));
