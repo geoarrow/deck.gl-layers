@@ -524,17 +524,20 @@ export function getPolygonResolvedOffsets(data: PolygonData): Int32Array {
   return resolvedRingOffsets;
 }
 
-/**
- * Get offsets pointing from each exploded polygon from the MultiPolygonArray to
- * their coordinates.
- *
- * Despite the fact that this is a MultiPolygonArray, we want the offsets from
- * the _PolygonArray_ instead, because each MultiPolygon is rendered as separate
- * Polygons.
- */
 export function getMultiPolygonResolvedOffsets(
   data: MultiPolygonData
 ): Int32Array {
   const polygonData = getMultiPolygonChild(data);
-  return getPolygonResolvedOffsets(polygonData);
+  const ringData = getPolygonChild(polygonData);
+
+  const geomOffsets = data.valueOffsets;
+  const polygonOffsets = polygonData.valueOffsets;
+  const ringOffsets = ringData.valueOffsets;
+
+  const resolvedRingOffsets = new Int32Array(geomOffsets.length);
+  for (let i = 0; i < resolvedRingOffsets.length; ++i) {
+    resolvedRingOffsets[i] = ringOffsets[polygonOffsets[geomOffsets[i]]];
+  }
+
+  return resolvedRingOffsets;
 }

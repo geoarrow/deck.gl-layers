@@ -308,11 +308,22 @@ export class GeoArrowSolidPolygonLayer<
       const nDim = pointData.type.listSize;
 
       // const geomOffsets = multiPolygonData.valueOffsets;
-      const polygonOffsets = polygonData.valueOffsets;
+      // const polygonOffsets = polygonData.valueOffsets;
       // const ringOffsets = ringData.valueOffsets;
       const flatCoordinateArray = coordData.values;
 
-      const resolvedRingOffsets =
+      // NOTE: we have two different uses of offsets. One is for _rendering_
+      // each polygon. The other is for mapping _accessor attributes_ from one
+      // value per feature to one value per vertex. And for that we need to use
+      // these offsets in two different ways.
+      //
+      // TODO: Don't construct the offsets twice from scratch? I.e. from the
+      // polygon-to-coord offsets you should be able to infer the
+      // multi-polygon-to-coord offsets? Or something like that
+      const resolvedPolygonToCoordOffsets =
+        getPolygonResolvedOffsets(polygonData);
+
+      const resolvedMultiPolygonToCoordOffsets =
         getMultiPolygonResolvedOffsets(multiPolygonData);
 
       const props: SolidPolygonLayerProps = {
@@ -330,11 +341,12 @@ export class GeoArrowSolidPolygonLayer<
           // Note: this needs to be the length one level down, because we're
           // rendering the polygons, not the multipolygons
           length: polygonData.length,
-          // Offsets into coordinateArray where each polygon starts
-          // Note: this is polygonOffsets, not geomOffsets because we're
-          // rendering the individual polygons on the map.
-          // @ts-ignore
-          startIndices: resolvedRingOffsets,
+          // Offsets into coordinateArray where each single-polygon starts
+          //
+          // Note that this is polygonToCoordOffsets and not geomToCoordOffsets
+          // because we're rendering each part of the MultiPolygon individually
+          // @ts-expect-error
+          startIndices: resolvedPolygonToCoordOffsets,
           attributes: {
             getPolygon: { value: flatCoordinateArray, size: nDim },
           },
@@ -346,21 +358,21 @@ export class GeoArrowSolidPolygonLayer<
         propName: "getElevation",
         propInput: this.props.getElevation,
         chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedRingOffsets,
+        geomCoordOffsets: resolvedMultiPolygonToCoordOffsets,
       });
       assignAccessor({
         props,
         propName: "getFillColor",
         propInput: this.props.getFillColor,
         chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedRingOffsets,
+        geomCoordOffsets: resolvedMultiPolygonToCoordOffsets,
       });
       assignAccessor({
         props,
         propName: "getLineColor",
         propInput: this.props.getLineColor,
         chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedRingOffsets,
+        geomCoordOffsets: resolvedMultiPolygonToCoordOffsets,
       });
 
       const layer = new SolidPolygonLayer(this.getSubLayerProps(props));
