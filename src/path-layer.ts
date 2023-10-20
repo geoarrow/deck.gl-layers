@@ -241,7 +241,7 @@ export class GeoArrowPathLayer<
         geomCoordOffsets: geomOffsets,
       });
 
-      const layer = new PathLayer(props);
+      const layer = new PathLayer(this.getSubLayerProps(props));
       layers.push(layer);
     }
 
@@ -328,7 +328,7 @@ export class GeoArrowPathLayer<
         geomCoordOffsets: resolvedRingOffsets,
       });
 
-      const layer = new PathLayer(props);
+      const layer = new PathLayer(this.getSubLayerProps(props));
       layers.push(layer);
     }
 

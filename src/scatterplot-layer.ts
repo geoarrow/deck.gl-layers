@@ -284,7 +284,7 @@ export class GeoArrowScatterplotLayer<
         chunkIdx: recordBatchIdx,
       });
 
-      const layer = new ScatterplotLayer(props);
+      const layer = new ScatterplotLayer(this.getSubLayerProps(props));
       layers.push(layer);
     }
 
@@ -389,7 +389,7 @@ export class GeoArrowScatterplotLayer<
         geomCoordOffsets: geomOffsets,
       });
 
-      const layer = new ScatterplotLayer(props);
+      const layer = new ScatterplotLayer(this.getSubLayerProps(props));
       layers.push(layer);
     }
 
