@@ -55,6 +55,7 @@ function Root() {
         data: table,
         getFillColor: [0, 100, 60, 160],
         pickable: true,
+        autoHighlight: true,
       })
     );
 
