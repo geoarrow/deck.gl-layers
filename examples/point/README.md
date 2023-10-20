@@ -1,23 +1,12 @@
-todo: try portal again (had issue with mismatched deck.gl versions)
+## Example: Use `@geoarrow/deck.gl-layers` with GeoArrow point data
 
-```json
-"@geoarrow/deck.gl-layers": "portal:../../modules/deck.gl-geoarrow",
+## Data for example:
+
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-## Example: Use deck.gl with react-map-gl and Webpack
-
-Uses [Vite](https://vitejs.dev/) to bundle and serve files.
+wget https://ookla-open-data.s3.us-west-2.amazonaws.com/parquet/performance/type=mobile/year=2019/quarter=1/2019-01-01_performance_mobile_tiles.parquet
+poetry install
+poetry run python generate_data.py
+```
 
 ## Usage
 
@@ -30,9 +19,6 @@ yarn
 ```
 
 Commands:
+
 * `npm start` is the development target, to serve the app and hot reload.
 * `npm run build` is the production target, to create the final bundle and write to disk.
-
-### Basemap
-
-The basemap in this example is provided by [CARTO free basemap service](https://carto.com/basemaps). To use an alternative base map solution, visit [this guide](https://deck.gl/docs/get-started/using-with-map#using-other-basemap-services)

@@ -6,7 +6,7 @@ import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 
 const GEOARROW_POINT_DATA =
-  "http://localhost:8080/2019-01-01_performance_mobile_tiles_color.feather";
+  "http://localhost:8080/2019-01-01_performance_mobile_tiles.feather";
 
 const INITIAL_VIEW_STATE = {
   latitude: 20,
@@ -57,8 +57,8 @@ function Root() {
       new GeoArrowScatterplotLayer({
         id: "geoarrow-points",
         data: table,
-        getFillColor: [255, 0, 0],
-        // getFillColor: "colors",
+        // getFillColor: [255, 0, 0],
+        getFillColor: table.getChild("colors"),
         radiusMinPixels: 1,
         getPointRadius: 10,
         pointRadiusMinPixels: 0.8,
