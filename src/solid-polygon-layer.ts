@@ -258,7 +258,7 @@ export class GeoArrowSolidPolygonLayer<
         geomCoordOffsets: resolvedRingOffsets,
       });
 
-      const layer = new SolidPolygonLayer(props);
+      const layer = new SolidPolygonLayer(this.getSubLayerProps(props));
       layers.push(layer);
     }
 
@@ -363,7 +363,7 @@ export class GeoArrowSolidPolygonLayer<
         geomCoordOffsets: resolvedRingOffsets,
       });
 
-      const layer = new SolidPolygonLayer(props);
+      const layer = new SolidPolygonLayer(this.getSubLayerProps(props));
       layers.push(layer);
     }
 
