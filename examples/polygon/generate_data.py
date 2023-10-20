@@ -1,16 +1,11 @@
 import geopandas as gpd
-import pyarrow as pa
 import pyarrow.feather as feather
-from geoarrow.shapely.geopandas_interop import geopandas_to_geoarrow
+from lonboard.geoarrow.geopandas_interop import geopandas_to_geoarrow
 
 
 def main():
-    gdf = gpd.read_file("Utah.geojson")
+    gdf = gpd.read_file("Utah.geojson.zip", engine="pyogrio")
     table = geopandas_to_geoarrow(gdf)
-    # rechunk
-    # Note: write_feather automatically rechunks. Manual rechunking isn't necessary
-    # otherwise
-    # table = pa.Table.from_batches(table.to_batches(max_chunksize=100_000))
     feather.write_feather(table, "utah.feather", compression="uncompressed")
 
 
