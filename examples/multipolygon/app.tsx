@@ -9,9 +9,9 @@ const GEOARROW_POLYGON_DATA =
   "http://localhost:8080/ne_10m_admin_0_countries.feather";
 
 const INITIAL_VIEW_STATE = {
-  latitude: 0,
+  latitude: 25,
   longitude: 0,
-  zoom: 2,
+  zoom: 1.5,
   bearing: 0,
   pitch: 0,
 };
@@ -58,7 +58,7 @@ function Root() {
         wireframe: true,
         extruded: true,
         getPolygon: table.getChild("geometry")!,
-        getFillColor: [255, 0, 0],
+        getFillColor: table.getChild("pop_colors")!,
         // pickable: true,
         // autoHighlight: true,
       })
