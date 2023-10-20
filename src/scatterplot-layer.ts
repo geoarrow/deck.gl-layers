@@ -26,7 +26,7 @@ import {
   validatePointType,
   validateVectorAccessors,
 } from "./utils.js";
-import { MultiPointVector, PointVector } from "./types.js";
+import { GeoArrowPickingInfo, MultiPointVector, PointVector } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
@@ -171,7 +171,10 @@ export class GeoArrowScatterplotLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowScatterplotLayer";
 
-  getPickingInfo({ info, sourceLayer }: GetPickingInfoParams): PickingInfo {
+  getPickingInfo({
+    info,
+    sourceLayer,
+  }: GetPickingInfoParams): GeoArrowPickingInfo {
     const { data: table } = this.props;
 
     // Geometry index as rendered
@@ -195,11 +198,13 @@ export class GeoArrowScatterplotLayer<
     const offsets: number[] = table._offsets;
     const currentBatchOffset = offsets[recordBatchIdx];
 
-    info.object = row;
     // Update index to be _global_ index, not within the specific record batch
     index += currentBatchOffset;
-    info.index = index;
-    return info;
+    return {
+      ...info,
+      index,
+      object: row,
+    };
   }
 
   renderLayers(): Layer<{}> | LayersList | null {

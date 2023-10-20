@@ -30,7 +30,11 @@ import {
   validatePolygonType,
   validateVectorAccessors,
 } from "./utils.js";
-import { MultiPolygonVector, PolygonVector } from "./types.js";
+import {
+  GeoArrowPickingInfo,
+  MultiPolygonVector,
+  PolygonVector,
+} from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
@@ -142,7 +146,10 @@ export class GeoArrowSolidPolygonLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowSolidPolygonLayer";
 
-  getPickingInfo({ info, sourceLayer }: GetPickingInfoParams): PickingInfo {
+  getPickingInfo({
+    info,
+    sourceLayer,
+  }: GetPickingInfoParams): GeoArrowPickingInfo {
     const { data: table } = this.props;
 
     // Geometry index as rendered
@@ -166,11 +173,13 @@ export class GeoArrowSolidPolygonLayer<
     const offsets: number[] = table._offsets;
     const currentBatchOffset = offsets[recordBatchIdx];
 
-    info.object = row;
     // Update index to be _global_ index, not within the specific record batch
     index += currentBatchOffset;
-    info.index = index;
-    return info;
+    return {
+      ...info,
+      index,
+      object: row,
+    };
   }
 
   renderLayers(): Layer<{}> | LayersList | null {
@@ -390,9 +399,18 @@ export class GeoArrowSolidPolygonLayer<
           startIndices: resolvedPolygonToCoordOffsets,
           attributes: {
             getPolygon: { value: flatCoordinateArray, size: nDim },
+            instancePickingColors: {
+              value: encodePickingColors(
+                resolvedMultiPolygonToCoordOffsets,
+                this.encodePickingColor
+              ),
+              size: 3,
+            },
           },
         },
       };
+
+      console.log(resolvedMultiPolygonToCoordOffsets);
 
       assignAccessor({
         props,
@@ -422,4 +440,30 @@ export class GeoArrowSolidPolygonLayer<
 
     return layers;
   }
+}
+
+function encodePickingColors(
+  geomToCoordOffsets: Int32Array,
+  encodePickingColor: (id: number, result: number[]) => void
+): Uint8ClampedArray {
+  const largestOffset = geomToCoordOffsets[geomToCoordOffsets.length - 1];
+  const pickingColors = new Uint8ClampedArray(largestOffset);
+
+  const pickingColor = [];
+  for (let arrayIdx = 0; arrayIdx < geomToCoordOffsets.length - 1; arrayIdx++) {
+    const thisOffset = geomToCoordOffsets[arrayIdx];
+    const nextOffset = geomToCoordOffsets[arrayIdx + 1];
+
+    // Note: we encode the picking color once per _feature_, but then assign it
+    // to the color array once per _vertex_
+    encodePickingColor(arrayIdx, pickingColor);
+    for (let offset = thisOffset; offset < nextOffset; offset++) {
+      pickingColors[offset * 3] = pickingColor[0];
+      pickingColors[offset * 3 + 1] = pickingColor[1];
+      pickingColors[offset * 3 + 2] = pickingColor[2];
+    }
+  }
+
+  console.log(pickingColors);
+  return pickingColors;
 }
