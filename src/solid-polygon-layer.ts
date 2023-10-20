@@ -361,7 +361,7 @@ export class GeoArrowSolidPolygonLayer<
           // Note: this is polygonOffsets, not geomOffsets because we're
           // rendering the individual polygons on the map.
           // @ts-ignore
-          startIndices: polygonOffsets,
+          startIndices: resolvedRingOffsets,
           attributes: {
             getPolygon: { value: flatCoordinateArray, size: nDim },
           },
