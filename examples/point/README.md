@@ -8,6 +8,12 @@ poetry install
 poetry run python generate_data.py
 ```
 
+## Serve data
+
+```
+npx http-server --cors
+```
+
 ## Usage
 
 To install dependencies:
