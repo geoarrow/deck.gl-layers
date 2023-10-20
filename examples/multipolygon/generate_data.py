@@ -1,5 +1,6 @@
 import geopandas as gpd
 import numpy as np
+import pandas as pd
 import pyarrow as pa
 import pyarrow.feather as feather
 from lonboard.colormap import apply_continuous_cmap
@@ -9,6 +10,16 @@ from palettable.colorbrewer.diverging import PRGn_11
 
 def main():
     gdf = gpd.read_file("ne_10m_admin_0_countries.zip", engine="pyogrio")
+
+    # Downcast because the NE_ID defaulted to int64, which the default arrow js json
+    # serializer doesn't know how to handle
+    for col in gdf.select_dtypes(np.signedinteger).columns:
+        gdf[col] = pd.to_numeric(gdf[col], downcast="signed")
+    for col in gdf.select_dtypes(np.unsignedinteger).columns:
+        gdf[col] = pd.to_numeric(gdf[col], downcast="unsigned")
+    for col in gdf.select_dtypes(np.floating).columns:
+        gdf[col] = pd.to_numeric(gdf[col], downcast="float")
+
     table = geopandas_to_geoarrow(gdf)
 
     log_pop_est = np.where(gdf["POP_EST"] == 0, 0, np.log10(gdf["POP_EST"]))

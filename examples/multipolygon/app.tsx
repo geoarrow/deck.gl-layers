@@ -59,8 +59,8 @@ function Root() {
         extruded: true,
         getPolygon: table.getChild("geometry")!,
         getFillColor: table.getChild("pop_colors")!,
-        // pickable: true,
-        // autoHighlight: true,
+        pickable: true,
+        autoHighlight: true,
       })
     );
 
@@ -70,7 +70,7 @@ function Root() {
       controller={true}
       layers={layers}
       ContextProvider={MapContext.Provider}
-      // onClick={onClick}
+      onClick={onClick}
     >
       <StaticMap mapStyle={MAP_STYLE} />
       <NavigationControl style={NAV_CONTROL_STYLE} />

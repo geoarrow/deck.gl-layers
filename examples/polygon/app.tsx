@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
-import DeckGL, { Layer } from "deck.gl/typed";
+import DeckGL, { Layer, PickingInfo } from "deck.gl/typed";
 import { GeoArrowSolidPolygonLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 
@@ -24,12 +24,9 @@ const NAV_CONTROL_STYLE = {
 };
 
 function Root() {
-  const onClick = (info) => {
+  const onClick = (info: PickingInfo) => {
     if (info.object) {
-      // eslint-disable-next-line
-      alert(
-        `${info.object.properties.name} (${info.object.properties.abbrev})`
-      );
+      console.log(JSON.stringify(info.object.toJSON()));
     }
   };
 
@@ -57,6 +54,8 @@ function Root() {
         id: "geoarrow-polygons",
         data: table,
         getFillColor: [0, 100, 60, 160],
+        pickable: true,
+        autoHighlight: true,
       })
     );
 
@@ -66,6 +65,7 @@ function Root() {
       controller={true}
       layers={layers}
       ContextProvider={MapContext.Provider}
+      onClick={onClick}
     >
       <StaticMap mapStyle={MAP_STYLE} />
       <NavigationControl style={NAV_CONTROL_STYLE} />

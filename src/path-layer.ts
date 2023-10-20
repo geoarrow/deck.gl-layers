@@ -4,8 +4,10 @@ import {
   CompositeLayer,
   CompositeLayerProps,
   DefaultProps,
+  GetPickingInfoParams,
   Layer,
   LayersList,
+  PickingInfo,
   Unit,
 } from "@deck.gl/core/typed";
 import { PathLayer } from "@deck.gl/layers/typed";
@@ -18,6 +20,7 @@ import {
   getMultiLineStringChild,
   getMultiLineStringResolvedOffsets,
   getPointChild,
+  invertOffsets,
   isLineStringVector,
   isMultiLineStringVector,
   validateColorVector,
@@ -138,6 +141,37 @@ export class GeoArrowPathLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowPathLayer";
 
+  getPickingInfo({ info, sourceLayer }: GetPickingInfoParams): PickingInfo {
+    const { data: table } = this.props;
+
+    // Geometry index as rendered
+    let index = info.index;
+
+    // if a MultiLineString dataset, map from the rendered index back to the
+    // feature index
+    // @ts-expect-error `invertedGeomOffsets` is manually set on layer props
+    if (sourceLayer.props.invertedGeomOffsets) {
+      // @ts-expect-error `invertedGeomOffsets` is manually set on layer props
+      index = sourceLayer.props.invertedGeomOffsets[index];
+    }
+
+    // @ts-expect-error `recordBatchIdx` is manually set on layer props
+    const recordBatchIdx: number = sourceLayer.props.recordBatchIdx;
+    const batch = table.batches[recordBatchIdx];
+    const row = batch.get(index);
+
+    // @ts-expect-error hack: using private method to avoid recomputing via
+    // batch lengths on each iteration
+    const offsets: number[] = table._offsets;
+    const currentBatchOffset = offsets[recordBatchIdx];
+
+    info.object = row;
+    // Update index to be _global_ index, not within the specific record batch
+    index += currentBatchOffset;
+    info.index = index;
+    return info;
+  }
+
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
@@ -206,6 +240,9 @@ export class GeoArrowPathLayer<
       const flatCoordinateArray = coordData.values;
 
       const props: PathLayerProps = {
+        // used for picking purposes
+        recordBatchIdx,
+
         id: `${this.props.id}-geoarrow-path-${recordBatchIdx}`,
         widthUnits: this.props.widthUnits,
         widthScale: this.props.widthScale,
@@ -282,6 +319,7 @@ export class GeoArrowPathLayer<
       const pointData = getLineStringChild(lineStringData);
       const coordData = getPointChild(pointData);
 
+      const geomOffsets = multiLineStringData.valueOffsets;
       const ringOffsets = lineStringData.valueOffsets;
 
       const nDim = pointData.type.listSize;
@@ -290,6 +328,10 @@ export class GeoArrowPathLayer<
         getMultiLineStringResolvedOffsets(multiLineStringData);
 
       const props: PathLayerProps = {
+        // used for picking purposes
+        recordBatchIdx,
+        invertedGeomOffsets: invertOffsets(geomOffsets),
+
         id: `${this.props.id}-geoarrow-path-${recordBatchIdx}`,
         widthUnits: this.props.widthUnits,
         widthScale: this.props.widthScale,
