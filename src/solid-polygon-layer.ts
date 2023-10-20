@@ -22,6 +22,7 @@ import {
   getPointChild,
   getPolygonChild,
   getPolygonResolvedOffsets,
+  invertOffsets,
   isMultiPolygonVector,
   isPolygonVector,
   validateColorVector,
@@ -144,10 +145,21 @@ export class GeoArrowSolidPolygonLayer<
   getPickingInfo({ info, sourceLayer }: GetPickingInfoParams): PickingInfo {
     const { data: table } = this.props;
 
+    // Geometry index as rendered
+    let index = info.index;
+
+    // if a MultiPolygon dataset, map from the rendered index back to the
+    // feature index
+    // @ts-expect-error `invertedGeomOffsets` is manually set on layer props
+    if (sourceLayer.props.invertedGeomOffsets) {
+      // @ts-expect-error `invertedGeomOffsets` is manually set on layer props
+      index = sourceLayer.props.invertedGeomOffsets[index];
+    }
+
     // @ts-expect-error `recordBatchIdx` is manually set on layer props
     const recordBatchIdx: number = sourceLayer.props.recordBatchIdx;
     const batch = table.batches[recordBatchIdx];
-    const row = batch.get(info.index);
+    const row = batch.get(index);
 
     // @ts-expect-error hack: using private method to avoid recomputing via
     // batch lengths on each iteration
@@ -156,7 +168,8 @@ export class GeoArrowSolidPolygonLayer<
 
     info.object = row;
     // Update index to be _global_ index, not within the specific record batch
-    info.index += currentBatchOffset;
+    index += currentBatchOffset;
+    info.index = index;
     return info;
   }
 
@@ -331,7 +344,7 @@ export class GeoArrowSolidPolygonLayer<
 
       const nDim = pointData.type.listSize;
 
-      // const geomOffsets = multiPolygonData.valueOffsets;
+      const geomOffsets = multiPolygonData.valueOffsets;
       // const polygonOffsets = polygonData.valueOffsets;
       // const ringOffsets = ringData.valueOffsets;
       const flatCoordinateArray = coordData.values;
@@ -353,6 +366,7 @@ export class GeoArrowSolidPolygonLayer<
       const props: SolidPolygonLayerProps = {
         // used for picking purposes
         recordBatchIdx,
+        invertedGeomOffsets: invertOffsets(geomOffsets),
 
         id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
         filled: this.props.filled,

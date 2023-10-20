@@ -541,3 +541,30 @@ export function getMultiPolygonResolvedOffsets(
 
   return resolvedRingOffsets;
 }
+
+/**
+ * Invert offsets so that lookup can go in the opposite direction
+ */
+export function invertOffsets(
+  offsets: Int32Array
+): Uint8Array | Uint16Array | Uint32Array {
+  const largestOffset = offsets[offsets.length - 1];
+
+  const arrayConstructor =
+    offsets.length < Math.pow(2, 8)
+      ? Uint8Array
+      : offsets.length < Math.pow(2, 16)
+      ? Uint16Array
+      : Uint32Array;
+
+  const invertedOffsets = new arrayConstructor(largestOffset);
+  for (let arrayIdx = 0; arrayIdx < offsets.length - 1; arrayIdx++) {
+    const thisOffset = offsets[arrayIdx];
+    const nextOffset = offsets[arrayIdx + 1];
+    for (let offset = thisOffset; offset < nextOffset; offset++) {
+      invertedOffsets[offset] = arrayIdx;
+    }
+  }
+
+  return invertedOffsets;
+}

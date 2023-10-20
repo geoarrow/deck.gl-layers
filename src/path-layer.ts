@@ -20,6 +20,7 @@ import {
   getMultiLineStringChild,
   getMultiLineStringResolvedOffsets,
   getPointChild,
+  invertOffsets,
   isLineStringVector,
   isMultiLineStringVector,
   validateColorVector,
@@ -143,10 +144,21 @@ export class GeoArrowPathLayer<
   getPickingInfo({ info, sourceLayer }: GetPickingInfoParams): PickingInfo {
     const { data: table } = this.props;
 
+    // Geometry index as rendered
+    let index = info.index;
+
+    // if a MultiLineString dataset, map from the rendered index back to the
+    // feature index
+    // @ts-expect-error `invertedGeomOffsets` is manually set on layer props
+    if (sourceLayer.props.invertedGeomOffsets) {
+      // @ts-expect-error `invertedGeomOffsets` is manually set on layer props
+      index = sourceLayer.props.invertedGeomOffsets[index];
+    }
+
     // @ts-expect-error `recordBatchIdx` is manually set on layer props
     const recordBatchIdx: number = sourceLayer.props.recordBatchIdx;
     const batch = table.batches[recordBatchIdx];
-    const row = batch.get(info.index);
+    const row = batch.get(index);
 
     // @ts-expect-error hack: using private method to avoid recomputing via
     // batch lengths on each iteration
@@ -155,7 +167,8 @@ export class GeoArrowPathLayer<
 
     info.object = row;
     // Update index to be _global_ index, not within the specific record batch
-    info.index += currentBatchOffset;
+    index += currentBatchOffset;
+    info.index = index;
     return info;
   }
 
@@ -306,6 +319,7 @@ export class GeoArrowPathLayer<
       const pointData = getLineStringChild(lineStringData);
       const coordData = getPointChild(pointData);
 
+      const geomOffsets = multiLineStringData.valueOffsets;
       const ringOffsets = lineStringData.valueOffsets;
 
       const nDim = pointData.type.listSize;
@@ -316,6 +330,7 @@ export class GeoArrowPathLayer<
       const props: PathLayerProps = {
         // used for picking purposes
         recordBatchIdx,
+        invertedGeomOffsets: invertOffsets(geomOffsets),
 
         id: `${this.props.id}-geoarrow-path-${recordBatchIdx}`,
         widthUnits: this.props.widthUnits,
