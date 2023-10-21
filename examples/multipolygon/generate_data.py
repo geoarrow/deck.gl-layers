@@ -27,10 +27,11 @@ def main():
     min_pop = np.min(log_pop_est)
     max_pop = np.max(log_pop_est)
     normalized = (log_pop_est - min_pop) / (max_pop - min_pop)
-    colors = apply_continuous_cmap(normalized, PRGn_11)
+    colors = apply_continuous_cmap(normalized, PRGn_11, alpha=0.5)
 
     table = table.append_column(
-        "pop_colors", pa.FixedSizeListArray.from_arrays(colors.flatten("C"), 3)
+        "pop_colors",
+        pa.FixedSizeListArray.from_arrays(colors.flatten("C"), colors.shape[-1]),
     )
 
     feather.write_feather(

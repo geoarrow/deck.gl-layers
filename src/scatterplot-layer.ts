@@ -7,7 +7,6 @@ import {
   GetPickingInfoParams,
   Layer,
   LayersList,
-  PickingInfo,
   Unit,
 } from "@deck.gl/core/typed";
 import { ScatterplotLayer } from "@deck.gl/layers/typed";

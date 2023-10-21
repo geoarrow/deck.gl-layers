@@ -7,7 +7,6 @@ import {
   GetPickingInfoParams,
   Layer,
   LayersList,
-  PickingInfo,
   Unit,
 } from "@deck.gl/core/typed";
 import { PathLayer } from "@deck.gl/layers/typed";
@@ -28,7 +27,11 @@ import {
   validateMultiLineStringType,
   validateVectorAccessors,
 } from "./utils.js";
-import { LineStringVector, MultiLineStringVector } from "./types.js";
+import {
+  GeoArrowPickingInfo,
+  LineStringVector,
+  MultiLineStringVector,
+} from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
@@ -141,7 +144,10 @@ export class GeoArrowPathLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowPathLayer";
 
-  getPickingInfo({ info, sourceLayer }: GetPickingInfoParams): PickingInfo {
+  getPickingInfo({
+    info,
+    sourceLayer,
+  }: GetPickingInfoParams): GeoArrowPickingInfo {
     const { data: table } = this.props;
 
     // Geometry index as rendered

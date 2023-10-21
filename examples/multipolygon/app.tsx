@@ -54,9 +54,6 @@ function Root() {
       new GeoArrowSolidPolygonLayer({
         id: "geoarrow-polygons",
         data: table,
-        filled: true,
-        wireframe: true,
-        extruded: true,
         getPolygon: table.getChild("geometry")!,
         getFillColor: table.getChild("pop_colors")!,
         pickable: true,

@@ -8,7 +8,6 @@ import {
   Layer,
   LayersList,
   GetPickingInfoParams,
-  PickingInfo,
 } from "@deck.gl/core/typed";
 import { SolidPolygonLayer } from "@deck.gl/layers/typed";
 import type { SolidPolygonLayerProps } from "@deck.gl/layers/typed";
@@ -36,6 +35,7 @@ import {
   PolygonVector,
 } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
+import { earcutPolygonArray } from "./earcut.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
@@ -257,6 +257,8 @@ export class GeoArrowSolidPolygonLayer<
 
       const resolvedRingOffsets = getPolygonResolvedOffsets(polygonData);
 
+      const earcutTriangles = earcutPolygonArray(polygonData);
+
       const props: SolidPolygonLayerProps = {
         // used for picking purposes
         recordBatchIdx,
@@ -278,6 +280,7 @@ export class GeoArrowSolidPolygonLayer<
           startIndices: resolvedRingOffsets,
           attributes: {
             getPolygon: { value: flatCoordinateArray, size: nDim },
+            indices: { value: earcutTriangles, size: 1 },
           },
         },
       };
@@ -358,6 +361,8 @@ export class GeoArrowSolidPolygonLayer<
       // const ringOffsets = ringData.valueOffsets;
       const flatCoordinateArray = coordData.values;
 
+      const earcutTriangles = earcutPolygonArray(polygonData);
+
       // NOTE: we have two different uses of offsets. One is for _rendering_
       // each polygon. The other is for mapping _accessor attributes_ from one
       // value per feature to one value per vertex. And for that we need to use
@@ -399,18 +404,17 @@ export class GeoArrowSolidPolygonLayer<
           startIndices: resolvedPolygonToCoordOffsets,
           attributes: {
             getPolygon: { value: flatCoordinateArray, size: nDim },
-            instancePickingColors: {
-              value: encodePickingColors(
-                resolvedMultiPolygonToCoordOffsets,
-                this.encodePickingColor
-              ),
-              size: 3,
-            },
+            indices: { value: earcutTriangles, size: 1 },
+            // instancePickingColors: {
+            //   value: encodePickingColors(
+            //     resolvedMultiPolygonToCoordOffsets,
+            //     this.encodePickingColor
+            //   ),
+            //   size: 3,
+            // },
           },
         },
       };
-
-      console.log(resolvedMultiPolygonToCoordOffsets);
 
       assignAccessor({
         props,
@@ -464,6 +468,5 @@ function encodePickingColors(
     }
   }
 
-  console.log(pickingColors);
   return pickingColors;
 }
