@@ -24,9 +24,6 @@ const NAV_CONTROL_STYLE = {
   left: 10,
 };
 
-console.log("multipoint")
-console.log(arrow);
-
 function Root() {
   const onClick = (info) => {
     if (info.object) {

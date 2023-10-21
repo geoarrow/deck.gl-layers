@@ -3,8 +3,8 @@ import * as arrow from "apache-arrow";
 
 export type InterleavedCoord = arrow.FixedSizeList<arrow.Float64>;
 export type SeparatedCoord = arrow.Struct<{
-  x: arrow.Float;
-  y: arrow.Float;
+  x: arrow.Float64;
+  y: arrow.Float64;
 }>;
 // TODO: support separated coords
 export type Coord = InterleavedCoord; // | SeparatedCoord;
