@@ -48,6 +48,8 @@ function earcutSinglePolygon(data: PolygonData, geomIndex: number): number[] {
   for (let holeRingIdx = ringBegin + 1; holeRingIdx < ringEnd; holeRingIdx++) {
     holeIndices.push(ringOffsets[holeRingIdx] - initialCoordIndex);
   }
+  // @ts-expect-error earcut typing is off. Should allow TypedArray but here
+  // only says number[]
   const triangles = earcut(slicedFlatCoords, holeIndices, dim);
 
   for (let i = 0; i < triangles.length; i++) {
