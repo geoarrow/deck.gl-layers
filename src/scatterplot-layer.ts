@@ -6,8 +6,10 @@ import {
   DefaultProps,
   GetPickingInfoParams,
   Layer,
+  LayerContext,
   LayersList,
   Unit,
+  UpdateParameters,
 } from "@deck.gl/core/typed";
 import { ScatterplotLayer } from "@deck.gl/layers/typed";
 import type { ScatterplotLayerProps } from "@deck.gl/layers/typed";
@@ -36,7 +38,7 @@ export type GeoArrowScatterplotLayerProps = _GeoArrowScatterplotLayerProps &
 
 /** Properties added by GeoArrowScatterplotLayer */
 type _GeoArrowScatterplotLayerProps = {
-  data: arrow.Table;
+  data: arrow.Table | string;
 
   /**
    * The units of the radius, one of `'meters'`, `'common'`, and `'pixels'`.
@@ -121,6 +123,7 @@ type _GeoArrowScatterplotLayerProps = {
    * @default [0, 0, 0, 255]
    */
   getFillColor?:
+    | ((table: arrow.Table) => arrow.Vector<arrow.FixedSizeList<arrow.Uint8>>)
     | arrow.Vector<arrow.FixedSizeList<arrow.Uint8>>
     | Accessor<arrow.Table, Color>;
   /**
@@ -170,6 +173,40 @@ export class GeoArrowScatterplotLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowScatterplotLayer";
 
+  declare state: CompositeLayer["state"] & {
+    table: arrow.Table | null;
+  }
+
+  initializeState(_context: LayerContext): void {
+    this.state = {
+      table: null,
+    };
+  }
+
+  async updateData() {
+    const { data, fetch, loadOptions, loaders } = this.props;
+
+    if (this.props.data instanceof arrow.Table) {
+      console.log("set state data");
+      this.setState({ table: this.props.data });
+    } else if (typeof data === "string") {
+      const newData = await fetch(data, {
+        propName: "data",
+        layer: this,
+        loaders,
+        loadOptions,
+      });
+      this.setState({table: newData});
+    }
+  }
+
+  updateState({ props, changeFlags }: UpdateParameters<this>): void {
+    console.log("updateState");
+    if (changeFlags.dataChanged) {
+      this.updateData();
+    }
+  }
+
   getPickingInfo({
     info,
     sourceLayer,
@@ -207,7 +244,7 @@ export class GeoArrowScatterplotLayer<
   }
 
   renderLayers(): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { table } = this.state;
 
     const pointVector = getGeometryVector(table, EXTENSION_NAME.POINT);
     if (pointVector !== null) {
@@ -237,7 +274,7 @@ export class GeoArrowScatterplotLayer<
   _renderLayersPoint(
     geometryColumn: PointVector
   ): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { table } = this.state;
 
     if (this.props._validate) {
       const vectorAccessors: arrow.Vector[] = [geometryColumn];
@@ -335,7 +372,7 @@ export class GeoArrowScatterplotLayer<
   _renderLayersMultiPoint(
     geometryColumn: MultiPointVector
   ): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { table } = this.state;
 
     // TODO: validate that if nested, accessor props have the same nesting
     // structure as the main geometry column.

@@ -4,6 +4,7 @@ import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
 import DeckGL, { Layer, PickingInfo } from "deck.gl/typed";
 import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
+import type { Loader, LoaderWithParser } from "@loaders.gl/loader-utils";
 
 const GEOARROW_POINT_DATA =
   "http://localhost:8080/2019-01-01_performance_mobile_tiles.feather";
@@ -24,6 +25,21 @@ const NAV_CONTROL_STYLE = {
   left: 10,
 };
 
+const GeoArrowIPCLoader: LoaderWithParser = {
+  name: "geoarrow-ipc",
+  id: "geoarrow-ipc",
+  module: "arrow",
+  version: "latest",
+  worker: false,
+  options: {},
+  extensions: ["feather", "arrow"],
+  mimeTypes: [],
+  binary: true,
+  parse: async (arrayBuffer) => {
+    return arrow.tableFromIPC(arrayBuffer);
+  },
+};
+
 function Root() {
   const onClick = (info: PickingInfo) => {
     if (info.object) {
@@ -31,36 +47,20 @@ function Root() {
     }
   };
 
-  const [table, setTable] = useState<arrow.Table | null>(null);
-
-  useEffect(() => {
-    // declare the data fetching function
-    const fetchData = async () => {
-      const data = await fetch(GEOARROW_POINT_DATA);
-      const buffer = await data.arrayBuffer();
-      const table = arrow.tableFromIPC(buffer);
-      setTable(table);
-    };
-
-    if (!table) {
-      fetchData().catch(console.error);
-    }
-  });
-
   const layers: Layer[] = [];
 
-  table &&
-    layers.push(
-      new GeoArrowScatterplotLayer({
-        id: "geoarrow-points",
-        data: table,
-        getFillColor: table.getChild("colors")!,
-        radiusMinPixels: 1.5,
-        getPointRadius: 10,
-        pointRadiusMinPixels: 0.8,
-        pickable: true,
-      })
-    );
+  layers.push(
+    new GeoArrowScatterplotLayer({
+      id: "geoarrow-points",
+      data: GEOARROW_POINT_DATA,
+      getFillColor: ((table: arrow.Table) => table.getChild("colors")!),
+      radiusMinPixels: 1.5,
+      getPointRadius: 10,
+      pointRadiusMinPixels: 0.8,
+      pickable: true,
+      loaders: [GeoArrowIPCLoader],
+    })
+  );
 
   return (
     <DeckGL
