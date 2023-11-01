@@ -30,6 +30,8 @@ import {
   validateVectorAccessors,
 } from "./utils.js";
 import {
+  ColorAccessor,
+  FloatAccessor,
   GeoArrowPickingInfo,
   MultiPolygonVector,
   PolygonVector,
@@ -94,19 +96,15 @@ type _GeoArrowSolidPolygonLayerProps = {
   /** Extrusion height accessor.
    * @default 1000
    */
-  getElevation?: arrow.Vector<arrow.Float> | Accessor<arrow.Table, number>;
+  getElevation?: FloatAccessor;
   /** Fill color accessor.
    * @default [0, 0, 0, 255]
    */
-  getFillColor?:
-    | arrow.Vector<arrow.FixedSizeList<arrow.Uint8>>
-    | Accessor<arrow.Table, Color>;
+  getFillColor?: ColorAccessor;
   /** Stroke color accessor.
    * @default [0, 0, 0, 255]
    */
-  getLineColor?:
-    | arrow.Vector<arrow.FixedSizeList<arrow.Uint8>>
-    | Accessor<arrow.Table, Color>;
+  getLineColor?: ColorAccessor;
 
   /**
    * Material settings for lighting effect. Applies if `extruded: true`
