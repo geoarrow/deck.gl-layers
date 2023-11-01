@@ -1,6 +1,4 @@
 import {
-  Accessor,
-  Color,
   CompositeLayer,
   CompositeLayerProps,
   DefaultProps,
