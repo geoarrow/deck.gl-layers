@@ -28,6 +28,8 @@ import {
   validateVectorAccessors,
 } from "./utils.js";
 import {
+  ColorAccessor,
+  FloatAccessor,
   GeoArrowPickingInfo,
   LineStringVector,
   MultiLineStringVector,
@@ -103,16 +105,12 @@ type _GeoArrowPathLayerProps = {
    * Path color accessor.
    * @default [0, 0, 0, 255]
    */
-  getColor?:
-    | arrow.Vector<arrow.FixedSizeList<arrow.Uint8>>
-    | Accessor<arrow.Table, Color | Color[]>;
+  getColor?: ColorAccessor;
   /**
    * Path width accessor.
    * @default 1
    */
-  getWidth?:
-    | arrow.Vector<arrow.Float>
-    | Accessor<arrow.Table, number | number[]>;
+  getWidth?: FloatAccessor;
 };
 
 const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {

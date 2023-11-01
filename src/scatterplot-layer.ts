@@ -25,7 +25,13 @@ import {
   validatePointType,
   validateVectorAccessors,
 } from "./utils.js";
-import { GeoArrowPickingInfo, MultiPointVector, PointVector } from "./types.js";
+import {
+  ColorAccessor,
+  FloatAccessor,
+  GeoArrowPickingInfo,
+  MultiPointVector,
+  PointVector,
+} from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
@@ -115,26 +121,22 @@ type _GeoArrowScatterplotLayerProps = {
    * Radius accessor.
    * @default 1
    */
-  getRadius?: arrow.Vector<arrow.Float> | Accessor<arrow.Table, number>;
+  getRadius?: FloatAccessor;
   /**
    * Fill color accessor.
    * @default [0, 0, 0, 255]
    */
-  getFillColor?:
-    | arrow.Vector<arrow.FixedSizeList<arrow.Uint8>>
-    | Accessor<arrow.Table, Color>;
+  getFillColor?: ColorAccessor;
   /**
    * Stroke color accessor.
    * @default [0, 0, 0, 255]
    */
-  getLineColor?:
-    | arrow.Vector<arrow.FixedSizeList<arrow.Uint8>>
-    | Accessor<arrow.Table, Color>;
+  getLineColor?: ColorAccessor;
   /**
    * Stroke width accessor.
    * @default 1
    */
-  getLineWidth?: arrow.Vector<arrow.Float> | Accessor<arrow.Table, number>;
+  getLineWidth?: FloatAccessor;
 };
 
 const defaultProps: DefaultProps<GeoArrowScatterplotLayerProps> = {
