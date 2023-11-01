@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
-import DeckGL, { Layer, PickingInfo } from "deck.gl/typed";
-import { GeoArrowSolidPolygonLayer } from "@geoarrow/deck.gl-layers";
+import DeckGL, { Layer } from "deck.gl/typed";
+import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 
-const GEOARROW_POLYGON_DATA = "http://localhost:8080/utah.feather";
+const GEOARROW_MULTIPOINT_DATA =
+  "http://localhost:8080/naturalearth_cities_multipoint.feather";
 
 const INITIAL_VIEW_STATE = {
-  latitude: 40.63403641639511,
-  longitude: -111.91530172951025,
-  zoom: 11,
+  latitude: 20,
+  longitude: 0,
+  zoom: 2,
   bearing: 0,
   pitch: 0,
 };
@@ -24,9 +25,12 @@ const NAV_CONTROL_STYLE = {
 };
 
 function Root() {
-  const onClick = (info: PickingInfo) => {
+  const onClick = (info) => {
     if (info.object) {
-      console.log(JSON.stringify(info.object.toJSON()));
+      // eslint-disable-next-line
+      alert(
+        `${info.object.properties.name} (${info.object.properties.abbrev})`
+      );
     }
   };
 
@@ -35,9 +39,10 @@ function Root() {
   useEffect(() => {
     // declare the data fetching function
     const fetchData = async () => {
-      const data = await fetch(GEOARROW_POLYGON_DATA);
+      const data = await fetch(GEOARROW_MULTIPOINT_DATA);
       const buffer = await data.arrayBuffer();
       const table = arrow.tableFromIPC(buffer);
+      console.log(table);
       setTable(table);
     };
 
@@ -50,12 +55,16 @@ function Root() {
 
   table &&
     layers.push(
-      new GeoArrowSolidPolygonLayer({
-        id: "geoarrow-polygons",
+      new GeoArrowScatterplotLayer({
+        id: "geoarrow-points",
         data: table,
-        getFillColor: [0, 100, 60, 160],
-        pickable: true,
-        autoHighlight: true,
+        getPosition: table.getChild("geometry")!,
+        getFillColor: [255, 0, 0],
+        // getFillColor: table.getChild("colors")!,
+        // getLineColor: table.getChild("colors")!,
+        radiusMinPixels: 4,
+        getPointRadius: 10,
+        pointRadiusMinPixels: 0.8,
       })
     );
 
@@ -64,8 +73,8 @@ function Root() {
       initialViewState={INITIAL_VIEW_STATE}
       controller={true}
       layers={layers}
+      // @ts-expect-error
       ContextProvider={MapContext.Provider}
-      onClick={onClick}
     >
       <StaticMap mapStyle={MAP_STYLE} />
       <NavigationControl style={NAV_CONTROL_STYLE} />

@@ -5,12 +5,13 @@ import DeckGL, { Layer, PickingInfo } from "deck.gl/typed";
 import { GeoArrowSolidPolygonLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 
-const GEOARROW_POLYGON_DATA = "http://localhost:8080/utah.feather";
+const GEOARROW_POLYGON_DATA =
+  "http://localhost:8080/ne_10m_admin_0_countries.feather";
 
 const INITIAL_VIEW_STATE = {
-  latitude: 40.63403641639511,
-  longitude: -111.91530172951025,
-  zoom: 11,
+  latitude: 25,
+  longitude: 0,
+  zoom: 1.5,
   bearing: 0,
   pitch: 0,
 };
@@ -53,7 +54,8 @@ function Root() {
       new GeoArrowSolidPolygonLayer({
         id: "geoarrow-polygons",
         data: table,
-        getFillColor: [0, 100, 60, 160],
+        getPolygon: table.getChild("geometry")!,
+        getFillColor: table.getChild("pop_colors")!,
         pickable: true,
         autoHighlight: true,
       })

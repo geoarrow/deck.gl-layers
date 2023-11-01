@@ -1,9 +1,11 @@
-## Example: Use `@geoarrow/deck.gl-layers` with GeoArrow point data
+## Example: Use `@geoarrow/deck.gl-layers` with GeoArrow MultiPolygon data
 
 ## Data for example:
 
+Download [Admin 0 - Countries](https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-0-countries/) data.
+
 ```
-wget https://ookla-open-data.s3.us-west-2.amazonaws.com/parquet/performance/type=mobile/year=2019/quarter=1/2019-01-01_performance_mobile_tiles.parquet
+wget https://naciscdn.org/naturalearth/10m/cultural/ne_10m_admin_0_countries.zip
 poetry install
 poetry run python generate_data.py
 ```
