@@ -9,7 +9,6 @@ import {
   Unit,
 } from "@deck.gl/core/typed";
 import { TripsLayer } from "@deck.gl/geo-layers/typed";
-import type { PathLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
 import {
   assignAccessor,
@@ -18,10 +17,11 @@ import {
   validateLineStringType,
   validateVectorAccessors,
 } from "./utils.js";
-import { LineStringVector } from "./types.js";
-import { GeoArrowPathLayerProps } from "./path-layer.js";
-
-const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
+import { LineStringVector, TimestampAccessor } from "./types.js";
+import {
+  GeoArrowPathLayerProps,
+  defaultProps as pathLayerDefaultProps,
+} from "./path-layer.js";
 
 /** All properties supported by GeoArrowTripsLayer */
 export type GeoArrowTripsLayerProps = _GeoArrowTripsLayerProps &
@@ -48,28 +48,11 @@ type _GeoArrowTripsLayerProps = {
   /**
    * Timestamp accessor.
    */
-  getTimestamps: arrow.Vector<arrow.List<arrow.Timestamp>>;
+  getTimestamps: TimestampAccessor;
 };
 
 const defaultProps: DefaultProps<GeoArrowTripsLayerProps> = {
-  widthUnits: "meters",
-  widthScale: { type: "number", min: 0, value: 1 },
-  widthMinPixels: { type: "number", min: 0, value: 0 },
-  widthMaxPixels: { type: "number", min: 0, value: Number.MAX_SAFE_INTEGER },
-  jointRounded: false,
-  capRounded: false,
-  miterLimit: { type: "number", min: 0, value: 4 },
-  billboard: false,
-  // Note: this diverges from upstream, where here we _default into_ binary
-  // rendering
-  // This instructs the layer to skip normalization and use the binary
-  // as-is
-  _pathType: "open",
-  _validate: true,
-
-  getColor: { type: "accessor", value: DEFAULT_COLOR },
-  getWidth: { type: "accessor", value: 1 },
-
+  ...pathLayerDefaultProps,
   fadeTrail: true,
   trailLength: { type: "number", value: 120, min: 0 },
   currentTime: { type: "number", value: 0, min: 0 },

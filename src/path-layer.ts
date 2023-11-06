@@ -111,7 +111,7 @@ type _GeoArrowPathLayerProps = {
   getWidth?: FloatAccessor;
 };
 
-const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
+export const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
   widthUnits: "meters",
   widthScale: { type: "number", min: 0, value: 1 },
   widthMinPixels: { type: "number", min: 0, value: 0 },
