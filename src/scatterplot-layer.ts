@@ -270,7 +270,8 @@ export class GeoArrowScatterplotLayer<
       recordBatchIdx++
     ) {
       const geometryData = geometryColumn.data[recordBatchIdx];
-      const flatCoordinateArray = geometryData.children[0].values;
+      const flatCoordsData = getPointChild(geometryData);
+      const flatCoordinateArray = flatCoordsData.values;
 
       const props: ScatterplotLayerProps = {
         // @ts-expect-error used for picking purposes
