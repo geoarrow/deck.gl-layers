@@ -4,7 +4,7 @@
     "examples/*"
   ],
   "name": "@geoarrow/deck.gl-layers",
-  "version": "0.3.0-beta.1",
+  "version": "0.3.0-beta.2",
   "type": "module",
   "description": "",
   "source": "src/index.ts",
@@ -37,12 +37,14 @@
   "author": "Kyle Barron <kylebarron2@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
+    "@deck.gl/aggregation-layers": "^8.9.23",
     "@deck.gl/core": "^8.9.23",
     "@deck.gl/layers": "^8.9.23",
     "@math.gl/polygon": "^3.6.2",
     "apache-arrow": "^13.0.0"
   },
   "devDependencies": {
+    "@deck.gl/aggregation-layers": "^8.9.23",
     "@deck.gl/core": "^8.9.23",
     "@deck.gl/layers": "^8.9.23",
     "@math.gl/polygon": "^3.6.2",

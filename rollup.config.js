@@ -48,6 +48,7 @@ export default [
       name: "@geoarrow/deck.gl-geoarrow",
       sourcemap,
       globals: {
+        "@deck.gl/aggregation-layers/typed": "deck",
         "@deck.gl/core/typed": "deck",
         "@deck.gl/layers/typed": "deck",
         "apache-arrow": "arrow",
