@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 import pyarrow.feather as feather
+from lonboard._geoarrow.geopandas_interop import geopandas_to_geoarrow
 from lonboard.colormap import apply_continuous_cmap
-from lonboard.geoarrow.geopandas_interop import geopandas_to_geoarrow
 from palettable.colorbrewer.diverging import PRGn_11
 
 

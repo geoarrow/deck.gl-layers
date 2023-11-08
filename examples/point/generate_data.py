@@ -5,8 +5,8 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.feather as feather
 import shapely
+from lonboard._geoarrow.geopandas_interop import geopandas_to_geoarrow
 from lonboard.colormap import apply_continuous_cmap
-from lonboard.geoarrow.geopandas_interop import geopandas_to_geoarrow
 from palettable.colorbrewer.diverging import BrBG_10
 
 url = "https://ookla-open-data.s3.us-west-2.amazonaws.com/parquet/performance/type=mobile/year=2019/quarter=1/2019-01-01_performance_mobile_tiles.parquet"
