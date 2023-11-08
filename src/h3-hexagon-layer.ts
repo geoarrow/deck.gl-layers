@@ -9,14 +9,10 @@ import {
 import { H3HexagonLayer } from "@deck.gl/geo-layers/typed";
 import type { H3HexagonLayerProps } from "@deck.gl/geo-layers/typed";
 import * as arrow from "apache-arrow";
-import {
-  assignAccessor,
-  extractAccessorsFromProps,
-  validateColorVector,
-  validateVectorAccessors,
-} from "./utils.js";
+import { assignAccessor, extractAccessorsFromProps } from "./utils.js";
 import { GeoArrowPickingInfo } from "./types.js";
 import { getPickingInfo } from "./picking.js";
+import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowH3HexagonLayer */
 export type GeoArrowH3HexagonLayerProps = Omit<
@@ -72,27 +68,7 @@ export class GeoArrowH3HexagonLayer<
     const { data: table, getHexagon: hexagonColumn } = this.props;
 
     if (this.props._validate) {
-      const vectorAccessors: arrow.Vector[] = [];
-      const colorVectorAccessors: arrow.Vector[] = [];
-      for (const [accessorName, accessorValue] of Object.entries(this.props)) {
-        // Is it an accessor
-        if (accessorName.startsWith("get")) {
-          // Is it a vector accessor
-          if (accessorValue instanceof arrow.Vector) {
-            vectorAccessors.push(accessorValue);
-
-            // Is it a color vector accessor
-            if (accessorName.endsWith("Color")) {
-              colorVectorAccessors.push(accessorValue);
-            }
-          }
-        }
-      }
-
-      validateVectorAccessors(table, vectorAccessors);
-      for (const colorVectorAccessor of colorVectorAccessors) {
-        validateColorVector(colorVectorAccessor);
-      }
+      validateAccessors(this.props, table);
     }
 
     const layers: H3HexagonLayer[] = [];

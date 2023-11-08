@@ -20,10 +20,6 @@ import {
   invertOffsets,
   isLineStringVector,
   isMultiLineStringVector,
-  validateColorVector,
-  validateLineStringType,
-  validateMultiLineStringType,
-  validateVectorAccessors,
 } from "./utils.js";
 import { getPickingInfo } from "./picking.js";
 import {
@@ -34,6 +30,11 @@ import {
   MultiLineStringVector,
 } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
+import {
+  validateAccessors,
+  validateLineStringType,
+  validateMultiLineStringType,
+} from "./validate.js";
 
 /** All properties supported by GeoArrowPathLayer */
 export type GeoArrowPathLayerProps = Omit<
@@ -138,19 +139,8 @@ export class GeoArrowPathLayer<
     // TODO: validate that if nested, accessor props have the same nesting
     // structure as the main geometry column.
     if (this.props._validate) {
-      const vectorAccessors: arrow.Vector[] = [geometryColumn];
-      for (const accessor of [this.props.getColor, this.props.getWidth]) {
-        if (accessor instanceof arrow.Vector) {
-          vectorAccessors.push(accessor);
-        }
-      }
-
       validateLineStringType(geometryColumn.type);
-      validateVectorAccessors(table, vectorAccessors);
-
-      if (this.props.getColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getColor);
-      }
+      validateAccessors(this.props, table);
     }
 
     const layers: PathLayer[] = [];
@@ -213,19 +203,8 @@ export class GeoArrowPathLayer<
     // TODO: validate that if nested, accessor props have the same nesting
     // structure as the main geometry column.
     if (this.props._validate) {
-      const vectorAccessors: arrow.Vector[] = [geometryColumn];
-      for (const accessor of [this.props.getColor, this.props.getWidth]) {
-        if (accessor instanceof arrow.Vector) {
-          vectorAccessors.push(accessor);
-        }
-      }
-
       validateMultiLineStringType(geometryColumn.type);
-      validateVectorAccessors(table, vectorAccessors);
-
-      if (this.props.getColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getColor);
-      }
+      validateAccessors(this.props, table);
     }
 
     const layers: PathLayer[] = [];

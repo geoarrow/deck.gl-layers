@@ -14,9 +14,6 @@ import {
   getGeometryVector,
   getPointChild,
   isPointVector,
-  validateColorVector,
-  validatePointType,
-  validateVectorAccessors,
 } from "./utils.js";
 import {
   ColorAccessor,
@@ -26,6 +23,7 @@ import {
 } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { getPickingInfo } from "./picking.js";
+import { validateAccessors, validatePointType } from "./validate.js";
 
 /** All properties supported by GeoArrowColumnLayer */
 export type GeoArrowColumnLayerProps = Omit<
@@ -131,27 +129,8 @@ export class GeoArrowColumnLayer<
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      const vectorAccessors: arrow.Vector[] = [geometryColumn];
-      for (const accessor of [
-        this.props.getFillColor,
-        this.props.getLineColor,
-        this.props.getLineWidth,
-        this.props.getElevation,
-      ]) {
-        if (accessor instanceof arrow.Vector) {
-          vectorAccessors.push(accessor);
-        }
-      }
-
       validatePointType(geometryColumn.type);
-      validateVectorAccessors(table, vectorAccessors);
-
-      if (this.props.getFillColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getFillColor);
-      }
-      if (this.props.getLineColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getLineColor);
-      }
+      validateAccessors(this.props, table);
     }
 
     const layers: ColumnLayer[] = [];

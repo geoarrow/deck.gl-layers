@@ -13,9 +13,6 @@ import {
   assignAccessor,
   extractAccessorsFromProps,
   getPointChild,
-  validateColorVector,
-  validatePointType,
-  validateVectorAccessors,
 } from "./utils.js";
 import { getPickingInfo } from "./picking.js";
 import {
@@ -24,6 +21,7 @@ import {
   GeoArrowPickingInfo,
   PointVector,
 } from "./types.js";
+import { validateAccessors, validatePointType } from "./validate.js";
 
 /** All properties supported by GeoArrowArcLayer */
 export type GeoArrowArcLayerProps = Omit<
@@ -126,39 +124,12 @@ export class GeoArrowArcLayer<
     } = this.props;
 
     if (this.props._validate) {
-      const vectorAccessors: arrow.Vector[] = [sourcePosition, targetPosition];
-      for (const accessor of [
-        this.props.getSourceColor,
-        this.props.getTargetColor,
-        this.props.getWidth,
-        this.props.getHeight,
-        this.props.getTilt,
-      ]) {
-        if (accessor instanceof arrow.Vector) {
-          vectorAccessors.push(accessor);
-        }
-      }
+      validateAccessors(this.props, table);
 
       // Note: below we iterate over table batches anyways, so this layer won't
       // work as-is if data/table is null
       validatePointType(sourcePosition.type);
       validatePointType(targetPosition.type);
-      if (table) {
-        validateVectorAccessors(table, vectorAccessors);
-      } else {
-        const validationTable = new arrow.Table({
-          source: sourcePosition,
-          target: targetPosition,
-        });
-        validateVectorAccessors(validationTable, vectorAccessors);
-      }
-
-      if (this.props.getSourceColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getSourceColor);
-      }
-      if (this.props.getTargetColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getTargetColor);
-      }
     }
 
     const layers: ArcLayer[] = [];

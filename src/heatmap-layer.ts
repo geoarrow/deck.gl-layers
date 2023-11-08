@@ -14,11 +14,10 @@ import {
   getGeometryVector,
   getPointChild,
   isPointVector,
-  validatePointType,
-  validateVectorAccessors,
 } from "./utils.js";
 import { FloatAccessor, PointVector } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
+import { validateAccessors, validatePointType } from "./validate.js";
 
 /** All properties supported by GeoArrowHeatmapLayer */
 export type GeoArrowHeatmapLayerProps = Omit<
@@ -93,15 +92,8 @@ export class GeoArrowHeatmapLayer<
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      const vectorAccessors: arrow.Vector[] = [geometryColumn];
-      for (const accessor of [this.props.getWeight]) {
-        if (accessor instanceof arrow.Vector) {
-          vectorAccessors.push(accessor);
-        }
-      }
-
       validatePointType(geometryColumn.type);
-      validateVectorAccessors(table, vectorAccessors);
+      validateAccessors(this.props, table);
     }
 
     const layers: HeatmapLayer[] = [];
