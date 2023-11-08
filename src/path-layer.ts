@@ -5,7 +5,6 @@ import {
   GetPickingInfoParams,
   Layer,
   LayersList,
-  Unit,
 } from "@deck.gl/core/typed";
 import { PathLayer } from "@deck.gl/layers/typed";
 import type { PathLayerProps } from "@deck.gl/layers/typed";
@@ -34,62 +33,18 @@ import {
 } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 
-const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
-
 /** All properties supported by GeoArrowPathLayer */
-export type GeoArrowPathLayerProps = _GeoArrowPathLayerProps &
+export type GeoArrowPathLayerProps = Omit<
+  PathLayerProps<arrow.Table>,
+  "getPath" | "getColor" | "getWidth"
+> &
+  _GeoArrowPathLayerProps &
   CompositeLayerProps;
 
 /** Properties added by GeoArrowPathLayer */
 type _GeoArrowPathLayerProps = {
   data: arrow.Table;
 
-  /** The units of the line width, one of `'meters'`, `'common'`, and `'pixels'`
-   * @default 'meters'
-   */
-  widthUnits?: Unit;
-  /**
-   * Path width multiplier.
-   * @default 1
-   */
-  widthScale?: number;
-  /**
-   * The minimum path width in pixels. This prop can be used to prevent the path from getting too thin when zoomed out.
-   * @default 0
-   */
-  widthMinPixels?: number;
-  /**
-   * The maximum path width in pixels. This prop can be used to prevent the path from getting too thick when zoomed in.
-   * @default Number.MAX_SAFE_INTEGER
-   */
-  widthMaxPixels?: number;
-  /**
-   * Type of joint. If `true`, draw round joints. Otherwise draw miter joints.
-   * @default false
-   */
-  jointRounded?: boolean;
-  /**
-   * Type of caps. If `true`, draw round caps. Otherwise draw square caps.
-   * @default false
-   */
-  capRounded?: boolean;
-  /**
-   * The maximum extent of a joint in ratio to the stroke width. Only works if `jointRounded` is `false`.
-   * @default 4
-   */
-  miterLimit?: number;
-  /**
-   * If `true`, extrude the path in screen space (width always faces the camera).
-   * If `false`, the width always faces up (z).
-   * @default false
-   */
-  billboard?: boolean;
-  /**
-   * (Experimental) If `'loop'` or `'open'`, will skip normalizing the coordinates returned by `getPath` and instead assume all paths are to be loops or open paths.
-   * When normalization is disabled, paths must be specified in the format of flat array. Open paths must contain at least 2 vertices and closed paths must contain at least 3 vertices.
-   * @default null
-   */
-  _pathType?: null | "loop" | "open";
   /**
    * If `true`, validate the arrays provided (e.g. chunk lengths)
    * @default true
@@ -111,24 +66,22 @@ type _GeoArrowPathLayerProps = {
   getWidth?: FloatAccessor;
 };
 
+// Remove data and getPosition from the upstream default props
+const {
+  data: _data,
+  getPath: _getPath,
+  ..._defaultProps
+} = PathLayer.defaultProps;
+
 const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
-  widthUnits: "meters",
-  widthScale: { type: "number", min: 0, value: 1 },
-  widthMinPixels: { type: "number", min: 0, value: 0 },
-  widthMaxPixels: { type: "number", min: 0, value: Number.MAX_SAFE_INTEGER },
-  jointRounded: false,
-  capRounded: false,
-  miterLimit: { type: "number", min: 0, value: 4 },
-  billboard: false,
+  ..._defaultProps,
+  getWidth: { type: "accessor", value: 1 },
   // Note: this diverges from upstream, where here we _default into_ binary
   // rendering
   // This instructs the layer to skip normalization and use the binary
   // as-is
   _pathType: "open",
   _validate: true,
-
-  getColor: { type: "accessor", value: DEFAULT_COLOR },
-  getWidth: { type: "accessor", value: 1 },
 };
 
 /**

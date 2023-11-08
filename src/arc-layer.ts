@@ -5,7 +5,6 @@ import {
   GetPickingInfoParams,
   Layer,
   LayersList,
-  Unit,
 } from "@deck.gl/core/typed";
 import { ArcLayer } from "@deck.gl/layers/typed";
 import type { ArcLayerProps } from "@deck.gl/layers/typed";
@@ -24,51 +23,23 @@ import {
   PointVector,
 } from "./types.js";
 
-const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
-
 /** All properties supported by GeoArrowArcLayer */
-export type GeoArrowArcLayerProps = _GeoArrowArcLayerProps &
+export type GeoArrowArcLayerProps = Omit<
+  ArcLayerProps,
+  | "getSourcePosition"
+  | "getTargetPosition"
+  | "getSourceColor"
+  | "getTargetColor"
+  | "getWidth"
+  | "getHeight"
+  | "getTilt"
+> &
+  _GeoArrowArcLayerProps &
   CompositeLayerProps;
 
 /** Properties added by GeoArrowArcLayer */
 type _GeoArrowArcLayerProps = {
   data?: arrow.Table;
-
-  /**
-   * If `true`, create the arc along the shortest path on the earth surface.
-   * @default false
-   */
-  greatCircle?: boolean;
-
-  /**
-   * The number of segments used to draw each arc.
-   * @default 50
-   */
-  numSegments?: number;
-
-  /**
-   * The units of the line width, one of `'meters'`, `'common'`, and `'pixels'`
-   * @default 'pixels'
-   */
-  widthUnits?: Unit;
-
-  /**
-   * The scaling multiplier for the width of each line.
-   * @default 1
-   */
-  widthScale?: number;
-
-  /**
-   * The minimum line width in pixels.
-   * @default 0
-   */
-  widthMinPixels?: number;
-
-  /**
-   * The maximum line width in pixels.
-   * @default Number.MAX_SAFE_INTEGER
-   */
-  widthMaxPixels?: number;
 
   /**
    * Method called to retrieve the source position of each object.
@@ -117,22 +88,17 @@ type _GeoArrowArcLayerProps = {
   _validate?: boolean;
 };
 
+// Remove data from the upstream default props
+const {
+  data: _data,
+  getSourcePosition: _getSourcePosition,
+  getTargetPosition: _getTargetPosition,
+  ..._defaultProps
+} = ArcLayer.defaultProps;
+
 const defaultProps: DefaultProps<GeoArrowArcLayerProps> = {
+  ..._defaultProps,
   _validate: true,
-
-  getSourceColor: { type: "accessor", value: DEFAULT_COLOR },
-  getTargetColor: { type: "accessor", value: DEFAULT_COLOR },
-  getWidth: { type: "accessor", value: 1 },
-  getHeight: { type: "accessor", value: 1 },
-  getTilt: { type: "accessor", value: 0 },
-
-  greatCircle: false,
-  numSegments: { type: "number", value: 50, min: 1 },
-
-  widthUnits: "pixels",
-  widthScale: { type: "number", value: 1, min: 0 },
-  widthMinPixels: { type: "number", value: 0, min: 0 },
-  widthMaxPixels: { type: "number", value: Number.MAX_SAFE_INTEGER, min: 0 },
 };
 
 export class GeoArrowArcLayer<

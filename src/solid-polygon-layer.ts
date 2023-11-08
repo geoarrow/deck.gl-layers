@@ -1,7 +1,6 @@
 import {
   CompositeLayer,
   CompositeLayerProps,
-  Material,
   DefaultProps,
   Layer,
   LayersList,
@@ -37,56 +36,17 @@ import {
 import { EXTENSION_NAME } from "./constants.js";
 import { earcutPolygonArray } from "./earcut.js";
 
-const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
-
 /** All properties supported by GeoArrowSolidPolygonLayer */
-export type GeoArrowSolidPolygonLayerProps = _GeoArrowSolidPolygonLayerProps &
+export type GeoArrowSolidPolygonLayerProps = Omit<
+  SolidPolygonLayerProps,
+  "getPolygon" | "getElevation" | "getFillColor" | "getLineColor"
+> &
+  _GeoArrowSolidPolygonLayerProps &
   CompositeLayerProps;
 
 /** Properties added by GeoArrowSolidPolygonLayer */
 type _GeoArrowSolidPolygonLayerProps = {
   data: arrow.Table;
-
-  /** Whether to fill the polygons
-   * @default true
-   */
-  filled?: boolean;
-  /** Whether to extrude the polygons
-   * @default false
-   */
-  extruded?: boolean;
-  /** Whether to generate a line wireframe of the polygon.
-   * @default false
-   */
-  wireframe?: boolean;
-  /**
-   * (Experimental) If `false`, will skip normalizing the coordinates returned by `getPolygon`.
-   * @default true
-   */
-  _normalize?: boolean;
-  /**
-   * (Experimental) This prop is only effective with `_normalize: false`.
-   * It specifies the winding order of rings in the polygon data, one of 'CW' (clockwise) and 'CCW' (counter-clockwise)
-   */
-  _windingOrder?: "CW" | "CCW";
-
-  /**
-   * (Experimental) This prop is only effective with `XYZ` data.
-   * When true, polygon tesselation will be performed on the plane with the largest area, instead of the xy plane.
-   * @default false
-   */
-  _full3d?: boolean;
-
-  /**
-   * If `true`, validate the arrays provided (e.g. chunk lengths)
-   * @default true
-   */
-  _validate?: boolean;
-
-  /** Elevation multiplier.
-   * @default 1
-   */
-  elevationScale?: number;
 
   /** Polygon geometry accessor. */
   getPolygon?: PolygonVector | MultiPolygonVector;
@@ -105,33 +65,28 @@ type _GeoArrowSolidPolygonLayerProps = {
   getLineColor?: ColorAccessor;
 
   /**
-   * Material settings for lighting effect. Applies if `extruded: true`
-   *
+   * If `true`, validate the arrays provided (e.g. chunk lengths)
    * @default true
-   * @see https://deck.gl/docs/developer-guide/using-lighting
    */
-  material?: Material;
+  _validate?: boolean;
 };
 
+// Remove data from the upstream default props
+const {
+  data: _data,
+  getPolygon: _getPolygon,
+  ..._defaultProps
+} = SolidPolygonLayer.defaultProps;
+
 const defaultProps: DefaultProps<GeoArrowSolidPolygonLayerProps> = {
-  filled: true,
-  extruded: false,
-  wireframe: false,
+  ..._defaultProps,
   // Note: this diverges from upstream, where here we default to no
   // normalization
   _normalize: false,
   // Note: this diverges from upstream, where here we default to CCW
   _windingOrder: "CCW",
-  _full3d: false,
+
   _validate: true,
-
-  elevationScale: { type: "number", min: 0, value: 1 },
-
-  getElevation: { type: "accessor", value: 1000 },
-  getFillColor: { type: "accessor", value: DEFAULT_COLOR },
-  getLineColor: { type: "accessor", value: DEFAULT_COLOR },
-
-  material: true,
 };
 
 export class GeoArrowSolidPolygonLayer<

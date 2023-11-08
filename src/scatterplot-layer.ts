@@ -5,7 +5,6 @@ import {
   GetPickingInfoParams,
   Layer,
   LayersList,
-  Unit,
 } from "@deck.gl/core/typed";
 import { ScatterplotLayer } from "@deck.gl/layers/typed";
 import type { ScatterplotLayerProps } from "@deck.gl/layers/typed";
@@ -32,78 +31,18 @@ import {
 } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 
-const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
-
 /** All properties supported by GeoArrowScatterplotLayer */
-export type GeoArrowScatterplotLayerProps = _GeoArrowScatterplotLayerProps &
+export type GeoArrowScatterplotLayerProps = Omit<
+  ScatterplotLayerProps<arrow.Table>,
+  "getPosition" | "getRadius" | "getFillColor" | "getLineColor"
+> &
+  _GeoArrowScatterplotLayerProps &
   CompositeLayerProps;
 
 /** Properties added by GeoArrowScatterplotLayer */
 type _GeoArrowScatterplotLayerProps = {
   data: arrow.Table;
 
-  /**
-   * The units of the radius, one of `'meters'`, `'common'`, and `'pixels'`.
-   * @default 'meters'
-   */
-  radiusUnits?: Unit;
-  /**
-   * Radius multiplier.
-   * @default 1
-   */
-  radiusScale?: number;
-  /**
-   * The minimum radius in pixels. This prop can be used to prevent the circle from getting too small when zoomed out.
-   * @default 0
-   */
-  radiusMinPixels?: number;
-  /**
-   * The maximum radius in pixels. This prop can be used to prevent the circle from getting too big when zoomed in.
-   * @default Number.MAX_SAFE_INTEGER
-   */
-  radiusMaxPixels?: number;
-
-  /**
-   * The units of the stroke width, one of `'meters'`, `'common'`, and `'pixels'`.
-   * @default 'meters'
-   */
-  lineWidthUnits?: Unit;
-  /**
-   * Stroke width multiplier.
-   * @default 1
-   */
-  lineWidthScale?: number;
-  /**
-   * The minimum stroke width in pixels. This prop can be used to prevent the line from getting too thin when zoomed out.
-   * @default 0
-   */
-  lineWidthMinPixels?: number;
-  /**
-   * The maximum stroke width in pixels. This prop can be used to prevent the circle from getting too thick when zoomed in.
-   * @default Number.MAX_SAFE_INTEGER
-   */
-  lineWidthMaxPixels?: number;
-
-  /**
-   * Draw the outline of points.
-   * @default false
-   */
-  stroked?: boolean;
-  /**
-   * Draw the filled area of points.
-   * @default true
-   */
-  filled?: boolean;
-  /**
-   * If `true`, rendered circles always face the camera. If `false` circles face up (i.e. are parallel with the ground plane).
-   * @default false
-   */
-  billboard?: boolean;
-  /**
-   * If `true`, circles are rendered with smoothed edges. If `false`, circles are rendered with rough edges. Antialiasing can cause artifacts on edges of overlapping circles.
-   * @default true
-   */
-  antialiasing?: boolean;
   /**
    * If `true`, validate the arrays provided (e.g. chunk lengths)
    * @default true
@@ -137,31 +76,16 @@ type _GeoArrowScatterplotLayerProps = {
   getLineWidth?: FloatAccessor;
 };
 
+// Remove data and getPosition from the upstream default props
+const {
+  data: _data,
+  getPosition: _getPosition,
+  ..._defaultProps
+} = ScatterplotLayer.defaultProps;
+
 const defaultProps: DefaultProps<GeoArrowScatterplotLayerProps> = {
-  radiusUnits: "meters",
-  radiusScale: { type: "number", min: 0, value: 1 },
-  radiusMinPixels: { type: "number", min: 0, value: 0 }, //  min point radius in pixels
-  radiusMaxPixels: { type: "number", min: 0, value: Number.MAX_SAFE_INTEGER }, // max point radius in pixels
-
-  lineWidthUnits: "meters",
-  lineWidthScale: { type: "number", min: 0, value: 1 },
-  lineWidthMinPixels: { type: "number", min: 0, value: 0 },
-  lineWidthMaxPixels: {
-    type: "number",
-    min: 0,
-    value: Number.MAX_SAFE_INTEGER,
-  },
-
-  stroked: false,
-  filled: true,
-  billboard: false,
-  antialiasing: true,
+  ..._defaultProps,
   _validate: true,
-
-  getRadius: { type: "accessor", value: 1 },
-  getFillColor: { type: "accessor", value: DEFAULT_COLOR },
-  getLineColor: { type: "accessor", value: DEFAULT_COLOR },
-  getLineWidth: { type: "accessor", value: 1 },
 };
 
 export class GeoArrowScatterplotLayer<
