@@ -11,6 +11,7 @@ import type { ScatterplotLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
 import {
   assignAccessor,
+  extractAccessorsFromProps,
   getGeometryVector,
   getMultiPointChild,
   getPointChild,
@@ -34,7 +35,7 @@ import { EXTENSION_NAME } from "./constants.js";
 /** All properties supported by GeoArrowScatterplotLayer */
 export type GeoArrowScatterplotLayerProps = Omit<
   ScatterplotLayerProps<arrow.Table>,
-  "getPosition" | "getRadius" | "getFillColor" | "getLineColor"
+  "data" | "getPosition" | "getRadius" | "getFillColor" | "getLineColor"
 > &
   _GeoArrowScatterplotLayerProps &
   CompositeLayerProps;
@@ -197,23 +198,18 @@ export class GeoArrowScatterplotLayer<
       const flatCoordsData = getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
 
+      // Exclude manually-set accessors
+      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+        "getPosition",
+      ]);
+
       const props: ScatterplotLayerProps = {
+        ...otherProps,
+
         // @ts-expect-error used for picking purposes
         recordBatchIdx,
 
         id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,
-        radiusUnits: this.props.radiusUnits,
-        radiusScale: this.props.radiusScale,
-        radiusMinPixels: this.props.radiusMinPixels,
-        radiusMaxPixels: this.props.radiusMaxPixels,
-        lineWidthUnits: this.props.lineWidthUnits,
-        lineWidthScale: this.props.lineWidthScale,
-        lineWidthMinPixels: this.props.lineWidthMinPixels,
-        lineWidthMaxPixels: this.props.lineWidthMaxPixels,
-        stroked: this.props.stroked,
-        filled: this.props.filled,
-        billboard: this.props.billboard,
-        antialiasing: this.props.antialiasing,
         data: {
           length: geometryData.length,
           attributes: {
@@ -225,30 +221,14 @@ export class GeoArrowScatterplotLayer<
         },
       };
 
-      assignAccessor({
-        props,
-        propName: "getRadius",
-        propInput: this.props.getRadius,
-        chunkIdx: recordBatchIdx,
-      });
-      assignAccessor({
-        props,
-        propName: "getFillColor",
-        propInput: this.props.getFillColor,
-        chunkIdx: recordBatchIdx,
-      });
-      assignAccessor({
-        props,
-        propName: "getLineColor",
-        propInput: this.props.getLineColor,
-        chunkIdx: recordBatchIdx,
-      });
-      assignAccessor({
-        props,
-        propName: "getLineWidth",
-        propInput: this.props.getLineWidth,
-        chunkIdx: recordBatchIdx,
-      });
+      for (const [propName, propInput] of Object.entries(accessors)) {
+        assignAccessor({
+          props,
+          propName,
+          propInput,
+          chunkIdx: recordBatchIdx,
+        });
+      }
 
       const layer = new ScatterplotLayer(this.getSubLayerProps(props));
       layers.push(layer);
@@ -300,24 +280,19 @@ export class GeoArrowScatterplotLayer<
       const flatCoordsData = getPointChild(pointData);
       const flatCoordinateArray = flatCoordsData.values;
 
+      // Exclude manually-set accessors
+      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+        "getPosition",
+      ]);
+
       const props: ScatterplotLayerProps = {
+        ...otherProps,
+
         // @ts-expect-error used for picking purposes
         recordBatchIdx,
         invertedGeomOffsets: invertOffsets(geomOffsets),
 
         id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,
-        radiusUnits: this.props.radiusUnits,
-        radiusScale: this.props.radiusScale,
-        radiusMinPixels: this.props.radiusMinPixels,
-        radiusMaxPixels: this.props.radiusMaxPixels,
-        lineWidthUnits: this.props.lineWidthUnits,
-        lineWidthScale: this.props.lineWidthScale,
-        lineWidthMinPixels: this.props.lineWidthMinPixels,
-        lineWidthMaxPixels: this.props.lineWidthMaxPixels,
-        stroked: this.props.stroked,
-        filled: this.props.filled,
-        billboard: this.props.billboard,
-        antialiasing: this.props.antialiasing,
         data: {
           // Note: this needs to be the length one level down.
           length: pointData.length,
@@ -330,34 +305,15 @@ export class GeoArrowScatterplotLayer<
         },
       };
 
-      assignAccessor({
-        props,
-        propName: "getRadius",
-        propInput: this.props.getRadius,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: geomOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getFillColor",
-        propInput: this.props.getFillColor,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: geomOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getLineColor",
-        propInput: this.props.getLineColor,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: geomOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getLineWidth",
-        propInput: this.props.getLineWidth,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: geomOffsets,
-      });
+      for (const [propName, propInput] of Object.entries(accessors)) {
+        assignAccessor({
+          props,
+          propName,
+          propInput,
+          chunkIdx: recordBatchIdx,
+          geomCoordOffsets: geomOffsets,
+        });
+      }
 
       const layer = new ScatterplotLayer(this.getSubLayerProps(props));
       layers.push(layer);

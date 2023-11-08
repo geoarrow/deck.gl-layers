@@ -10,6 +10,7 @@ import type { HeatmapLayerProps } from "@deck.gl/aggregation-layers/typed";
 import * as arrow from "apache-arrow";
 import {
   assignAccessor,
+  extractAccessorsFromProps,
   getGeometryVector,
   getPointChild,
   isPointVector,
@@ -22,7 +23,7 @@ import { EXTENSION_NAME } from "./constants.js";
 /** All properties supported by GeoArrowHeatmapLayer */
 export type GeoArrowHeatmapLayerProps = Omit<
   HeatmapLayerProps,
-  "getPosition" | "getWeight"
+  "data" | "getPosition" | "getWeight"
 > &
   _GeoArrowHeatmapLayerProps &
   CompositeLayerProps;
@@ -113,20 +114,18 @@ export class GeoArrowHeatmapLayer<
       const flatCoordsData = getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
 
+      // Exclude manually-set accessors
+      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+        "getPosition",
+      ]);
+
       const props: HeatmapLayerProps = {
+        ...otherProps,
+
         // @ts-expect-error used for picking purposes
         recordBatchIdx,
 
         id: `${this.props.id}-geoarrow-heatmap-${recordBatchIdx}`,
-
-        radiusPixels: this.props.radiusPixels,
-        colorRange: this.props.colorRange,
-        intensity: this.props.intensity,
-        threshold: this.props.threshold,
-        colorDomain: this.props.colorDomain,
-        aggregation: this.props.aggregation,
-        weightsTextureSize: this.props.weightsTextureSize,
-        debounceTimeout: this.props.debounceTimeout,
         data: {
           length: geometryData.length,
           attributes: {
@@ -138,12 +137,14 @@ export class GeoArrowHeatmapLayer<
         },
       };
 
-      assignAccessor({
-        props,
-        propName: "getWeight",
-        propInput: this.props.getWeight,
-        chunkIdx: recordBatchIdx,
-      });
+      for (const [propName, propInput] of Object.entries(accessors)) {
+        assignAccessor({
+          props,
+          propName,
+          propInput,
+          chunkIdx: recordBatchIdx,
+        });
+      }
 
       const layer = new HeatmapLayer(this.getSubLayerProps(props));
       layers.push(layer);

@@ -11,6 +11,7 @@ import type { ArcLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
 import {
   assignAccessor,
+  extractAccessorsFromProps,
   getPointChild,
   validateColorVector,
   validatePointType,
@@ -26,6 +27,7 @@ import {
 /** All properties supported by GeoArrowArcLayer */
 export type GeoArrowArcLayerProps = Omit<
   ArcLayerProps,
+  | "data"
   | "getSourcePosition"
   | "getTargetPosition"
   | "getSourceColor"
@@ -191,19 +193,19 @@ export class GeoArrowArcLayer<
       const targetData = targetPosition.data[recordBatchIdx];
       const targetValues = getPointChild(targetData).values;
 
+      // Exclude manually-set accessors
+      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+        "getSourcePosition",
+        "getTargetPosition",
+      ]);
+
       const props: ArcLayerProps = {
+        ...otherProps,
+
         // @ts-expect-error used for picking purposes
         recordBatchIdx,
 
         id: `${this.props.id}-geoarrow-arc-${recordBatchIdx}`,
-
-        greatCircle: this.props.greatCircle,
-        numSegments: this.props.numSegments,
-        widthUnits: this.props.widthUnits,
-        widthScale: this.props.widthScale,
-        widthMinPixels: this.props.widthMinPixels,
-        widthMaxPixels: this.props.widthMaxPixels,
-
         data: {
           length: sourceData.length,
           attributes: {
@@ -219,36 +221,14 @@ export class GeoArrowArcLayer<
         },
       };
 
-      assignAccessor({
-        props,
-        propName: "getSourceColor",
-        propInput: this.props.getSourceColor,
-        chunkIdx: recordBatchIdx,
-      });
-      assignAccessor({
-        props,
-        propName: "getTargetColor",
-        propInput: this.props.getTargetColor,
-        chunkIdx: recordBatchIdx,
-      });
-      assignAccessor({
-        props,
-        propName: "getWidth",
-        propInput: this.props.getWidth,
-        chunkIdx: recordBatchIdx,
-      });
-      assignAccessor({
-        props,
-        propName: "getHeight",
-        propInput: this.props.getHeight,
-        chunkIdx: recordBatchIdx,
-      });
-      assignAccessor({
-        props,
-        propName: "getTilt",
-        propInput: this.props.getTilt,
-        chunkIdx: recordBatchIdx,
-      });
+      for (const [propName, propInput] of Object.entries(accessors)) {
+        assignAccessor({
+          props,
+          propName,
+          propInput,
+          chunkIdx: recordBatchIdx,
+        });
+      }
 
       const layer = new ArcLayer(this.getSubLayerProps(props));
       layers.push(layer);

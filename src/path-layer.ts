@@ -11,6 +11,7 @@ import type { PathLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
 import {
   assignAccessor,
+  extractAccessorsFromProps,
   getGeometryVector,
   getLineStringChild,
   getMultiLineStringChild,
@@ -36,7 +37,7 @@ import { EXTENSION_NAME } from "./constants.js";
 /** All properties supported by GeoArrowPathLayer */
 export type GeoArrowPathLayerProps = Omit<
   PathLayerProps<arrow.Table>,
-  "getPath" | "getColor" | "getWidth"
+  "data" | "getPath" | "getColor" | "getWidth"
 > &
   _GeoArrowPathLayerProps &
   CompositeLayerProps;
@@ -196,20 +197,18 @@ export class GeoArrowPathLayer<
       const coordData = getPointChild(pointData);
       const flatCoordinateArray = coordData.values;
 
+      // Exclude manually-set accessors
+      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+        "getPath",
+      ]);
+
       const props: PathLayerProps = {
+        ...otherProps,
+
         // used for picking purposes
         recordBatchIdx,
 
         id: `${this.props.id}-geoarrow-path-${recordBatchIdx}`,
-        widthUnits: this.props.widthUnits,
-        widthScale: this.props.widthScale,
-        widthMinPixels: this.props.widthMinPixels,
-        widthMaxPixels: this.props.widthMaxPixels,
-        jointRounded: this.props.jointRounded,
-        capRounded: this.props.capRounded,
-        miterLimit: this.props.miterLimit,
-        billboard: this.props.billboard,
-        _pathType: this.props._pathType,
         data: {
           length: lineStringData.length,
           // @ts-expect-error
@@ -220,20 +219,15 @@ export class GeoArrowPathLayer<
         },
       };
 
-      assignAccessor({
-        props,
-        propName: "getColor",
-        propInput: this.props.getColor,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: geomOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getWidth",
-        propInput: this.props.getWidth,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: geomOffsets,
-      });
+      for (const [propName, propInput] of Object.entries(accessors)) {
+        assignAccessor({
+          props,
+          propName,
+          propInput,
+          chunkIdx: recordBatchIdx,
+          geomCoordOffsets: geomOffsets,
+        });
+      }
 
       const layer = new PathLayer(this.getSubLayerProps(props));
       layers.push(layer);
@@ -284,21 +278,19 @@ export class GeoArrowPathLayer<
       const multiLineStringToCoordOffsets =
         getMultiLineStringResolvedOffsets(multiLineStringData);
 
+      // Exclude manually-set accessors
+      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+        "getPath",
+      ]);
+
       const props: PathLayerProps = {
+        ...otherProps,
+
         // used for picking purposes
         recordBatchIdx,
         invertedGeomOffsets: invertOffsets(geomOffsets),
 
         id: `${this.props.id}-geoarrow-path-${recordBatchIdx}`,
-        widthUnits: this.props.widthUnits,
-        widthScale: this.props.widthScale,
-        widthMinPixels: this.props.widthMinPixels,
-        widthMaxPixels: this.props.widthMaxPixels,
-        jointRounded: this.props.jointRounded,
-        capRounded: this.props.capRounded,
-        miterLimit: this.props.miterLimit,
-        billboard: this.props.billboard,
-        _pathType: this.props._pathType,
         data: {
           // Note: this needs to be the length one level down.
           length: lineStringData.length,
@@ -316,20 +308,15 @@ export class GeoArrowPathLayer<
 
       // Note: here we use multiLineStringToCoordOffsets, not ringOffsets,
       // because we want the mapping from the _feature_ to the vertex
-      assignAccessor({
-        props,
-        propName: "getColor",
-        propInput: this.props.getColor,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: multiLineStringToCoordOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getWidth",
-        propInput: this.props.getWidth,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: multiLineStringToCoordOffsets,
-      });
+      for (const [propName, propInput] of Object.entries(accessors)) {
+        assignAccessor({
+          props,
+          propName,
+          propInput,
+          chunkIdx: recordBatchIdx,
+          geomCoordOffsets: multiLineStringToCoordOffsets,
+        });
+      }
 
       const layer = new PathLayer(this.getSubLayerProps(props));
       layers.push(layer);
