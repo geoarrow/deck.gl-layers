@@ -25,6 +25,7 @@ import {
   validateMultiLineStringType,
   validateVectorAccessors,
 } from "./utils.js";
+import { getPickingInfo } from "./picking.js";
 import {
   ColorAccessor,
   FloatAccessor,
@@ -94,40 +95,8 @@ export class GeoArrowPathLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowPathLayer";
 
-  getPickingInfo({
-    info,
-    sourceLayer,
-  }: GetPickingInfoParams): GeoArrowPickingInfo {
-    const { data: table } = this.props;
-
-    // Geometry index as rendered
-    let index = info.index;
-
-    // if a MultiLineString dataset, map from the rendered index back to the
-    // feature index
-    // @ts-expect-error `invertedGeomOffsets` is manually set on layer props
-    if (sourceLayer.props.invertedGeomOffsets) {
-      // @ts-expect-error `invertedGeomOffsets` is manually set on layer props
-      index = sourceLayer.props.invertedGeomOffsets[index];
-    }
-
-    // @ts-expect-error `recordBatchIdx` is manually set on layer props
-    const recordBatchIdx: number = sourceLayer.props.recordBatchIdx;
-    const batch = table.batches[recordBatchIdx];
-    const row = batch.get(index);
-
-    // @ts-expect-error hack: using private method to avoid recomputing via
-    // batch lengths on each iteration
-    const offsets: number[] = table._offsets;
-    const currentBatchOffset = offsets[recordBatchIdx];
-
-    // Update index to be _global_ index, not within the specific record batch
-    index += currentBatchOffset;
-    return {
-      ...info,
-      index,
-      object: row,
-    };
+  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+    return getPickingInfo(params, this.props.data);
   }
 
   renderLayers(): Layer<{}> | LayersList | null {

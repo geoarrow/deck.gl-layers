@@ -1,7 +1,8 @@
-import { assert } from "@deck.gl/core/typed";
+import { GetPickingInfoParams, assert } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
 import {
   Coord,
+  GeoArrowPickingInfo,
   LineString,
   LineStringData,
   LineStringVector,
