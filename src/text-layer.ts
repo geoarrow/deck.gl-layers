@@ -11,6 +11,7 @@ import type { TextLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
 import {
   assignAccessor,
+  expandArrayToCoords,
   extractAccessorsFromProps,
   getGeometryVector,
   getPointChild,
@@ -178,7 +179,9 @@ export class GeoArrowTextLayer<
       const flatCoordsData = getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
       const textData = this.props.getText.data[recordBatchIdx];
+      // console.log(textData);
       const textValues = textData.values;
+      const characterOffsets = textData.valueOffsets;
 
       // Exclude manually-set accessors
       const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
@@ -189,21 +192,28 @@ export class GeoArrowTextLayer<
       const props: TextLayerProps = {
         ...otherProps,
 
-        // @ts-expect-error used for picking purposes
+        // // @ts-expect-error used for picking purposes
         recordBatchIdx,
 
         id: `${this.props.id}-geoarrow-heatmap-${recordBatchIdx}`,
         data: {
           length: geometryData.length,
+          // @ts-expect-error
+          startIndices: characterOffsets,
           attributes: {
+            // Positions need to be expanded to be one per character!
             getPosition: {
-              value: flatCoordinateArray,
+              value: expandArrayToCoords(
+                flatCoordinateArray,
+                geometryData.type.listSize,
+                characterOffsets
+              ),
               size: geometryData.type.listSize,
             },
             // TODO: support non-ascii characters
             getText: {
               value: textValues,
-              size: 1,
+              // size: 1,
             },
           },
         },
@@ -215,6 +225,7 @@ export class GeoArrowTextLayer<
           propName,
           propInput,
           chunkIdx: recordBatchIdx,
+          geomCoordOffsets: characterOffsets,
         });
       }
 
