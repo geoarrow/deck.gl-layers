@@ -55,6 +55,7 @@ function Root() {
         data: table,
         getColor: [0, 100, 60, 160],
         getText: table.getChild("name")!,
+        character_set: "auto",
         pickable: true,
         autoHighlight: true,
       })
