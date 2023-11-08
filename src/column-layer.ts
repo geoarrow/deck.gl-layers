@@ -25,6 +25,7 @@ import {
   PointVector,
 } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
+import { getPickingInfo } from "./picking.js";
 
 /** All properties supported by GeoArrowColumnLayer */
 export type GeoArrowColumnLayerProps = Omit<
@@ -104,32 +105,8 @@ export class GeoArrowColumnLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowColumnLayer";
 
-  getPickingInfo({
-    info,
-    sourceLayer,
-  }: GetPickingInfoParams): GeoArrowPickingInfo {
-    const { data: table } = this.props;
-
-    // Geometry index as rendered
-    let index = info.index;
-
-    // @ts-expect-error `recordBatchIdx` is manually set on layer props
-    const recordBatchIdx: number = sourceLayer.props.recordBatchIdx;
-    const batch = table.batches[recordBatchIdx];
-    const row = batch.get(index);
-
-    // @ts-expect-error hack: using private method to avoid recomputing via
-    // batch lengths on each iteration
-    const offsets: number[] = table._offsets;
-    const currentBatchOffset = offsets[recordBatchIdx];
-
-    // Update index to be _global_ index, not within the specific record batch
-    index += currentBatchOffset;
-    return {
-      ...info,
-      index,
-      object: row,
-    };
+  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+    return getPickingInfo(params, this.props.data);
   }
 
   renderLayers(): Layer<{}> | LayersList | null {

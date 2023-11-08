@@ -30,7 +30,7 @@ export type GeoArrowHeatmapLayerProps = Omit<
 
 /** Properties added by GeoArrowHeatmapLayer */
 type _GeoArrowHeatmapLayerProps = {
-  data?: arrow.Table;
+  data: arrow.Table;
 
   /**
    * Method called to retrieve the position of each object.
