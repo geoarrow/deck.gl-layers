@@ -15,13 +15,9 @@ import * as arrow from "apache-arrow";
 import {
   assignAccessor,
   getGeometryVector,
-  getMultiPointChild,
   getPointChild,
-  invertOffsets,
-  isMultiPointVector,
   isPointVector,
   validateColorVector,
-  validateMultiPointType,
   validatePointType,
   validateVectorAccessors,
 } from "./utils.js";
@@ -29,7 +25,6 @@ import {
   ColorAccessor,
   FloatAccessor,
   GeoArrowPickingInfo,
-  MultiPointVector,
   PointVector,
 } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
