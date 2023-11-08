@@ -18,10 +18,6 @@ import {
   invertOffsets,
   isMultiPointVector,
   isPointVector,
-  validateColorVector,
-  validateMultiPointType,
-  validatePointType,
-  validateVectorAccessors,
 } from "./utils.js";
 import { getPickingInfo } from "./picking.js";
 import {
@@ -32,6 +28,11 @@ import {
   PointVector,
 } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
+import {
+  validateAccessors,
+  validateMultiPointType,
+  validatePointType,
+} from "./validate.js";
 
 /** All properties supported by GeoArrowScatterplotLayer */
 export type GeoArrowScatterplotLayerProps = Omit<
@@ -134,27 +135,8 @@ export class GeoArrowScatterplotLayer<
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      const vectorAccessors: arrow.Vector[] = [geometryColumn];
-      for (const accessor of [
-        this.props.getRadius,
-        this.props.getFillColor,
-        this.props.getLineColor,
-        this.props.getLineWidth,
-      ]) {
-        if (accessor instanceof arrow.Vector) {
-          vectorAccessors.push(accessor);
-        }
-      }
-
       validatePointType(geometryColumn.type);
-      validateVectorAccessors(table, vectorAccessors);
-
-      if (this.props.getFillColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getFillColor);
-      }
-      if (this.props.getLineColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getLineColor);
-      }
+      validateAccessors(this.props, table);
     }
 
     const layers: ScatterplotLayer[] = [];
@@ -214,27 +196,8 @@ export class GeoArrowScatterplotLayer<
     // TODO: validate that if nested, accessor props have the same nesting
     // structure as the main geometry column.
     if (this.props._validate) {
-      const vectorAccessors: arrow.Vector[] = [geometryColumn];
-      for (const accessor of [
-        this.props.getRadius,
-        this.props.getFillColor,
-        this.props.getLineColor,
-        this.props.getLineWidth,
-      ]) {
-        if (accessor instanceof arrow.Vector) {
-          vectorAccessors.push(accessor);
-        }
-      }
-
       validateMultiPointType(geometryColumn.type);
-      validateVectorAccessors(table, vectorAccessors);
-
-      if (this.props.getFillColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getFillColor);
-      }
-      if (this.props.getLineColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getLineColor);
-      }
+      validateAccessors(this.props, table);
     }
 
     const layers: ScatterplotLayer[] = [];

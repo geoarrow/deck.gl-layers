@@ -22,10 +22,6 @@ import {
   invertOffsets,
   isMultiPolygonVector,
   isPolygonVector,
-  validateColorVector,
-  validateMultiPolygonType,
-  validatePolygonType,
-  validateVectorAccessors,
 } from "./utils.js";
 import { getPickingInfo } from "./picking.js";
 import {
@@ -37,6 +33,11 @@ import {
 } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { earcutPolygonArray } from "./earcut.js";
+import {
+  validateAccessors,
+  validateMultiPolygonType,
+  validatePolygonType,
+} from "./validate.js";
 
 /** All properties supported by GeoArrowSolidPolygonLayer */
 export type GeoArrowSolidPolygonLayerProps = Omit<
@@ -137,26 +138,8 @@ export class GeoArrowSolidPolygonLayer<
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      const vectorAccessors: arrow.Vector[] = [geometryColumn];
-      for (const accessor of [
-        this.props.getElevation,
-        this.props.getFillColor,
-        this.props.getLineColor,
-      ]) {
-        if (accessor instanceof arrow.Vector) {
-          vectorAccessors.push(accessor);
-        }
-      }
-
       validatePolygonType(geometryColumn.type);
-      validateVectorAccessors(table, vectorAccessors);
-
-      if (this.props.getFillColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getFillColor);
-      }
-      if (this.props.getLineColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getLineColor);
-      }
+      validateAccessors(this.props, table);
     }
 
     const layers: SolidPolygonLayer[] = [];
@@ -228,26 +211,8 @@ export class GeoArrowSolidPolygonLayer<
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      const vectorAccessors: arrow.Vector[] = [geometryColumn];
-      for (const accessor of [
-        this.props.getElevation,
-        this.props.getFillColor,
-        this.props.getLineColor,
-      ]) {
-        if (accessor instanceof arrow.Vector) {
-          vectorAccessors.push(accessor);
-        }
-      }
-
       validateMultiPolygonType(geometryColumn.type);
-      validateVectorAccessors(table, vectorAccessors);
-
-      if (this.props.getFillColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getFillColor);
-      }
-      if (this.props.getLineColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getLineColor);
-      }
+      validateAccessors(this.props, table);
     }
 
     const layers: SolidPolygonLayer[] = [];
