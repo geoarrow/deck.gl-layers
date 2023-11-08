@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
 import DeckGL, { Layer, PickingInfo } from "deck.gl/typed";
-import { GeoArrowSolidPolygonLayer } from "@geoarrow/deck.gl-layers";
+import { _GeoArrowTextLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 
-const GEOARROW_POLYGON_DATA = "http://localhost:8080/utah.feather";
+const GEOARROW_POLYGON_DATA = "http://localhost:8080/text.arrow";
 
 const INITIAL_VIEW_STATE = {
   latitude: 40.63403641639511,
@@ -50,10 +50,11 @@ function Root() {
 
   table &&
     layers.push(
-      new GeoArrowSolidPolygonLayer({
+      new _GeoArrowTextLayer({
         id: "geoarrow-polygons",
         data: table,
-        getFillColor: [0, 100, 60, 160],
+        getColor: [0, 100, 60, 160],
+        getText: table.getChild("name")!,
         pickable: true,
         autoHighlight: true,
       })

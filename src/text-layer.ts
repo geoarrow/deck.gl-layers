@@ -178,6 +178,7 @@ export class GeoArrowTextLayer<
       const flatCoordsData = getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
       const textData = this.props.getText.data[recordBatchIdx];
+      // console.log(textData);
       const textValues = textData.values;
 
       // Exclude manually-set accessors
@@ -195,6 +196,8 @@ export class GeoArrowTextLayer<
         id: `${this.props.id}-geoarrow-heatmap-${recordBatchIdx}`,
         data: {
           length: geometryData.length,
+          // @ts-expect-error
+          startIndices: textData.valueOffsets,
           attributes: {
             getPosition: {
               value: flatCoordinateArray,
@@ -203,7 +206,7 @@ export class GeoArrowTextLayer<
             // TODO: support non-ascii characters
             getText: {
               value: textValues,
-              size: 1,
+              // size: 1,
             },
           },
         },
