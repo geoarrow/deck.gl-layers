@@ -39,6 +39,7 @@
   "peerDependencies": {
     "@deck.gl/aggregation-layers": "^8.9.23",
     "@deck.gl/core": "^8.9.23",
+    "@deck.gl/geo-layers": "^8.9.23",
     "@deck.gl/layers": "^8.9.23",
     "@math.gl/polygon": "^3.6.2",
     "apache-arrow": "^13.0.0"
@@ -46,6 +47,7 @@
   "devDependencies": {
     "@deck.gl/aggregation-layers": "^8.9.23",
     "@deck.gl/core": "^8.9.23",
+    "@deck.gl/geo-layers": "^8.9.23",
     "@deck.gl/layers": "^8.9.23",
     "@math.gl/polygon": "^3.6.2",
     "@rollup/plugin-terser": "^0.4.3",

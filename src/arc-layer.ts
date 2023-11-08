@@ -42,7 +42,7 @@ export type GeoArrowArcLayerProps = Omit<
 
 /** Properties added by GeoArrowArcLayer */
 type _GeoArrowArcLayerProps = {
-  data?: arrow.Table;
+  data: arrow.Table;
 
   /**
    * Method called to retrieve the source position of each object.
@@ -139,6 +139,8 @@ export class GeoArrowArcLayer<
         }
       }
 
+      // Note: below we iterate over table batches anyways, so this layer won't
+      // work as-is if data/table is null
       validatePointType(sourcePosition.type);
       validatePointType(targetPosition.type);
       if (table) {
