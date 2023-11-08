@@ -29,6 +29,7 @@ import { EXTENSION_NAME } from "./constants.js";
 /** All properties supported by GeoArrowColumnLayer */
 export type GeoArrowColumnLayerProps = Omit<
   ColumnLayerProps<arrow.Table>,
+  | "data"
   | "getPosition"
   | "getFillColor"
   | "getLineColor"
