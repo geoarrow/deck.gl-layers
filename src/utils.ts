@@ -568,3 +568,25 @@ export function invertOffsets(
 
   return invertedOffsets;
 }
+
+// TODO: better typing
+export function extractAccessorsFromProps(
+  props: Record<string, any>,
+  excludeKeys: string[]
+): [Record<string, any>, Record<string, any>] {
+  const accessors = {};
+  const otherProps = {};
+  for (const [key, value] of Object.entries(props)) {
+    if (excludeKeys.includes(key)) {
+      continue;
+    }
+
+    if (key.startsWith("get")) {
+      accessors[key] = value;
+    } else {
+      otherProps[key] = value;
+    }
+  }
+
+  return [accessors, otherProps];
+}
