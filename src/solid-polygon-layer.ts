@@ -11,6 +11,7 @@ import type { SolidPolygonLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
 import {
   assignAccessor,
+  extractAccessorsFromProps,
   getGeometryVector,
   getLineStringChild,
   getMultiPolygonChild,
@@ -39,7 +40,7 @@ import { earcutPolygonArray } from "./earcut.js";
 /** All properties supported by GeoArrowSolidPolygonLayer */
 export type GeoArrowSolidPolygonLayerProps = Omit<
   SolidPolygonLayerProps,
-  "getPolygon" | "getElevation" | "getFillColor" | "getLineColor"
+  "data" | "getPolygon" | "getElevation" | "getFillColor" | "getLineColor"
 > &
   _GeoArrowSolidPolygonLayerProps &
   CompositeLayerProps;
@@ -210,19 +211,18 @@ export class GeoArrowSolidPolygonLayer<
 
       const earcutTriangles = earcutPolygonArray(polygonData);
 
+      // Exclude manually-set accessors
+      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+        "getPolygon",
+      ]);
+
       const props: SolidPolygonLayerProps = {
+        ...otherProps,
+
         // used for picking purposes
         recordBatchIdx,
 
         id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
-        filled: this.props.filled,
-        extruded: this.props.extruded,
-        wireframe: this.props.wireframe,
-        _normalize: this.props._normalize,
-        _windingOrder: this.props._windingOrder,
-        _full3d: this.props._full3d,
-        elevationScale: this.props.elevationScale,
-        material: this.props.material,
         data: {
           // Number of geometries
           length: polygonData.length,
@@ -236,27 +236,15 @@ export class GeoArrowSolidPolygonLayer<
         },
       };
 
-      assignAccessor({
-        props,
-        propName: "getElevation",
-        propInput: this.props.getElevation,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedRingOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getFillColor",
-        propInput: this.props.getFillColor,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedRingOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getLineColor",
-        propInput: this.props.getLineColor,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedRingOffsets,
-      });
+      for (const [propName, propInput] of Object.entries(accessors)) {
+        assignAccessor({
+          props,
+          propName,
+          propInput,
+          chunkIdx: recordBatchIdx,
+          geomCoordOffsets: resolvedRingOffsets,
+        });
+      }
 
       const layer = new SolidPolygonLayer(this.getSubLayerProps(props));
       layers.push(layer);
@@ -328,20 +316,19 @@ export class GeoArrowSolidPolygonLayer<
       const resolvedMultiPolygonToCoordOffsets =
         getMultiPolygonResolvedOffsets(multiPolygonData);
 
+      // Exclude manually-set accessors
+      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+        "getPolygon",
+      ]);
+
       const props: SolidPolygonLayerProps = {
+        ...otherProps,
+
         // used for picking purposes
         recordBatchIdx,
         invertedGeomOffsets: invertOffsets(geomOffsets),
 
         id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
-        filled: this.props.filled,
-        extruded: this.props.extruded,
-        wireframe: this.props.wireframe,
-        _normalize: this.props._normalize,
-        _windingOrder: this.props._windingOrder,
-        _full3d: this.props._full3d,
-        elevationScale: this.props.elevationScale,
-        material: this.props.material,
         data: {
           // Number of polygons
           // Note: this needs to be the length one level down, because we're
@@ -367,27 +354,15 @@ export class GeoArrowSolidPolygonLayer<
         },
       };
 
-      assignAccessor({
-        props,
-        propName: "getElevation",
-        propInput: this.props.getElevation,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedMultiPolygonToCoordOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getFillColor",
-        propInput: this.props.getFillColor,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedMultiPolygonToCoordOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getLineColor",
-        propInput: this.props.getLineColor,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedMultiPolygonToCoordOffsets,
-      });
+      for (const [propName, propInput] of Object.entries(accessors)) {
+        assignAccessor({
+          props,
+          propName,
+          propInput,
+          chunkIdx: recordBatchIdx,
+          geomCoordOffsets: resolvedMultiPolygonToCoordOffsets,
+        });
+      }
 
       const layer = new SolidPolygonLayer(this.getSubLayerProps(props));
       layers.push(layer);
