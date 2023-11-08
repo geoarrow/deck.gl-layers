@@ -11,3 +11,5 @@ export type { GeoArrowHeatmapLayerProps } from "./heatmap-layer.js";
 export type { GeoArrowPathLayerProps } from "./path-layer.js";
 export type { GeoArrowScatterplotLayerProps } from "./scatterplot-layer.js";
 export type { GeoArrowSolidPolygonLayerProps } from "./solid-polygon-layer.js";
+
+export type { GeoArrowPickingInfo } from "./types.js";
