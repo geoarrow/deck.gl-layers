@@ -89,9 +89,14 @@ const {
   ..._defaultProps
 } = ColumnLayer.defaultProps;
 
+// Default props added by us
+const ourDefaultProps = {
+  _validate: true,
+};
+
 const defaultProps: DefaultProps<GeoArrowColumnLayerProps> = {
   ..._defaultProps,
-  _validate: true,
+  ...ourDefaultProps,
 };
 
 /**
@@ -151,9 +156,8 @@ export class GeoArrowColumnLayer<
 
       const props: ColumnLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in defaultProps as the default in this
-        // props object
-        ...defaultProps,
+        // itself, we still have to pass in our defaultProps
+        ...ourDefaultProps,
         ...otherProps,
 
         // @ts-expect-error used for picking purposes

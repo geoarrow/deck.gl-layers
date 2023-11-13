@@ -59,9 +59,14 @@ const {
   ..._defaultProps
 } = HeatmapLayer.defaultProps;
 
+// Default props added by us
+const ourDefaultProps = {
+  _validate: true,
+};
+
 const defaultProps: DefaultProps<GeoArrowHeatmapLayerProps> = {
   ..._defaultProps,
-  _validate: true,
+  ...ourDefaultProps,
 };
 
 export class GeoArrowHeatmapLayer<
@@ -113,9 +118,8 @@ export class GeoArrowHeatmapLayer<
 
       const props: HeatmapLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in defaultProps as the default in this
-        // props object
-        ...defaultProps,
+        // itself, we still have to pass in our defaultProps
+        ...ourDefaultProps,
         ...otherProps,
 
         // @ts-expect-error used for picking purposes

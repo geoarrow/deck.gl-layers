@@ -125,12 +125,20 @@ const {
   ..._defaultProps
 } = TextLayer.defaultProps;
 
-const defaultProps: DefaultProps<GeoArrowTextLayerProps> = {
-  ..._defaultProps,
+// Default props added by us
+const ourDefaultProps: Pick<
+  GeoArrowTextLayerProps,
+  "getTextAnchor" | "getAlignmentBaseline" | "getPixelOffset" | "_validate"
+> = {
   getTextAnchor: "middle",
   getAlignmentBaseline: "center",
   getPixelOffset: [0, 0],
   _validate: true,
+};
+
+const defaultProps: DefaultProps<GeoArrowTextLayerProps> = {
+  ..._defaultProps,
+  ...ourDefaultProps,
 };
 
 export class GeoArrowTextLayer<
@@ -191,9 +199,8 @@ export class GeoArrowTextLayer<
 
       const props: TextLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in defaultProps as the default in this
-        // props object
-        ...defaultProps,
+        // itself, we still have to pass in our defaultProps
+        ...ourDefaultProps,
         ...otherProps,
 
         // // @ts-expect-error used for picking purposes

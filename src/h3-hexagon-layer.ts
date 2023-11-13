@@ -45,9 +45,14 @@ const {
   ..._defaultProps
 } = H3HexagonLayer.defaultProps;
 
+// Default props added by us
+const ourDefaultProps = {
+  _validate: true,
+};
+
 const defaultProps: DefaultProps<GeoArrowH3HexagonLayerProps> = {
   ..._defaultProps,
-  _validate: true,
+  ...ourDefaultProps,
 };
 
 export class GeoArrowH3HexagonLayer<
@@ -87,9 +92,8 @@ export class GeoArrowH3HexagonLayer<
 
       const props: H3HexagonLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in defaultProps as the default in this
-        // props object
-        ...defaultProps,
+        // itself, we still have to pass in our defaultProps
+        ...ourDefaultProps,
         ...otherProps,
 
         // @ts-expect-error used for picking purposes
