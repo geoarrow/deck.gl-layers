@@ -143,6 +143,11 @@ export class GeoArrowPathLayer<
       validateAccessors(this.props, table);
     }
 
+    // Exclude manually-set accessors
+    const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+      "getPath",
+    ]);
+
     const layers: PathLayer[] = [];
     for (
       let recordBatchIdx = 0;
@@ -156,12 +161,11 @@ export class GeoArrowPathLayer<
       const coordData = getPointChild(pointData);
       const flatCoordinateArray = coordData.values;
 
-      // Exclude manually-set accessors
-      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
-        "getPath",
-      ]);
-
       const props: PathLayerProps = {
+        // Note: because this is a composite layer and not doing the rendering
+        // itself, we still have to pass in defaultProps as the default in this
+        // props object
+        ...defaultProps,
         ...otherProps,
 
         // used for picking purposes
@@ -207,6 +211,11 @@ export class GeoArrowPathLayer<
       validateAccessors(this.props, table);
     }
 
+    // Exclude manually-set accessors
+    const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+      "getPath",
+    ]);
+
     const layers: PathLayer[] = [];
     for (
       let recordBatchIdx = 0;
@@ -226,12 +235,11 @@ export class GeoArrowPathLayer<
       const multiLineStringToCoordOffsets =
         getMultiLineStringResolvedOffsets(multiLineStringData);
 
-      // Exclude manually-set accessors
-      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
-        "getPath",
-      ]);
-
       const props: PathLayerProps = {
+        // Note: because this is a composite layer and not doing the rendering
+        // itself, we still have to pass in defaultProps as the default in this
+        // props object
+        ...defaultProps,
         ...otherProps,
 
         // used for picking purposes

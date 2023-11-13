@@ -139,6 +139,11 @@ export class GeoArrowScatterplotLayer<
       validateAccessors(this.props, table);
     }
 
+    // Exclude manually-set accessors
+    const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+      "getPosition",
+    ]);
+
     const layers: ScatterplotLayer[] = [];
     for (
       let recordBatchIdx = 0;
@@ -149,12 +154,11 @@ export class GeoArrowScatterplotLayer<
       const flatCoordsData = getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
 
-      // Exclude manually-set accessors
-      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
-        "getPosition",
-      ]);
-
       const props: ScatterplotLayerProps = {
+        // Note: because this is a composite layer and not doing the rendering
+        // itself, we still have to pass in defaultProps as the default in this
+        // props object
+        ...defaultProps,
         ...otherProps,
 
         // @ts-expect-error used for picking purposes
@@ -200,6 +204,11 @@ export class GeoArrowScatterplotLayer<
       validateAccessors(this.props, table);
     }
 
+    // Exclude manually-set accessors
+    const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+      "getPosition",
+    ]);
+
     const layers: ScatterplotLayer[] = [];
     for (
       let recordBatchIdx = 0;
@@ -212,12 +221,11 @@ export class GeoArrowScatterplotLayer<
       const flatCoordsData = getPointChild(pointData);
       const flatCoordinateArray = flatCoordsData.values;
 
-      // Exclude manually-set accessors
-      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
-        "getPosition",
-      ]);
-
       const props: ScatterplotLayerProps = {
+        // Note: because this is a composite layer and not doing the rendering
+        // itself, we still have to pass in defaultProps as the default in this
+        // props object
+        ...defaultProps,
         ...otherProps,
 
         // @ts-expect-error used for picking purposes

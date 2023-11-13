@@ -132,6 +132,12 @@ export class GeoArrowArcLayer<
       validatePointType(targetPosition.type);
     }
 
+    // Exclude manually-set accessors
+    const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+      "getSourcePosition",
+      "getTargetPosition",
+    ]);
+
     const layers: ArcLayer[] = [];
     for (
       let recordBatchIdx = 0;
@@ -143,13 +149,11 @@ export class GeoArrowArcLayer<
       const targetData = targetPosition.data[recordBatchIdx];
       const targetValues = getPointChild(targetData).values;
 
-      // Exclude manually-set accessors
-      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
-        "getSourcePosition",
-        "getTargetPosition",
-      ]);
-
       const props: ArcLayerProps = {
+        // Note: because this is a composite layer and not doing the rendering
+        // itself, we still have to pass in defaultProps as the default in this
+        // props object
+        ...defaultProps,
         ...otherProps,
 
         // @ts-expect-error used for picking purposes

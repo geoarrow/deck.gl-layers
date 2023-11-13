@@ -169,6 +169,12 @@ export class GeoArrowTextLayer<
       validateAccessors(this.props, table);
     }
 
+    // Exclude manually-set accessors
+    const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+      "getPosition",
+      "getText",
+    ]);
+
     const layers: TextLayer[] = [];
     for (
       let recordBatchIdx = 0;
@@ -183,13 +189,11 @@ export class GeoArrowTextLayer<
       const textValues = textData.values;
       const characterOffsets = textData.valueOffsets;
 
-      // Exclude manually-set accessors
-      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
-        "getPosition",
-        "getText",
-      ]);
-
       const props: TextLayerProps = {
+        // Note: because this is a composite layer and not doing the rendering
+        // itself, we still have to pass in defaultProps as the default in this
+        // props object
+        ...defaultProps,
         ...otherProps,
 
         // // @ts-expect-error used for picking purposes
