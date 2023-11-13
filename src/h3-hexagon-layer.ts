@@ -71,6 +71,11 @@ export class GeoArrowH3HexagonLayer<
       validateAccessors(this.props, table);
     }
 
+    // Exclude manually-set accessors
+    const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+      "getHexagon",
+    ]);
+
     const layers: H3HexagonLayer[] = [];
     for (
       let recordBatchIdx = 0;
@@ -80,12 +85,11 @@ export class GeoArrowH3HexagonLayer<
       const hexData = hexagonColumn.data[recordBatchIdx];
       const hexValues = hexData.values;
 
-      // Exclude manually-set accessors
-      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
-        "getHexagon",
-      ]);
-
       const props: H3HexagonLayerProps = {
+        // Note: because this is a composite layer and not doing the rendering
+        // itself, we still have to pass in defaultProps as the default in this
+        // props object
+        ...defaultProps,
         ...otherProps,
 
         // @ts-expect-error used for picking purposes

@@ -11,6 +11,7 @@ import type { ColumnLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
 import {
   assignAccessor,
+  extractAccessorsFromProps,
   getGeometryVector,
   getPointChild,
   isPointVector,
@@ -133,6 +134,11 @@ export class GeoArrowColumnLayer<
       validateAccessors(this.props, table);
     }
 
+    // Exclude manually-set accessors
+    const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+      "getPosition",
+    ]);
+
     const layers: ColumnLayer[] = [];
     for (
       let recordBatchIdx = 0;
@@ -144,30 +150,16 @@ export class GeoArrowColumnLayer<
       const flatCoordinateArray = flatCoordsData.values;
 
       const props: ColumnLayerProps = {
+        // Note: because this is a composite layer and not doing the rendering
+        // itself, we still have to pass in defaultProps as the default in this
+        // props object
+        ...defaultProps,
+        ...otherProps,
+
         // @ts-expect-error used for picking purposes
         recordBatchIdx,
 
         id: `${this.props.id}-geoarrow-column-${recordBatchIdx}`,
-
-        diskResolution: this.props.diskResolution,
-        radius: this.props.radius,
-        angle: this.props.angle,
-        vertices: this.props.vertices,
-        offset: this.props.offset,
-        coverage: this.props.coverage,
-        elevationScale: this.props.elevationScale,
-        filled: this.props.filled,
-        stroked: this.props.stroked,
-        extruded: this.props.extruded,
-        wireframe: this.props.wireframe,
-        flatShading: this.props.flatShading,
-        radiusUnits: this.props.radiusUnits,
-        lineWidthUnits: this.props.lineWidthUnits,
-        lineWidthScale: this.props.lineWidthScale,
-        lineWidthMinPixels: this.props.lineWidthMinPixels,
-        lineWidthMaxPixels: this.props.lineWidthMaxPixels,
-        material: this.props.material,
-
         data: {
           length: geometryData.length,
           attributes: {
@@ -179,30 +171,14 @@ export class GeoArrowColumnLayer<
         },
       };
 
-      assignAccessor({
-        props,
-        propName: "getFillColor",
-        propInput: this.props.getFillColor,
-        chunkIdx: recordBatchIdx,
-      });
-      assignAccessor({
-        props,
-        propName: "getLineColor",
-        propInput: this.props.getLineColor,
-        chunkIdx: recordBatchIdx,
-      });
-      assignAccessor({
-        props,
-        propName: "getElevation",
-        propInput: this.props.getElevation,
-        chunkIdx: recordBatchIdx,
-      });
-      assignAccessor({
-        props,
-        propName: "getLineWidth",
-        propInput: this.props.getLineWidth,
-        chunkIdx: recordBatchIdx,
-      });
+      for (const [propName, propInput] of Object.entries(accessors)) {
+        assignAccessor({
+          props,
+          propName,
+          propInput,
+          chunkIdx: recordBatchIdx,
+        });
+      }
 
       const layer = new ColumnLayer(this.getSubLayerProps(props));
       layers.push(layer);

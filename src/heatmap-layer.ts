@@ -96,6 +96,11 @@ export class GeoArrowHeatmapLayer<
       validateAccessors(this.props, table);
     }
 
+    // Exclude manually-set accessors
+    const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+      "getPosition",
+    ]);
+
     const layers: HeatmapLayer[] = [];
     for (
       let recordBatchIdx = 0;
@@ -106,12 +111,11 @@ export class GeoArrowHeatmapLayer<
       const flatCoordsData = getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
 
-      // Exclude manually-set accessors
-      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
-        "getPosition",
-      ]);
-
       const props: HeatmapLayerProps = {
+        // Note: because this is a composite layer and not doing the rendering
+        // itself, we still have to pass in defaultProps as the default in this
+        // props object
+        ...defaultProps,
         ...otherProps,
 
         // @ts-expect-error used for picking purposes

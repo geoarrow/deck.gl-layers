@@ -142,6 +142,11 @@ export class GeoArrowSolidPolygonLayer<
       validateAccessors(this.props, table);
     }
 
+    // Exclude manually-set accessors
+    const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+      "getPolygon",
+    ]);
+
     const layers: SolidPolygonLayer[] = [];
     for (
       let recordBatchIdx = 0;
@@ -163,12 +168,11 @@ export class GeoArrowSolidPolygonLayer<
 
       const earcutTriangles = earcutPolygonArray(polygonData);
 
-      // Exclude manually-set accessors
-      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
-        "getPolygon",
-      ]);
-
       const props: SolidPolygonLayerProps = {
+        // Note: because this is a composite layer and not doing the rendering
+        // itself, we still have to pass in defaultProps as the default in this
+        // props object
+        ...defaultProps,
         ...otherProps,
 
         // used for picking purposes
@@ -215,6 +219,11 @@ export class GeoArrowSolidPolygonLayer<
       validateAccessors(this.props, table);
     }
 
+    // Exclude manually-set accessors
+    const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+      "getPolygon",
+    ]);
+
     const layers: SolidPolygonLayer[] = [];
     for (
       let recordBatchIdx = 0;
@@ -250,12 +259,11 @@ export class GeoArrowSolidPolygonLayer<
       const resolvedMultiPolygonToCoordOffsets =
         getMultiPolygonResolvedOffsets(multiPolygonData);
 
-      // Exclude manually-set accessors
-      const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
-        "getPolygon",
-      ]);
-
       const props: SolidPolygonLayerProps = {
+        // Note: because this is a composite layer and not doing the rendering
+        // itself, we still have to pass in defaultProps as the default in this
+        // props object
+        ...defaultProps,
         ...otherProps,
 
         // used for picking purposes
