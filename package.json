@@ -4,7 +4,7 @@
     "examples/*"
   ],
   "name": "@geoarrow/deck.gl-layers",
-  "version": "0.3.0-beta.6",
+  "version": "0.3.0-beta.7",
   "type": "module",
   "description": "",
   "source": "src/index.ts",
@@ -27,7 +27,8 @@
     "build:rollup": "rollup -c rollup.config.js",
     "clean": "rimraf dist",
     "watch": "tsc --watch",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepublishOnly": "npm run clean && npm run build"
   },
   "files": [
     "dist/",
