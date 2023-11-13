@@ -97,9 +97,14 @@ const {
   ..._defaultProps
 } = ArcLayer.defaultProps;
 
+// Default props added by us
+const ourDefaultProps = {
+  _validate: true,
+};
+
 const defaultProps: DefaultProps<GeoArrowArcLayerProps> = {
   ..._defaultProps,
-  _validate: true,
+  ...ourDefaultProps,
 };
 
 export class GeoArrowArcLayer<
@@ -151,9 +156,8 @@ export class GeoArrowArcLayer<
 
       const props: ArcLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in defaultProps as the default in this
-        // props object
-        ...defaultProps,
+        // itself, we still have to pass in our defaultProps
+        ...ourDefaultProps,
         ...otherProps,
 
         // @ts-expect-error used for picking purposes

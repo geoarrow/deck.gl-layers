@@ -83,12 +83,17 @@ type _GeoArrowScatterplotLayerProps = {
 const {
   data: _data,
   getPosition: _getPosition,
-  ..._defaultProps
+  ..._upstreamDefaultProps
 } = ScatterplotLayer.defaultProps;
 
-const defaultProps: DefaultProps<GeoArrowScatterplotLayerProps> = {
-  ..._defaultProps,
+// Default props added by us
+const ourDefaultProps = {
   _validate: true,
+};
+
+const defaultProps: DefaultProps<GeoArrowScatterplotLayerProps> = {
+  ..._upstreamDefaultProps,
+  ...ourDefaultProps,
 };
 
 export class GeoArrowScatterplotLayer<
@@ -156,9 +161,8 @@ export class GeoArrowScatterplotLayer<
 
       const props: ScatterplotLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in defaultProps as the default in this
-        // props object
-        ...defaultProps,
+        // itself, we still have to pass in our defaultProps
+        ...ourDefaultProps,
         ...otherProps,
 
         // @ts-expect-error used for picking purposes
@@ -223,9 +227,8 @@ export class GeoArrowScatterplotLayer<
 
       const props: ScatterplotLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in defaultProps as the default in this
-        // props object
-        ...defaultProps,
+        // itself, we still have to pass in our defaultProps
+        ...ourDefaultProps,
         ...otherProps,
 
         // @ts-expect-error used for picking purposes

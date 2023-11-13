@@ -81,8 +81,11 @@ const {
   ..._defaultProps
 } = SolidPolygonLayer.defaultProps;
 
-const defaultProps: DefaultProps<GeoArrowSolidPolygonLayerProps> = {
-  ..._defaultProps,
+// Default props added by us
+const ourDefaultProps: Pick<
+  GeoArrowSolidPolygonLayerProps,
+  "_normalize" | "_windingOrder" | "_validate"
+> = {
   // Note: this diverges from upstream, where here we default to no
   // normalization
   _normalize: false,
@@ -90,6 +93,11 @@ const defaultProps: DefaultProps<GeoArrowSolidPolygonLayerProps> = {
   _windingOrder: "CCW",
 
   _validate: true,
+};
+
+const defaultProps: DefaultProps<GeoArrowSolidPolygonLayerProps> = {
+  ..._defaultProps,
+  ...ourDefaultProps,
 };
 
 export class GeoArrowSolidPolygonLayer<
@@ -170,9 +178,8 @@ export class GeoArrowSolidPolygonLayer<
 
       const props: SolidPolygonLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in defaultProps as the default in this
-        // props object
-        ...defaultProps,
+        // itself, we still have to pass in our defaultProps
+        ...ourDefaultProps,
         ...otherProps,
 
         // used for picking purposes
@@ -261,9 +268,8 @@ export class GeoArrowSolidPolygonLayer<
 
       const props: SolidPolygonLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in defaultProps as the default in this
-        // props object
-        ...defaultProps,
+        // itself, we still have to pass in our defaultProps
+        ...ourDefaultProps,
         ...otherProps,
 
         // used for picking purposes

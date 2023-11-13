@@ -1,4 +1,5 @@
 import {
+  Accessor,
   CompositeLayer,
   CompositeLayerProps,
   DefaultProps,
@@ -76,15 +77,21 @@ const {
   ..._defaultProps
 } = PathLayer.defaultProps;
 
+// Default props added by us
+const ourDefaultProps: Pick<GeoArrowPathLayerProps, "_pathType" | "_validate"> =
+  {
+    // Note: this diverges from upstream, where here we _default into_ binary
+    // rendering
+    // This instructs the layer to skip normalization and use the binary
+    // as-is
+    _pathType: "open",
+    _validate: true,
+  };
+
+// @ts-expect-error not sure why this is failing
 const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
   ..._defaultProps,
-  getWidth: { type: "accessor", value: 1 },
-  // Note: this diverges from upstream, where here we _default into_ binary
-  // rendering
-  // This instructs the layer to skip normalization and use the binary
-  // as-is
-  _pathType: "open",
-  _validate: true,
+  ...ourDefaultProps,
 };
 
 /**
@@ -163,9 +170,8 @@ export class GeoArrowPathLayer<
 
       const props: PathLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in defaultProps as the default in this
-        // props object
-        ...defaultProps,
+        // itself, we still have to pass in our defaultProps
+        ...ourDefaultProps,
         ...otherProps,
 
         // used for picking purposes
@@ -237,9 +243,8 @@ export class GeoArrowPathLayer<
 
       const props: PathLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in defaultProps as the default in this
-        // props object
-        ...defaultProps,
+        // itself, we still have to pass in our defaultProps
+        ...ourDefaultProps,
         ...otherProps,
 
         // used for picking purposes
