@@ -142,6 +142,7 @@ export class GeoArrowPathLayer<
     geometryColumn: LineStringVector
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
+    console.log(this.props);
 
     // TODO: validate that if nested, accessor props have the same nesting
     // structure as the main geometry column.

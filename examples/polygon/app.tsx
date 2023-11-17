@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
 import DeckGL, { Layer, PickingInfo } from "deck.gl/typed";
-import { GeoArrowSolidPolygonLayer } from "@geoarrow/deck.gl-layers";
+import { GeoArrowPolygonLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 
 const GEOARROW_POLYGON_DATA = "http://localhost:8080/utah.feather";
@@ -38,7 +38,9 @@ function Root() {
       const data = await fetch(GEOARROW_POLYGON_DATA);
       const buffer = await data.arrayBuffer();
       const table = arrow.tableFromIPC(buffer);
-      setTable(table);
+      const table2 = new arrow.Table(table.batches.slice(0, 10));
+      console.log(table.batches);
+      setTable(table2);
     };
 
     if (!table) {
@@ -50,11 +52,15 @@ function Root() {
 
   table &&
     layers.push(
-      new GeoArrowSolidPolygonLayer({
+      new GeoArrowPolygonLayer({
         id: "geoarrow-polygons",
+        stroked: true,
+        filled: false,
         data: table,
         getFillColor: [0, 100, 60, 160],
-        pickable: true,
+        getLineColor: [255, 0, 0],
+        lineWidthMinPixels: 0.2,
+        pickable: false,
         autoHighlight: true,
       })
     );
