@@ -1,6 +1,6 @@
 import { assert } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
-import { Coord, LineString, MultiPoint, Polygon } from "./types";
+import * as ga from "@geoarrow/geoarrow-js";
 
 export function validateAccessors(
   props: Record<string, any>,
@@ -68,77 +68,4 @@ export function validateColorVector(vector: arrow.Vector) {
   // @ts-ignore
   // Property 'type' does not exist on type 'Int_<Ints>'. Did you mean 'TType'?
   assert(vector.type.children[0].type.bitWidth === 8);
-}
-
-export function validatePointType(type: arrow.DataType): type is Coord {
-  // Assert the point vector is a FixedSizeList
-  // TODO: support struct
-  assert(arrow.DataType.isFixedSizeList(type));
-
-  // Assert it has 2 or 3 values
-  assert(type.listSize === 2 || type.listSize === 3);
-
-  // Assert the child type is a float
-  assert(arrow.DataType.isFloat(type.children[0]));
-
-  return true;
-}
-
-export function validateLineStringType(
-  type: arrow.DataType,
-): type is LineString {
-  // Assert the outer vector is a List
-  assert(arrow.DataType.isList(type));
-
-  // Assert its inner vector is a point layout
-  validatePointType(type.children[0].type);
-
-  return true;
-}
-
-export function validatePolygonType(type: arrow.DataType): type is Polygon {
-  // Assert the outer vector is a List
-  assert(arrow.DataType.isList(type));
-
-  // Assert its inner vector is a linestring layout
-  validateLineStringType(type.children[0].type);
-
-  return true;
-}
-
-// Note: this is the same as validateLineStringType
-export function validateMultiPointType(
-  type: arrow.DataType,
-): type is MultiPoint {
-  // Assert the outer vector is a List
-  assert(arrow.DataType.isList(type));
-
-  // Assert its inner vector is a point layout
-  validatePointType(type.children[0].type);
-
-  return true;
-}
-
-export function validateMultiLineStringType(
-  type: arrow.DataType,
-): type is Polygon {
-  // Assert the outer vector is a List
-  assert(arrow.DataType.isList(type));
-
-  // Assert its inner vector is a linestring layout
-  validateLineStringType(type.children[0].type);
-
-  return true;
-}
-
-export function validateMultiPolygonType(
-  type: arrow.DataType,
-): type is Polygon {
-  // Assert the outer vector is a List
-  assert(arrow.DataType.isList(type));
-
-  // Assert its inner vector is a linestring layout
-  validatePolygonType(type.children[0].type);
-
-  return true;
 }

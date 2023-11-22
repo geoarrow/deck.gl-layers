@@ -1,19 +1,6 @@
 import { assert } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
-import {
-  LineStringData,
-  LineStringVector,
-  MultiLineStringData,
-  MultiLineStringVector,
-  MultiPointData,
-  MultiPointVector,
-  MultiPolygonData,
-  MultiPolygonVector,
-  PointData,
-  PointVector,
-  PolygonData,
-  PolygonVector,
-} from "./types";
+import * as ga from "@geoarrow/geoarrow-js";
 
 export type TypedArray =
   | Uint8Array
@@ -236,103 +223,6 @@ export function getGeometryVector(
   return table.getChildAt(geometryColumnIdx);
 }
 
-export function isPointVector(vector: arrow.Vector): vector is PointVector {
-  // Check FixedSizeList
-  if (!arrow.DataType.isFixedSizeList(vector.type)) {
-    return false;
-  }
-
-  // Check list size of 2 or 3
-  if (vector.type.listSize !== 2 && vector.type.listSize !== 3) {
-    return false;
-  }
-
-  // Check child of FixedSizeList is floating type
-  if (!arrow.DataType.isFloat(vector.type.children[0])) {
-    return false;
-  }
-
-  return true;
-}
-
-export function isLineStringVector(
-  vector: arrow.Vector,
-): vector is LineStringVector {
-  // Check the outer vector is a List
-  if (!arrow.DataType.isList(vector.type)) {
-    return false;
-  }
-
-  // Check the child is a point vector
-  if (!isPointVector(vector.getChildAt(0))) {
-    return false;
-  }
-
-  return true;
-}
-
-export function isPolygonVector(vector: arrow.Vector): vector is PolygonVector {
-  // Check the outer vector is a List
-  if (!arrow.DataType.isList(vector.type)) {
-    return false;
-  }
-
-  // Check the child is a linestring vector
-  if (!isLineStringVector(vector.getChildAt(0))) {
-    return false;
-  }
-
-  return true;
-}
-
-export function isMultiPointVector(
-  vector: arrow.Vector,
-): vector is MultiPointVector {
-  // Check the outer vector is a List
-  if (!arrow.DataType.isList(vector.type)) {
-    return false;
-  }
-
-  // Check the child is a point vector
-  if (!isPointVector(vector.getChildAt(0))) {
-    return false;
-  }
-
-  return true;
-}
-
-export function isMultiLineStringVector(
-  vector: arrow.Vector,
-): vector is MultiLineStringVector {
-  // Check the outer vector is a List
-  if (!arrow.DataType.isList(vector.type)) {
-    return false;
-  }
-
-  // Check the child is a linestring vector
-  if (!isLineStringVector(vector.getChildAt(0))) {
-    return false;
-  }
-
-  return true;
-}
-
-export function isMultiPolygonVector(
-  vector: arrow.Vector,
-): vector is MultiPolygonVector {
-  // Check the outer vector is a List
-  if (!arrow.DataType.isList(vector.type)) {
-    return false;
-  }
-
-  // Check the child is a polygon vector
-  if (!isPolygonVector(vector.getChildAt(0))) {
-    return false;
-  }
-
-  return true;
-}
-
 export function getListNestingLevels(data: arrow.Data): number {
   let nestingLevels = 0;
   if (arrow.DataType.isList(data.type)) {
@@ -342,43 +232,11 @@ export function getListNestingLevels(data: arrow.Data): number {
   return nestingLevels;
 }
 
-export function getPointChild(data: PointData): arrow.Data<arrow.Float> {
-  // @ts-expect-error
-  return data.children[0];
-}
-
-export function getLineStringChild(data: LineStringData): PointData {
-  // @ts-expect-error
-  return data.children[0];
-}
-
-export function getPolygonChild(data: PolygonData): LineStringData {
-  // @ts-expect-error
-  return data.children[0];
-}
-
-export function getMultiPointChild(data: MultiPointData): PointData {
-  // @ts-expect-error
-  return data.children[0];
-}
-
-export function getMultiLineStringChild(
-  data: MultiLineStringData,
-): LineStringData {
-  // @ts-expect-error
-  return data.children[0];
-}
-
-export function getMultiPolygonChild(data: MultiPolygonData): PolygonData {
-  // @ts-expect-error
-  return data.children[0];
-}
-
 export function getMultiLineStringResolvedOffsets(
-  data: MultiLineStringData,
+  data: ga.data.MultiLineStringData,
 ): Int32Array {
   const geomOffsets = data.valueOffsets;
-  const lineStringData = getMultiLineStringChild(data);
+  const lineStringData = ga.child.getMultiLineStringChild(data);
   const ringOffsets = lineStringData.valueOffsets;
 
   const resolvedRingOffsets = new Int32Array(geomOffsets.length);
@@ -391,9 +249,11 @@ export function getMultiLineStringResolvedOffsets(
   return resolvedRingOffsets;
 }
 
-export function getPolygonResolvedOffsets(data: PolygonData): Int32Array {
+export function getPolygonResolvedOffsets(
+  data: ga.data.PolygonData,
+): Int32Array {
   const geomOffsets = data.valueOffsets;
-  const ringData = getPolygonChild(data);
+  const ringData = ga.child.getPolygonChild(data);
   const ringOffsets = ringData.valueOffsets;
 
   const resolvedRingOffsets = new Int32Array(geomOffsets.length);
@@ -407,10 +267,10 @@ export function getPolygonResolvedOffsets(data: PolygonData): Int32Array {
 }
 
 export function getMultiPolygonResolvedOffsets(
-  data: MultiPolygonData,
+  data: ga.data.MultiPolygonData,
 ): Int32Array {
-  const polygonData = getMultiPolygonChild(data);
-  const ringData = getPolygonChild(polygonData);
+  const polygonData = ga.child.getMultiPolygonChild(data);
+  const ringData = ga.child.getPolygonChild(polygonData);
 
   const geomOffsets = data.valueOffsets;
   const polygonOffsets = polygonData.valueOffsets;
