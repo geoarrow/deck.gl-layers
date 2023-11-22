@@ -131,6 +131,7 @@ const ourDefaultProps: Pick<
   _validate: true,
 };
 
+// @ts-expect-error Type error in merging default props with ours
 const defaultProps: DefaultProps<GeoArrowTextLayerProps> = {
   ..._defaultProps,
   ...ourDefaultProps,
