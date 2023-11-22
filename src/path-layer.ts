@@ -10,25 +10,19 @@ import {
 import { PathLayer } from "@deck.gl/layers/typed";
 import type { PathLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
+import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
-  getLineStringChild,
-  getMultiLineStringChild,
   getMultiLineStringResolvedOffsets,
-  getPointChild,
   invertOffsets,
-  isLineStringVector,
-  isMultiLineStringVector,
 } from "./utils.js";
 import { getPickingInfo } from "./picking.js";
 import {
   ColorAccessor,
   FloatAccessor,
   GeoArrowPickingInfo,
-  LineStringVector,
-  MultiLineStringVector,
 } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import {
@@ -57,7 +51,7 @@ type _GeoArrowPathLayerProps = {
   /**
    * Path geometry accessor.
    */
-  getPath?: LineStringVector | MultiLineStringVector;
+  getPath?: ga.vector.LineStringVector | ga.vector.MultiLineStringVector;
   /**
    * Path color accessor.
    * @default [0, 0, 0, 255]
@@ -127,11 +121,11 @@ export class GeoArrowPathLayer<
     }
 
     const geometryColumn = this.props.getPath;
-    if (isLineStringVector(geometryColumn)) {
+    if (ga.vector.isLineStringVector(geometryColumn)) {
       return this._renderLayersLineString(geometryColumn);
     }
 
-    if (isMultiLineStringVector(geometryColumn)) {
+    if (ga.vector.isMultiLineStringVector(geometryColumn)) {
       return this._renderLayersMultiLineString(geometryColumn);
     }
 
@@ -139,7 +133,7 @@ export class GeoArrowPathLayer<
   }
 
   _renderLayersLineString(
-    geometryColumn: LineStringVector,
+    geometryColumn: ga.vector.LineStringVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
@@ -163,9 +157,9 @@ export class GeoArrowPathLayer<
     ) {
       const lineStringData = geometryColumn.data[recordBatchIdx];
       const geomOffsets = lineStringData.valueOffsets;
-      const pointData = getLineStringChild(lineStringData);
+      const pointData = ga.child.getLineStringChild(lineStringData);
       const nDim = pointData.type.listSize;
-      const coordData = getPointChild(pointData);
+      const coordData = ga.child.getPointChild(pointData);
       const flatCoordinateArray = coordData.values;
 
       const props: PathLayerProps = {
@@ -206,7 +200,7 @@ export class GeoArrowPathLayer<
   }
 
   _renderLayersMultiLineString(
-    geometryColumn: MultiLineStringVector,
+    geometryColumn: ga.vector.MultiLineStringVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
@@ -229,9 +223,10 @@ export class GeoArrowPathLayer<
       recordBatchIdx++
     ) {
       const multiLineStringData = geometryColumn.data[recordBatchIdx];
-      const lineStringData = getMultiLineStringChild(multiLineStringData);
-      const pointData = getLineStringChild(lineStringData);
-      const coordData = getPointChild(pointData);
+      const lineStringData =
+        ga.child.getMultiLineStringChild(multiLineStringData);
+      const pointData = ga.child.getLineStringChild(lineStringData);
+      const coordData = ga.child.getPointChild(pointData);
 
       const geomOffsets = multiLineStringData.valueOffsets;
       const ringOffsets = lineStringData.valueOffsets;

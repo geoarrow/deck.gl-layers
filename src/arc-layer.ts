@@ -9,18 +9,11 @@ import {
 import { ArcLayer } from "@deck.gl/layers/typed";
 import type { ArcLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
-import {
-  assignAccessor,
-  extractAccessorsFromProps,
-  getPointChild,
-} from "./utils.js";
+import * as ga from "@geoarrow/geoarrow-js";
+import { assignAccessor, extractAccessorsFromProps } from "./utils.js";
+import { child } from "@geoarrow/geoarrow-js";
 import { getPickingInfo } from "./picking.js";
-import {
-  ColorAccessor,
-  FloatAccessor,
-  GeoArrowPickingInfo,
-  PointVector,
-} from "./types.js";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { validateAccessors, validatePointType } from "./validate.js";
 
 /** All properties supported by GeoArrowArcLayer */
@@ -45,12 +38,12 @@ type _GeoArrowArcLayerProps = {
   /**
    * Method called to retrieve the source position of each object.
    */
-  getSourcePosition: PointVector;
+  getSourcePosition: ga.vector.PointVector;
 
   /**
    * Method called to retrieve the target position of each object.
    */
-  getTargetPosition: PointVector;
+  getTargetPosition: ga.vector.PointVector;
 
   /**
    * The rgba color is in the format of `[r, g, b, [a]]`.
@@ -150,9 +143,9 @@ export class GeoArrowArcLayer<
       recordBatchIdx++
     ) {
       const sourceData = sourcePosition.data[recordBatchIdx];
-      const sourceValues = getPointChild(sourceData).values;
+      const sourceValues = child.getPointChild(sourceData).values;
       const targetData = targetPosition.data[recordBatchIdx];
-      const targetValues = getPointChild(targetData).values;
+      const targetValues = child.getPointChild(targetData).values;
 
       const props: ArcLayerProps = {
         // Note: because this is a composite layer and not doing the rendering

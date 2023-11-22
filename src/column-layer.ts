@@ -13,9 +13,8 @@ import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
-  getPointChild,
-  isPointVector,
 } from "./utils.js";
+import * as ga from "@geoarrow/geoarrow-js";
 import {
   ColorAccessor,
   FloatAccessor,
@@ -122,7 +121,7 @@ export class GeoArrowColumnLayer<
     }
 
     const geometryColumn = this.props.getPosition;
-    if (isPointVector(geometryColumn)) {
+    if (ga.vector.isPointVector(geometryColumn)) {
       return this._renderLayersPoint(geometryColumn);
     }
 
@@ -151,7 +150,7 @@ export class GeoArrowColumnLayer<
       recordBatchIdx++
     ) {
       const geometryData = geometryColumn.data[recordBatchIdx];
-      const flatCoordsData = getPointChild(geometryData);
+      const flatCoordsData = ga.child.getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
 
       const props: ColumnLayerProps = {

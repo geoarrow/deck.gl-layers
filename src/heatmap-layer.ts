@@ -8,14 +8,13 @@ import {
 import { HeatmapLayer } from "@deck.gl/aggregation-layers/typed";
 import type { HeatmapLayerProps } from "@deck.gl/aggregation-layers/typed";
 import * as arrow from "apache-arrow";
+import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
-  getPointChild,
-  isPointVector,
 } from "./utils.js";
-import { FloatAccessor, PointVector } from "./types.js";
+import { FloatAccessor } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { validateAccessors, validatePointType } from "./validate.js";
 
@@ -36,7 +35,7 @@ type _GeoArrowHeatmapLayerProps = {
    *
    * @default d => d.position
    */
-  getPosition?: PointVector;
+  getPosition?: ga.vector.PointVector;
 
   /**
    * The weight of each object.
@@ -84,7 +83,7 @@ export class GeoArrowHeatmapLayer<
     }
 
     const geometryColumn = this.props.getPosition;
-    if (isPointVector(geometryColumn)) {
+    if (ga.vector.isPointVector(geometryColumn)) {
       return this._renderLayersPoint(geometryColumn);
     }
 
@@ -92,7 +91,7 @@ export class GeoArrowHeatmapLayer<
   }
 
   _renderLayersPoint(
-    geometryColumn: PointVector,
+    geometryColumn: ga.vector.PointVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
@@ -113,7 +112,7 @@ export class GeoArrowHeatmapLayer<
       recordBatchIdx++
     ) {
       const geometryData = geometryColumn.data[recordBatchIdx];
-      const flatCoordsData = getPointChild(geometryData);
+      const flatCoordsData = ga.child.getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
 
       const props: HeatmapLayerProps = {

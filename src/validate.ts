@@ -1,6 +1,6 @@
 import { assert } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
-import { Coord, LineString, MultiPoint, Polygon } from "./types";
+import * as ga from "@geoarrow/geoarrow-js";
 
 export function validateAccessors(
   props: Record<string, any>,
@@ -70,7 +70,7 @@ export function validateColorVector(vector: arrow.Vector) {
   assert(vector.type.children[0].type.bitWidth === 8);
 }
 
-export function validatePointType(type: arrow.DataType): type is Coord {
+export function validatePointType(type: arrow.DataType): type is ga.type.Coord {
   // Assert the point vector is a FixedSizeList
   // TODO: support struct
   assert(arrow.DataType.isFixedSizeList(type));
@@ -86,7 +86,7 @@ export function validatePointType(type: arrow.DataType): type is Coord {
 
 export function validateLineStringType(
   type: arrow.DataType,
-): type is LineString {
+): type is ga.type.LineString {
   // Assert the outer vector is a List
   assert(arrow.DataType.isList(type));
 
@@ -96,7 +96,9 @@ export function validateLineStringType(
   return true;
 }
 
-export function validatePolygonType(type: arrow.DataType): type is Polygon {
+export function validatePolygonType(
+  type: arrow.DataType,
+): type is ga.type.Polygon {
   // Assert the outer vector is a List
   assert(arrow.DataType.isList(type));
 
@@ -109,7 +111,7 @@ export function validatePolygonType(type: arrow.DataType): type is Polygon {
 // Note: this is the same as validateLineStringType
 export function validateMultiPointType(
   type: arrow.DataType,
-): type is MultiPoint {
+): type is ga.type.MultiPoint {
   // Assert the outer vector is a List
   assert(arrow.DataType.isList(type));
 
@@ -121,7 +123,7 @@ export function validateMultiPointType(
 
 export function validateMultiLineStringType(
   type: arrow.DataType,
-): type is Polygon {
+): type is ga.type.Polygon {
   // Assert the outer vector is a List
   assert(arrow.DataType.isList(type));
 
@@ -133,7 +135,7 @@ export function validateMultiLineStringType(
 
 export function validateMultiPolygonType(
   type: arrow.DataType,
-): type is Polygon {
+): type is ga.type.Polygon {
   // Assert the outer vector is a List
   assert(arrow.DataType.isList(type));
 
