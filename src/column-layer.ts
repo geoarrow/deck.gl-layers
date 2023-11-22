@@ -16,11 +16,7 @@ import {
   getGeometryVector,
 } from "./utils.js";
 import * as ga from "@geoarrow/geoarrow-js";
-import {
-  ColorAccessor,
-  FloatAccessor,
-  GeoArrowPickingInfo,
-} from "./types.js";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { getPickingInfo } from "./picking.js";
 import { validateAccessors } from "./validate.js";
