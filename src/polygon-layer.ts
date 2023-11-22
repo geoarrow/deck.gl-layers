@@ -5,39 +5,24 @@ import {
   Layer,
   LayersList,
   GetPickingInfoParams,
+  assert,
 } from "@deck.gl/core/typed";
 import { PolygonLayer } from "@deck.gl/layers/typed";
 import type { PolygonLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
+import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
-  getLineStringChild,
-  getMultiPolygonChild,
   getMultiPolygonResolvedOffsets,
-  getPointChild,
-  getPolygonChild,
   getPolygonResolvedOffsets,
   invertOffsets,
-  isMultiPolygonVector,
-  isPolygonVector,
 } from "./utils.js";
 import { getPickingInfo } from "./picking.js";
-import {
-  ColorAccessor,
-  FloatAccessor,
-  GeoArrowPickingInfo,
-  MultiPolygonVector,
-  PolygonVector,
-} from "./types.js";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
-import { earcutPolygonArray } from "./earcut.js";
-import {
-  validateAccessors,
-  validateMultiPolygonType,
-  validatePolygonType,
-} from "./validate.js";
+import { validateAccessors } from "./validate.js";
 import { GeoArrowSolidPolygonLayer } from "./solid-polygon-layer.js";
 import { GeoArrowPathLayer } from "./path-layer.js";
 import { exteriorPolygon } from "./alg/exterior.js";
@@ -60,7 +45,7 @@ type _GeoArrowPolygonLayerProps = {
   data: arrow.Table;
 
   /** Polygon geometry accessor. */
-  getPolygon?: PolygonVector | MultiPolygonVector;
+  getPolygon?: ga.vector.PolygonVector | ga.vector.MultiPolygonVector;
   /** Fill color accessor.
    * @default [0, 0, 0, 255]
    */
@@ -111,7 +96,7 @@ const ourDefaultProps: Pick<
   _validate: true,
 };
 
-// // @ts-expect-error not sure why this is failing
+// @ts-expect-error Type error in merging default props with ours
 const defaultProps: DefaultProps<GeoArrowPolygonLayerProps> = {
   ..._defaultProps,
   ...ourDefaultProps,
@@ -121,7 +106,7 @@ const defaultLineColor: [number, number, number, number] = [0, 0, 0, 255];
 const defaultFillColor: [number, number, number, number] = [0, 0, 0, 255];
 
 export class GeoArrowPolygonLayer<
-  ExtraProps extends {} = {}
+  ExtraProps extends {} = {},
 > extends CompositeLayer<Required<GeoArrowPolygonLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowPolygonLayer";
@@ -140,18 +125,18 @@ export class GeoArrowPolygonLayer<
 
     const MultiPolygonVector = getGeometryVector(
       table,
-      EXTENSION_NAME.MULTIPOLYGON
+      EXTENSION_NAME.MULTIPOLYGON,
     );
     if (MultiPolygonVector !== null) {
       return this._renderLayersMultiPolygon(MultiPolygonVector);
     }
 
     const geometryColumn = this.props.getPolygon;
-    if (isPolygonVector(geometryColumn)) {
+    if (ga.vector.isPolygonVector(geometryColumn)) {
       return this._renderLayersPolygon(geometryColumn);
     }
 
-    if (isMultiPolygonVector(geometryColumn)) {
+    if (ga.vector.isMultiPolygonVector(geometryColumn)) {
       return this._renderLayersMultiPolygon(geometryColumn);
     }
 
@@ -159,12 +144,12 @@ export class GeoArrowPolygonLayer<
   }
 
   _renderLayersPolygon(
-    geometryColumn: PolygonVector
+    geometryColumn: ga.vector.PolygonVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      validatePolygonType(geometryColumn.type);
+      assert(ga.vector.isPolygonVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 
@@ -207,50 +192,49 @@ export class GeoArrowPolygonLayer<
       material,
     } = this.props;
 
-    console.log('hi')
+    console.log("hi");
     console.log(this.shouldRenderSubLayer("fill", table));
     // console.log(table.length);
     const FillLayer = this.getSubLayerClass("fill", GeoArrowSolidPolygonLayer);
     const StrokeLayer = this.getSubLayerClass("stroke", GeoArrowPathLayer);
 
     // Filled Polygon Layer
-    const polygonLayer =
-      new FillLayer(
-        {
-          // _dataDiff,
-          extruded,
-          elevationScale,
+    const polygonLayer = new FillLayer(
+      {
+        // _dataDiff,
+        extruded,
+        elevationScale,
 
-          filled,
-          wireframe,
-          _normalize,
-          _windingOrder,
+        filled,
+        wireframe,
+        _normalize,
+        _windingOrder,
 
-          getElevation,
-          getFillColor,
-          getLineColor: extruded && wireframe ? getLineColor : defaultLineColor,
+        getElevation,
+        getFillColor,
+        getLineColor: extruded && wireframe ? getLineColor : defaultLineColor,
 
-          material,
-          transitions,
+        material,
+        transitions,
+      },
+      this.getSubLayerProps({
+        id: "fill",
+        updateTriggers: updateTriggers && {
+          getPolygon: updateTriggers.getPolygon,
+          getElevation: updateTriggers.getElevation,
+          getFillColor: updateTriggers.getFillColor,
+          // using a legacy API to invalid lineColor attributes
+          // if (extruded && wireframe) has changed
+          lineColors: extruded && wireframe,
+          getLineColor: updateTriggers.getLineColor,
         },
-        this.getSubLayerProps({
-          id: "fill",
-          updateTriggers: updateTriggers && {
-            getPolygon: updateTriggers.getPolygon,
-            getElevation: updateTriggers.getElevation,
-            getFillColor: updateTriggers.getFillColor,
-            // using a legacy API to invalid lineColor attributes
-            // if (extruded && wireframe) has changed
-            lineColors: extruded && wireframe,
-            getLineColor: updateTriggers.getLineColor,
-          },
-        }),
-        {
-          data,
-          positionFormat,
-          getPolygon,
-        }
-      );
+      }),
+      {
+        data,
+        positionFormat,
+        getPolygon,
+      },
+    );
 
     // Polygon line layer
     const polygonLineLayer =
@@ -293,7 +277,7 @@ export class GeoArrowPolygonLayer<
           data: table,
           positionFormat,
           getPath,
-        }
+        },
       );
 
     const layers = [
@@ -307,4 +291,7 @@ export class GeoArrowPolygonLayer<
     return layers;
   }
 
+  _renderLayersMultiPolygon(
+    geometryColumn: ga.vector.MultiPolygonVector,
+  ): Layer<{}> | LayersList | null {}
 }
