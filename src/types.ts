@@ -2,7 +2,7 @@ import type { Accessor, Color, PickingInfo } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
 
 export type GeoArrowPickingInfo = PickingInfo & {
-  object: arrow.StructRowProxy;
+  object?: arrow.StructRowProxy;
 };
 
 export type FloatAccessor =
