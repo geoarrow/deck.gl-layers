@@ -96,7 +96,7 @@ function convertStructToFixedSizeList(
 
 type AssignAccessorProps = {
   /** The object on which to assign the resolved accesor */
-  props: object;
+  props: Record<string, any>;
   /** The name of the prop to set */
   propName: string;
   /** The user-supplied input to the layer. Must either be a scalar value or a reference to a column in the table. */
@@ -136,7 +136,6 @@ export function assignAccessor(args: AssignAccessorProps) {
         );
       }
 
-      // @ts-expect-error Property 'data' does not exist on type 'object'.
       props.data.attributes[propName] = {
         value: values,
         size: columnData.type.listSize,
@@ -152,7 +151,6 @@ export function assignAccessor(args: AssignAccessorProps) {
         values = expandArrayToCoords(values, 1, geomCoordOffsets);
       }
 
-      // @ts-expect-error Property 'data' does not exist on type 'object'.
       props.data.attributes[propName] = {
         value: values,
         size: 1,
@@ -316,8 +314,8 @@ export function extractAccessorsFromProps(
   props: Record<string, any>,
   excludeKeys: string[],
 ): [Record<string, any>, Record<string, any>] {
-  const accessors = {};
-  const otherProps = {};
+  const accessors: Record<string, any> = {};
+  const otherProps: Record<string, any> = {};
   for (const [key, value] of Object.entries(props)) {
     if (excludeKeys.includes(key)) {
       continue;

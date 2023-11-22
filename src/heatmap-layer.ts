@@ -64,6 +64,7 @@ const ourDefaultProps = {
   _validate: true,
 };
 
+// @ts-expect-error Type error in merging default props with ours
 const defaultProps: DefaultProps<GeoArrowHeatmapLayerProps> = {
   ..._defaultProps,
   ...ourDefaultProps,

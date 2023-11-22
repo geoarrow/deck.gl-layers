@@ -21,7 +21,7 @@ import {
 } from "./utils.js";
 import { getPickingInfo } from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
-import { EXTENSION_NAME } from "./constants.js";
+import { DEFAULT_COLOR, EXTENSION_NAME } from "./constants.js";
 import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowSolidPolygonLayer */
@@ -80,6 +80,7 @@ const ourDefaultProps: Pick<
   _validate: true,
 };
 
+// @ts-expect-error Type error in merging default props with ours
 const defaultProps: DefaultProps<GeoArrowSolidPolygonLayerProps> = {
   ..._defaultProps,
   ...ourDefaultProps,
@@ -312,7 +313,7 @@ function encodePickingColors(
   const largestOffset = geomToCoordOffsets[geomToCoordOffsets.length - 1];
   const pickingColors = new Uint8ClampedArray(largestOffset);
 
-  const pickingColor = [];
+  const pickingColor: number[] = [];
   for (let arrayIdx = 0; arrayIdx < geomToCoordOffsets.length - 1; arrayIdx++) {
     const thisOffset = geomToCoordOffsets[arrayIdx];
     const nextOffset = geomToCoordOffsets[arrayIdx + 1];

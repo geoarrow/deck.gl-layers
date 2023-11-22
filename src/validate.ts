@@ -1,6 +1,5 @@
 import { assert } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
-import * as ga from "@geoarrow/geoarrow-js";
 
 export function validateAccessors(
   props: Record<string, any>,
