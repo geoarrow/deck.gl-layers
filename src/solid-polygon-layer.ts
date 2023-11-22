@@ -5,39 +5,24 @@ import {
   Layer,
   LayersList,
   GetPickingInfoParams,
+  assert,
 } from "@deck.gl/core/typed";
 import { SolidPolygonLayer } from "@deck.gl/layers/typed";
 import type { SolidPolygonLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
+import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
-  getLineStringChild,
-  getMultiPolygonChild,
   getMultiPolygonResolvedOffsets,
-  getPointChild,
-  getPolygonChild,
   getPolygonResolvedOffsets,
   invertOffsets,
-  isMultiPolygonVector,
-  isPolygonVector,
 } from "./utils.js";
 import { getPickingInfo } from "./picking.js";
-import {
-  ColorAccessor,
-  FloatAccessor,
-  GeoArrowPickingInfo,
-  MultiPolygonVector,
-  PolygonVector,
-} from "./types.js";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
-import { earcutPolygonArray } from "./earcut.js";
-import {
-  validateAccessors,
-  validateMultiPolygonType,
-  validatePolygonType,
-} from "./validate.js";
+import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowSolidPolygonLayer */
 export type GeoArrowSolidPolygonLayerProps = Omit<
@@ -52,7 +37,7 @@ type _GeoArrowSolidPolygonLayerProps = {
   data: arrow.Table;
 
   /** Polygon geometry accessor. */
-  getPolygon?: PolygonVector | MultiPolygonVector;
+  getPolygon?: ga.vector.PolygonVector | ga.vector.MultiPolygonVector;
 
   /** Extrusion height accessor.
    * @default 1000
@@ -101,7 +86,7 @@ const defaultProps: DefaultProps<GeoArrowSolidPolygonLayerProps> = {
 };
 
 export class GeoArrowSolidPolygonLayer<
-  ExtraProps extends {} = {}
+  ExtraProps extends {} = {},
 > extends CompositeLayer<
   Required<GeoArrowSolidPolygonLayerProps> & ExtraProps
 > {
@@ -122,18 +107,18 @@ export class GeoArrowSolidPolygonLayer<
 
     const MultiPolygonVector = getGeometryVector(
       table,
-      EXTENSION_NAME.MULTIPOLYGON
+      EXTENSION_NAME.MULTIPOLYGON,
     );
     if (MultiPolygonVector !== null) {
       return this._renderLayersMultiPolygon(MultiPolygonVector);
     }
 
     const geometryColumn = this.props.getPolygon;
-    if (isPolygonVector(geometryColumn)) {
+    if (ga.vector.isPolygonVector(geometryColumn)) {
       return this._renderLayersPolygon(geometryColumn);
     }
 
-    if (isMultiPolygonVector(geometryColumn)) {
+    if (ga.vector.isMultiPolygonVector(geometryColumn)) {
       return this._renderLayersMultiPolygon(geometryColumn);
     }
 
@@ -141,12 +126,12 @@ export class GeoArrowSolidPolygonLayer<
   }
 
   _renderLayersPolygon(
-    geometryColumn: PolygonVector
+    geometryColumn: ga.vector.PolygonVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      validatePolygonType(geometryColumn.type);
+      assert(ga.vector.isPolygonVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 
@@ -162,9 +147,9 @@ export class GeoArrowSolidPolygonLayer<
       recordBatchIdx++
     ) {
       const polygonData = geometryColumn.data[recordBatchIdx];
-      const ringData = getPolygonChild(polygonData);
-      const pointData = getLineStringChild(ringData);
-      const coordData = getPointChild(pointData);
+      const ringData = ga.child.getPolygonChild(polygonData);
+      const pointData = ga.child.getLineStringChild(ringData);
+      const coordData = ga.child.getPointChild(pointData);
 
       const nDim = pointData.type.listSize;
 
@@ -174,7 +159,7 @@ export class GeoArrowSolidPolygonLayer<
 
       const resolvedRingOffsets = getPolygonResolvedOffsets(polygonData);
 
-      const earcutTriangles = earcutPolygonArray(polygonData);
+      const earcutTriangles = ga.algorithm.earcut(polygonData);
 
       const props: SolidPolygonLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
@@ -217,12 +202,12 @@ export class GeoArrowSolidPolygonLayer<
   }
 
   _renderLayersMultiPolygon(
-    geometryColumn: MultiPolygonVector
+    geometryColumn: ga.vector.MultiPolygonVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      validateMultiPolygonType(geometryColumn.type);
+      assert(ga.vector.isMultiPolygonVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 
@@ -238,10 +223,10 @@ export class GeoArrowSolidPolygonLayer<
       recordBatchIdx++
     ) {
       const multiPolygonData = geometryColumn.data[recordBatchIdx];
-      const polygonData = getMultiPolygonChild(multiPolygonData);
-      const ringData = getPolygonChild(polygonData);
-      const pointData = getLineStringChild(ringData);
-      const coordData = getPointChild(pointData);
+      const polygonData = ga.child.getMultiPolygonChild(multiPolygonData);
+      const ringData = ga.child.getPolygonChild(polygonData);
+      const pointData = ga.child.getLineStringChild(ringData);
+      const coordData = ga.child.getPointChild(pointData);
 
       const nDim = pointData.type.listSize;
 
@@ -250,7 +235,7 @@ export class GeoArrowSolidPolygonLayer<
       // const ringOffsets = ringData.valueOffsets;
       const flatCoordinateArray = coordData.values;
 
-      const earcutTriangles = earcutPolygonArray(polygonData);
+      const earcutTriangles = ga.algorithm.earcut(polygonData);
 
       // NOTE: we have two different uses of offsets. One is for _rendering_
       // each polygon. The other is for mapping _accessor attributes_ from one
@@ -322,7 +307,7 @@ export class GeoArrowSolidPolygonLayer<
 
 function encodePickingColors(
   geomToCoordOffsets: Int32Array,
-  encodePickingColor: (id: number, result: number[]) => void
+  encodePickingColor: (id: number, result: number[]) => void,
 ): Uint8ClampedArray {
   const largestOffset = geomToCoordOffsets[geomToCoordOffsets.length - 1];
   const pickingColors = new Uint8ClampedArray(largestOffset);

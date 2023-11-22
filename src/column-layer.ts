@@ -5,6 +5,7 @@ import {
   GetPickingInfoParams,
   Layer,
   LayersList,
+  assert,
 } from "@deck.gl/core/typed";
 import { ColumnLayer } from "@deck.gl/layers/typed";
 import type { ColumnLayerProps } from "@deck.gl/layers/typed";
@@ -13,18 +14,12 @@ import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
-  getPointChild,
-  isPointVector,
 } from "./utils.js";
-import {
-  ColorAccessor,
-  FloatAccessor,
-  GeoArrowPickingInfo,
-  PointVector,
-} from "./types.js";
+import * as ga from "@geoarrow/geoarrow-js";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { getPickingInfo } from "./picking.js";
-import { validateAccessors, validatePointType } from "./validate.js";
+import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowColumnLayer */
 export type GeoArrowColumnLayerProps = Omit<
@@ -47,7 +42,7 @@ type _GeoArrowColumnLayerProps = {
    * Method called to retrieve the position of each column.
    * @default object => object.position
    */
-  getPosition?: PointVector;
+  getPosition?: ga.vector.PointVector;
 
   /**
    * Fill color value or accessor.
@@ -104,7 +99,7 @@ const defaultProps: DefaultProps<GeoArrowColumnLayerProps> = {
  * coordinates.
  */
 export class GeoArrowColumnLayer<
-  ExtraProps extends {} = {}
+  ExtraProps extends {} = {},
 > extends CompositeLayer<Required<GeoArrowColumnLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowColumnLayer";
@@ -122,7 +117,7 @@ export class GeoArrowColumnLayer<
     }
 
     const geometryColumn = this.props.getPosition;
-    if (isPointVector(geometryColumn)) {
+    if (ga.vector.isPointVector(geometryColumn)) {
       return this._renderLayersPoint(geometryColumn);
     }
 
@@ -130,12 +125,12 @@ export class GeoArrowColumnLayer<
   }
 
   _renderLayersPoint(
-    geometryColumn: PointVector
+    geometryColumn: ga.vector.PointVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      validatePointType(geometryColumn.type);
+      assert(ga.vector.isPointVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 
@@ -151,7 +146,7 @@ export class GeoArrowColumnLayer<
       recordBatchIdx++
     ) {
       const geometryData = geometryColumn.data[recordBatchIdx];
-      const flatCoordsData = getPointChild(geometryData);
+      const flatCoordsData = ga.child.getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
 
       const props: ColumnLayerProps = {

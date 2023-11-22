@@ -5,27 +5,22 @@ import {
   GetPickingInfoParams,
   Layer,
   LayersList,
+  assert,
 } from "@deck.gl/core/typed";
 import { TextLayer } from "@deck.gl/layers/typed";
 import type { TextLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
+import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
   expandArrayToCoords,
   extractAccessorsFromProps,
   getGeometryVector,
-  getPointChild,
-  isPointVector,
 } from "./utils.js";
 import { getPickingInfo } from "./picking.js";
-import {
-  ColorAccessor,
-  FloatAccessor,
-  GeoArrowPickingInfo,
-  PointVector,
-} from "./types.js";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
-import { validateAccessors, validatePointType } from "./validate.js";
+import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowTextLayer */
 export type GeoArrowTextLayerProps = Omit<
@@ -73,7 +68,7 @@ type _GeoArrowTextLayerProps = {
   /**
    * Anchor position accessor
    */
-  getPosition?: PointVector;
+  getPosition?: ga.vector.PointVector;
   /**
    * Label color accessor
    * @default [0, 0, 0, 255]
@@ -142,7 +137,7 @@ const defaultProps: DefaultProps<GeoArrowTextLayerProps> = {
 };
 
 export class GeoArrowTextLayer<
-  ExtraProps extends {} = {}
+  ExtraProps extends {} = {},
 > extends CompositeLayer<Required<GeoArrowTextLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowTextLayer";
@@ -160,7 +155,7 @@ export class GeoArrowTextLayer<
     }
 
     const geometryColumn = this.props.getPosition;
-    if (isPointVector(geometryColumn)) {
+    if (ga.vector.isPointVector(geometryColumn)) {
       return this._renderLayersPoint(geometryColumn);
     }
 
@@ -168,12 +163,12 @@ export class GeoArrowTextLayer<
   }
 
   _renderLayersPoint(
-    geometryColumn: PointVector
+    geometryColumn: ga.vector.PointVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      validatePointType(geometryColumn.type);
+      assert(ga.vector.isPointVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 
@@ -190,7 +185,7 @@ export class GeoArrowTextLayer<
       recordBatchIdx++
     ) {
       const geometryData = geometryColumn.data[recordBatchIdx];
-      const flatCoordsData = getPointChild(geometryData);
+      const flatCoordsData = ga.child.getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
       const textData = this.props.getText.data[recordBatchIdx];
       // console.log(textData);
@@ -217,7 +212,7 @@ export class GeoArrowTextLayer<
               value: expandArrayToCoords(
                 flatCoordinateArray,
                 geometryData.type.listSize,
-                characterOffsets
+                characterOffsets,
               ),
               size: geometryData.type.listSize,
             },
