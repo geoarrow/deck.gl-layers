@@ -5,6 +5,7 @@ import {
   GetPickingInfoParams,
   Layer,
   LayersList,
+  assert,
 } from "@deck.gl/core/typed";
 import { ScatterplotLayer } from "@deck.gl/layers/typed";
 import type { ScatterplotLayerProps } from "@deck.gl/layers/typed";
@@ -19,11 +20,7 @@ import {
 import { getPickingInfo } from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
-import {
-  validateAccessors,
-  validateMultiPointType,
-  validatePointType,
-} from "./validate.js";
+import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowScatterplotLayer */
 export type GeoArrowScatterplotLayerProps = Omit<
@@ -131,7 +128,7 @@ export class GeoArrowScatterplotLayer<
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      validatePointType(geometryColumn.type);
+      assert(ga.vector.isPointVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 
@@ -195,7 +192,7 @@ export class GeoArrowScatterplotLayer<
     // TODO: validate that if nested, accessor props have the same nesting
     // structure as the main geometry column.
     if (this.props._validate) {
-      validateMultiPointType(geometryColumn.type);
+      assert(ga.vector.isMultiPointVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 

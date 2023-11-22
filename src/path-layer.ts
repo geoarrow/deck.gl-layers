@@ -6,6 +6,7 @@ import {
   GetPickingInfoParams,
   Layer,
   LayersList,
+  assert,
 } from "@deck.gl/core/typed";
 import { PathLayer } from "@deck.gl/layers/typed";
 import type { PathLayerProps } from "@deck.gl/layers/typed";
@@ -19,17 +20,9 @@ import {
   invertOffsets,
 } from "./utils.js";
 import { getPickingInfo } from "./picking.js";
-import {
-  ColorAccessor,
-  FloatAccessor,
-  GeoArrowPickingInfo,
-} from "./types.js";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
-import {
-  validateAccessors,
-  validateLineStringType,
-  validateMultiLineStringType,
-} from "./validate.js";
+import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowPathLayer */
 export type GeoArrowPathLayerProps = Omit<
@@ -140,7 +133,7 @@ export class GeoArrowPathLayer<
     // TODO: validate that if nested, accessor props have the same nesting
     // structure as the main geometry column.
     if (this.props._validate) {
-      validateLineStringType(geometryColumn.type);
+      assert(ga.vector.isLineStringVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 
@@ -207,7 +200,7 @@ export class GeoArrowPathLayer<
     // TODO: validate that if nested, accessor props have the same nesting
     // structure as the main geometry column.
     if (this.props._validate) {
-      validateMultiLineStringType(geometryColumn.type);
+      assert(ga.vector.isMultiLineStringVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 

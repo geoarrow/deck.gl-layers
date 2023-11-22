@@ -5,6 +5,7 @@ import {
   GetPickingInfoParams,
   Layer,
   LayersList,
+  assert,
 } from "@deck.gl/core/typed";
 import { ColumnLayer } from "@deck.gl/layers/typed";
 import type { ColumnLayerProps } from "@deck.gl/layers/typed";
@@ -22,7 +23,7 @@ import {
 } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { getPickingInfo } from "./picking.js";
-import { validateAccessors, validatePointType } from "./validate.js";
+import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowColumnLayer */
 export type GeoArrowColumnLayerProps = Omit<
@@ -133,7 +134,7 @@ export class GeoArrowColumnLayer<
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      validatePointType(geometryColumn.type);
+      assert(ga.vector.isPointVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 

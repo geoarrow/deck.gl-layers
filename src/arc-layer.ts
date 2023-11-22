@@ -5,6 +5,7 @@ import {
   GetPickingInfoParams,
   Layer,
   LayersList,
+  assert,
 } from "@deck.gl/core/typed";
 import { ArcLayer } from "@deck.gl/layers/typed";
 import type { ArcLayerProps } from "@deck.gl/layers/typed";
@@ -14,7 +15,7 @@ import { assignAccessor, extractAccessorsFromProps } from "./utils.js";
 import { child } from "@geoarrow/geoarrow-js";
 import { getPickingInfo } from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
-import { validateAccessors, validatePointType } from "./validate.js";
+import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowArcLayer */
 export type GeoArrowArcLayerProps = Omit<
@@ -126,8 +127,8 @@ export class GeoArrowArcLayer<
 
       // Note: below we iterate over table batches anyways, so this layer won't
       // work as-is if data/table is null
-      validatePointType(sourcePosition.type);
-      validatePointType(targetPosition.type);
+      assert(ga.vector.isPointVector(sourcePosition));
+      assert(ga.vector.isPointVector(targetPosition));
     }
 
     // Exclude manually-set accessors

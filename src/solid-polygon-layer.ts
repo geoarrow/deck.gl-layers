@@ -5,6 +5,7 @@ import {
   Layer,
   LayersList,
   GetPickingInfoParams,
+  assert,
 } from "@deck.gl/core/typed";
 import { SolidPolygonLayer } from "@deck.gl/layers/typed";
 import type { SolidPolygonLayerProps } from "@deck.gl/layers/typed";
@@ -19,17 +20,9 @@ import {
   invertOffsets,
 } from "./utils.js";
 import { getPickingInfo } from "./picking.js";
-import {
-  ColorAccessor,
-  FloatAccessor,
-  GeoArrowPickingInfo,
-} from "./types.js";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
-import {
-  validateAccessors,
-  validateMultiPolygonType,
-  validatePolygonType,
-} from "./validate.js";
+import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowSolidPolygonLayer */
 export type GeoArrowSolidPolygonLayerProps = Omit<
@@ -138,7 +131,7 @@ export class GeoArrowSolidPolygonLayer<
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      validatePolygonType(geometryColumn.type);
+      assert(ga.vector.isPolygonVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 
@@ -214,7 +207,7 @@ export class GeoArrowSolidPolygonLayer<
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      validateMultiPolygonType(geometryColumn.type);
+      assert(ga.vector.isMultiPolygonVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 

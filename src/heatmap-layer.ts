@@ -4,6 +4,7 @@ import {
   DefaultProps,
   Layer,
   LayersList,
+  assert,
 } from "@deck.gl/core/typed";
 import { HeatmapLayer } from "@deck.gl/aggregation-layers/typed";
 import type { HeatmapLayerProps } from "@deck.gl/aggregation-layers/typed";
@@ -16,7 +17,7 @@ import {
 } from "./utils.js";
 import { FloatAccessor } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
-import { validateAccessors, validatePointType } from "./validate.js";
+import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowHeatmapLayer */
 export type GeoArrowHeatmapLayerProps = Omit<
@@ -96,7 +97,7 @@ export class GeoArrowHeatmapLayer<
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      validatePointType(geometryColumn.type);
+      assert(ga.vector.isPointVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 

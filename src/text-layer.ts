@@ -5,6 +5,7 @@ import {
   GetPickingInfoParams,
   Layer,
   LayersList,
+  assert,
 } from "@deck.gl/core/typed";
 import { TextLayer } from "@deck.gl/layers/typed";
 import type { TextLayerProps } from "@deck.gl/layers/typed";
@@ -19,7 +20,7 @@ import {
 import { getPickingInfo } from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
-import { validateAccessors, validatePointType } from "./validate.js";
+import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowTextLayer */
 export type GeoArrowTextLayerProps = Omit<
@@ -167,7 +168,7 @@ export class GeoArrowTextLayer<
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      validatePointType(geometryColumn.type);
+      assert(ga.vector.isPointVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 
