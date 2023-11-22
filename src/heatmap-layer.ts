@@ -70,7 +70,7 @@ const defaultProps: DefaultProps<GeoArrowHeatmapLayerProps> = {
 };
 
 export class GeoArrowHeatmapLayer<
-  ExtraProps extends {} = {}
+  ExtraProps extends {} = {},
 > extends CompositeLayer<Required<GeoArrowHeatmapLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowHeatmapLayer";
@@ -92,7 +92,7 @@ export class GeoArrowHeatmapLayer<
   }
 
   _renderLayersPoint(
-    geometryColumn: PointVector
+    geometryColumn: PointVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 

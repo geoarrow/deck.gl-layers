@@ -97,7 +97,7 @@ const defaultProps: DefaultProps<GeoArrowScatterplotLayerProps> = {
 };
 
 export class GeoArrowScatterplotLayer<
-  ExtraProps extends {} = {}
+  ExtraProps extends {} = {},
 > extends CompositeLayer<Required<GeoArrowScatterplotLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowScatterplotLayer";
@@ -116,7 +116,7 @@ export class GeoArrowScatterplotLayer<
 
     const multiPointVector = getGeometryVector(
       table,
-      EXTENSION_NAME.MULTIPOINT
+      EXTENSION_NAME.MULTIPOINT,
     );
     if (multiPointVector !== null) {
       return this._renderLayersMultiPoint(multiPointVector);
@@ -135,7 +135,7 @@ export class GeoArrowScatterplotLayer<
   }
 
   _renderLayersPoint(
-    geometryColumn: PointVector
+    geometryColumn: PointVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
@@ -197,7 +197,7 @@ export class GeoArrowScatterplotLayer<
   }
 
   _renderLayersMultiPoint(
-    geometryColumn: MultiPointVector
+    geometryColumn: MultiPointVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 

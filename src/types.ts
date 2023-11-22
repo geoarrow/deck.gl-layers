@@ -30,8 +30,8 @@ export type MultiLineStringData = arrow.Data<MultiLineString>;
 export type MultiPolygonData = arrow.Data<MultiPolygon>;
 
 export type GeoArrowPickingInfo = PickingInfo & {
-  object: arrow.StructRowProxy
-}
+  object: arrow.StructRowProxy;
+};
 
 export type FloatAccessor =
   | arrow.Vector<arrow.Float>

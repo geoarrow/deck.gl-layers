@@ -104,7 +104,7 @@ const defaultProps: DefaultProps<GeoArrowColumnLayerProps> = {
  * coordinates.
  */
 export class GeoArrowColumnLayer<
-  ExtraProps extends {} = {}
+  ExtraProps extends {} = {},
 > extends CompositeLayer<Required<GeoArrowColumnLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowColumnLayer";
@@ -130,7 +130,7 @@ export class GeoArrowColumnLayer<
   }
 
   _renderLayersPoint(
-    geometryColumn: PointVector
+    geometryColumn: PointVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 

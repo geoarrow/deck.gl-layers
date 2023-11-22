@@ -98,7 +98,7 @@ const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
  * Render lists of coordinate points as extruded polylines with mitering.
  */
 export class GeoArrowPathLayer<
-  ExtraProps extends {} = {}
+  ExtraProps extends {} = {},
 > extends CompositeLayer<Required<GeoArrowPathLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowPathLayer";
@@ -112,7 +112,7 @@ export class GeoArrowPathLayer<
 
     const lineStringVector = getGeometryVector(
       table,
-      EXTENSION_NAME.LINESTRING
+      EXTENSION_NAME.LINESTRING,
     );
     if (lineStringVector !== null) {
       return this._renderLayersLineString(lineStringVector);
@@ -120,7 +120,7 @@ export class GeoArrowPathLayer<
 
     const multiLineStringVector = getGeometryVector(
       table,
-      EXTENSION_NAME.MULTILINESTRING
+      EXTENSION_NAME.MULTILINESTRING,
     );
     if (multiLineStringVector !== null) {
       return this._renderLayersMultiLineString(multiLineStringVector);
@@ -139,7 +139,7 @@ export class GeoArrowPathLayer<
   }
 
   _renderLayersLineString(
-    geometryColumn: LineStringVector
+    geometryColumn: LineStringVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
@@ -206,7 +206,7 @@ export class GeoArrowPathLayer<
   }
 
   _renderLayersMultiLineString(
-    geometryColumn: MultiLineStringVector
+    geometryColumn: MultiLineStringVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
