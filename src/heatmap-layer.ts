@@ -4,20 +4,20 @@ import {
   DefaultProps,
   Layer,
   LayersList,
+  assert,
 } from "@deck.gl/core/typed";
 import { HeatmapLayer } from "@deck.gl/aggregation-layers/typed";
 import type { HeatmapLayerProps } from "@deck.gl/aggregation-layers/typed";
 import * as arrow from "apache-arrow";
+import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
-  getPointChild,
-  isPointVector,
 } from "./utils.js";
-import { FloatAccessor, PointVector } from "./types.js";
+import { FloatAccessor } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
-import { validateAccessors, validatePointType } from "./validate.js";
+import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowHeatmapLayer */
 export type GeoArrowHeatmapLayerProps = Omit<
@@ -36,7 +36,7 @@ type _GeoArrowHeatmapLayerProps = {
    *
    * @default d => d.position
    */
-  getPosition?: PointVector;
+  getPosition?: ga.vector.PointVector;
 
   /**
    * The weight of each object.
@@ -64,13 +64,14 @@ const ourDefaultProps = {
   _validate: true,
 };
 
+// @ts-expect-error Type error in merging default props with ours
 const defaultProps: DefaultProps<GeoArrowHeatmapLayerProps> = {
   ..._defaultProps,
   ...ourDefaultProps,
 };
 
 export class GeoArrowHeatmapLayer<
-  ExtraProps extends {} = {}
+  ExtraProps extends {} = {},
 > extends CompositeLayer<Required<GeoArrowHeatmapLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowHeatmapLayer";
@@ -84,7 +85,7 @@ export class GeoArrowHeatmapLayer<
     }
 
     const geometryColumn = this.props.getPosition;
-    if (isPointVector(geometryColumn)) {
+    if (ga.vector.isPointVector(geometryColumn)) {
       return this._renderLayersPoint(geometryColumn);
     }
 
@@ -92,12 +93,12 @@ export class GeoArrowHeatmapLayer<
   }
 
   _renderLayersPoint(
-    geometryColumn: PointVector
+    geometryColumn: ga.vector.PointVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      validatePointType(geometryColumn.type);
+      assert(ga.vector.isPointVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 
@@ -113,7 +114,7 @@ export class GeoArrowHeatmapLayer<
       recordBatchIdx++
     ) {
       const geometryData = geometryColumn.data[recordBatchIdx];
-      const flatCoordsData = getPointChild(geometryData);
+      const flatCoordsData = ga.child.getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
 
       const props: HeatmapLayerProps = {

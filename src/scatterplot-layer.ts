@@ -5,34 +5,22 @@ import {
   GetPickingInfoParams,
   Layer,
   LayersList,
+  assert,
 } from "@deck.gl/core/typed";
 import { ScatterplotLayer } from "@deck.gl/layers/typed";
 import type { ScatterplotLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
+import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
-  getMultiPointChild,
-  getPointChild,
   invertOffsets,
-  isMultiPointVector,
-  isPointVector,
 } from "./utils.js";
 import { getPickingInfo } from "./picking.js";
-import {
-  ColorAccessor,
-  FloatAccessor,
-  GeoArrowPickingInfo,
-  MultiPointVector,
-  PointVector,
-} from "./types.js";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
-import {
-  validateAccessors,
-  validateMultiPointType,
-  validatePointType,
-} from "./validate.js";
+import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowScatterplotLayer */
 export type GeoArrowScatterplotLayerProps = Omit<
@@ -56,7 +44,7 @@ type _GeoArrowScatterplotLayerProps = {
    * If not provided, will be inferred by finding a column with extension type
    * `"geoarrow.point"` or `"geoarrow.multipoint"`.
    */
-  getPosition?: PointVector | MultiPointVector;
+  getPosition?: ga.vector.PointVector | ga.vector.MultiPointVector;
   /**
    * Radius accessor.
    * @default 1
@@ -91,13 +79,14 @@ const ourDefaultProps = {
   _validate: true,
 };
 
+// @ts-expect-error Type error in merging default props with ours
 const defaultProps: DefaultProps<GeoArrowScatterplotLayerProps> = {
   ..._upstreamDefaultProps,
   ...ourDefaultProps,
 };
 
 export class GeoArrowScatterplotLayer<
-  ExtraProps extends {} = {}
+  ExtraProps extends {} = {},
 > extends CompositeLayer<Required<GeoArrowScatterplotLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowScatterplotLayer";
@@ -116,18 +105,18 @@ export class GeoArrowScatterplotLayer<
 
     const multiPointVector = getGeometryVector(
       table,
-      EXTENSION_NAME.MULTIPOINT
+      EXTENSION_NAME.MULTIPOINT,
     );
     if (multiPointVector !== null) {
       return this._renderLayersMultiPoint(multiPointVector);
     }
 
     const geometryColumn = this.props.getPosition;
-    if (isPointVector(geometryColumn)) {
+    if (ga.vector.isPointVector(geometryColumn)) {
       return this._renderLayersPoint(geometryColumn);
     }
 
-    if (isMultiPointVector(geometryColumn)) {
+    if (ga.vector.isMultiPointVector(geometryColumn)) {
       return this._renderLayersMultiPoint(geometryColumn);
     }
 
@@ -135,12 +124,12 @@ export class GeoArrowScatterplotLayer<
   }
 
   _renderLayersPoint(
-    geometryColumn: PointVector
+    geometryColumn: ga.vector.PointVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      validatePointType(geometryColumn.type);
+      assert(ga.vector.isPointVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 
@@ -156,7 +145,7 @@ export class GeoArrowScatterplotLayer<
       recordBatchIdx++
     ) {
       const geometryData = geometryColumn.data[recordBatchIdx];
-      const flatCoordsData = getPointChild(geometryData);
+      const flatCoordsData = ga.child.getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
 
       const props: ScatterplotLayerProps = {
@@ -197,14 +186,14 @@ export class GeoArrowScatterplotLayer<
   }
 
   _renderLayersMultiPoint(
-    geometryColumn: MultiPointVector
+    geometryColumn: ga.vector.MultiPointVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
     // TODO: validate that if nested, accessor props have the same nesting
     // structure as the main geometry column.
     if (this.props._validate) {
-      validateMultiPointType(geometryColumn.type);
+      assert(ga.vector.isMultiPointVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 
@@ -220,9 +209,9 @@ export class GeoArrowScatterplotLayer<
       recordBatchIdx++
     ) {
       const multiPointData = geometryColumn.data[recordBatchIdx];
-      const pointData = getMultiPointChild(multiPointData);
+      const pointData = ga.child.getMultiPointChild(multiPointData);
       const geomOffsets = multiPointData.valueOffsets;
-      const flatCoordsData = getPointChild(pointData);
+      const flatCoordsData = ga.child.getPointChild(pointData);
       const flatCoordinateArray = flatCoordsData.values;
 
       const props: ScatterplotLayerProps = {

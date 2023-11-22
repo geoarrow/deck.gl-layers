@@ -4,7 +4,7 @@ import { GeoArrowPickingInfo } from "./types";
 
 export function getPickingInfo(
   { info, sourceLayer }: GetPickingInfoParams,
-  table: arrow.Table
+  table: arrow.Table,
 ): GeoArrowPickingInfo {
   // Geometry index as rendered
   let index = info.index;
@@ -21,6 +21,9 @@ export function getPickingInfo(
   const recordBatchIdx: number = sourceLayer.props.recordBatchIdx;
   const batch = table.batches[recordBatchIdx];
   const row = batch.get(index);
+  if (row === null) {
+    return info;
+  }
 
   // @ts-expect-error hack: using private method to avoid recomputing via
   // batch lengths on each iteration
