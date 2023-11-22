@@ -19,7 +19,6 @@ import {
   ColorAccessor,
   FloatAccessor,
   GeoArrowPickingInfo,
-  PointVector,
 } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { getPickingInfo } from "./picking.js";
@@ -46,7 +45,7 @@ type _GeoArrowColumnLayerProps = {
    * Method called to retrieve the position of each column.
    * @default object => object.position
    */
-  getPosition?: PointVector;
+  getPosition?: ga.vector.PointVector;
 
   /**
    * Fill color value or accessor.
@@ -129,7 +128,7 @@ export class GeoArrowColumnLayer<
   }
 
   _renderLayersPoint(
-    geometryColumn: PointVector,
+    geometryColumn: ga.vector.PointVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
