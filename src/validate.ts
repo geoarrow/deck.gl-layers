@@ -4,7 +4,7 @@ import { Coord, LineString, MultiPoint, Polygon } from "./types";
 
 export function validateAccessors(
   props: Record<string, any>,
-  table: arrow.Table
+  table: arrow.Table,
 ): void {
   const vectorAccessors: arrow.Vector[] = [];
   const colorVectorAccessors: arrow.Vector[] = [];
@@ -39,7 +39,7 @@ export function validateAccessors(
  */
 export function validateVectorAccessors(
   table: arrow.Table,
-  vectorAccessors: arrow.Vector[]
+  vectorAccessors: arrow.Vector[],
 ) {
   // Check the same number of chunks as the table's batches
   for (const vectorAccessor of vectorAccessors) {
@@ -85,7 +85,7 @@ export function validatePointType(type: arrow.DataType): type is Coord {
 }
 
 export function validateLineStringType(
-  type: arrow.DataType
+  type: arrow.DataType,
 ): type is LineString {
   // Assert the outer vector is a List
   assert(arrow.DataType.isList(type));
@@ -108,7 +108,7 @@ export function validatePolygonType(type: arrow.DataType): type is Polygon {
 
 // Note: this is the same as validateLineStringType
 export function validateMultiPointType(
-  type: arrow.DataType
+  type: arrow.DataType,
 ): type is MultiPoint {
   // Assert the outer vector is a List
   assert(arrow.DataType.isList(type));
@@ -120,7 +120,7 @@ export function validateMultiPointType(
 }
 
 export function validateMultiLineStringType(
-  type: arrow.DataType
+  type: arrow.DataType,
 ): type is Polygon {
   // Assert the outer vector is a List
   assert(arrow.DataType.isList(type));
@@ -132,7 +132,7 @@ export function validateMultiLineStringType(
 }
 
 export function validateMultiPolygonType(
-  type: arrow.DataType
+  type: arrow.DataType,
 ): type is Polygon {
   // Assert the outer vector is a List
   assert(arrow.DataType.isList(type));

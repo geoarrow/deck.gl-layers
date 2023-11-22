@@ -101,7 +101,7 @@ const defaultProps: DefaultProps<GeoArrowSolidPolygonLayerProps> = {
 };
 
 export class GeoArrowSolidPolygonLayer<
-  ExtraProps extends {} = {}
+  ExtraProps extends {} = {},
 > extends CompositeLayer<
   Required<GeoArrowSolidPolygonLayerProps> & ExtraProps
 > {
@@ -122,7 +122,7 @@ export class GeoArrowSolidPolygonLayer<
 
     const MultiPolygonVector = getGeometryVector(
       table,
-      EXTENSION_NAME.MULTIPOLYGON
+      EXTENSION_NAME.MULTIPOLYGON,
     );
     if (MultiPolygonVector !== null) {
       return this._renderLayersMultiPolygon(MultiPolygonVector);
@@ -141,7 +141,7 @@ export class GeoArrowSolidPolygonLayer<
   }
 
   _renderLayersPolygon(
-    geometryColumn: PolygonVector
+    geometryColumn: PolygonVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
@@ -217,7 +217,7 @@ export class GeoArrowSolidPolygonLayer<
   }
 
   _renderLayersMultiPolygon(
-    geometryColumn: MultiPolygonVector
+    geometryColumn: MultiPolygonVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
@@ -322,7 +322,7 @@ export class GeoArrowSolidPolygonLayer<
 
 function encodePickingColors(
   geomToCoordOffsets: Int32Array,
-  encodePickingColor: (id: number, result: number[]) => void
+  encodePickingColor: (id: number, result: number[]) => void,
 ): Uint8ClampedArray {
   const largestOffset = geomToCoordOffsets[geomToCoordOffsets.length - 1];
   const pickingColors = new Uint8ClampedArray(largestOffset);

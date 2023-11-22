@@ -4,7 +4,7 @@ import { GeoArrowPickingInfo } from "./types";
 
 export function getPickingInfo(
   { info, sourceLayer }: GetPickingInfoParams,
-  table: arrow.Table
+  table: arrow.Table,
 ): GeoArrowPickingInfo {
   // Geometry index as rendered
   let index = info.index;

@@ -40,7 +40,7 @@ function earcutSinglePolygon(data: PolygonData, geomIndex: number): number[] {
 
   const slicedFlatCoords = flatCoords.values.subarray(
     coordsBegin * dim,
-    coordsEnd * dim
+    coordsEnd * dim,
   );
 
   const initialCoordIndex = ringOffsets[ringBegin];

@@ -108,7 +108,7 @@ const defaultProps: DefaultProps<GeoArrowArcLayerProps> = {
 };
 
 export class GeoArrowArcLayer<
-  ExtraProps extends {} = {}
+  ExtraProps extends {} = {},
 > extends CompositeLayer<Required<GeoArrowArcLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowArcLayer";

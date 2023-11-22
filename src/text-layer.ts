@@ -142,7 +142,7 @@ const defaultProps: DefaultProps<GeoArrowTextLayerProps> = {
 };
 
 export class GeoArrowTextLayer<
-  ExtraProps extends {} = {}
+  ExtraProps extends {} = {},
 > extends CompositeLayer<Required<GeoArrowTextLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowTextLayer";
@@ -168,7 +168,7 @@ export class GeoArrowTextLayer<
   }
 
   _renderLayersPoint(
-    geometryColumn: PointVector
+    geometryColumn: PointVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
@@ -217,7 +217,7 @@ export class GeoArrowTextLayer<
               value: expandArrayToCoords(
                 flatCoordinateArray,
                 geometryData.type.listSize,
-                characterOffsets
+                characterOffsets,
               ),
               size: geometryData.type.listSize,
             },
