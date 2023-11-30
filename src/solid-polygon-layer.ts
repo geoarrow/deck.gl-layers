@@ -150,6 +150,8 @@ export class GeoArrowSolidPolygonLayer<
     const workerTextResp = await fetch(
       this.props.workerUrl || "http://localhost:8082/earcut-worker.js",
     );
+    console.time("earcut");
+
     const workerText = await workerTextResp.text();
     const worker =  BlobWorker.fromText(workerText);
 
@@ -193,6 +195,7 @@ export class GeoArrowSolidPolygonLayer<
 
     await pool.completed();
     await pool.terminate();
+    console.timeEnd("earcut");
 
     return result;
   }
