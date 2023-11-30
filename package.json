@@ -74,6 +74,6 @@
     "npm": "10.2.0"
   },
   "dependencies": {
-    "@geoarrow/geoarrow-js": "^0.1.0"
+    "@geoarrow/geoarrow-js": "^0.2.0"
   }
 }
