@@ -10,7 +10,7 @@ const GEOARROW_POLYGON_DATA = "http://localhost:8080/utah.feather";
 const INITIAL_VIEW_STATE = {
   latitude: 40.63403641639511,
   longitude: -111.91530172951025,
-  zoom: 11,
+  zoom: 9,
   bearing: 0,
   pitch: 0,
 };
@@ -53,10 +53,13 @@ function Root() {
       new GeoArrowSolidPolygonLayer({
         id: "geoarrow-polygons",
         data: table,
-        getFillColor: [0, 100, 60, 160],
+        getFillColor: [0, 100, 60, 255],
         pickable: true,
         autoHighlight: true,
-      })
+        workerUrl: new URL(
+          "https://gist.githubusercontent.com/kylebarron/0553b763d118bed6bad48407e9729376/raw/698855d8b237b26af65e2199a4f7914af8e203cf/earcut-worker.js",
+        ),
+      }),
     );
 
   return (
