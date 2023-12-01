@@ -6,6 +6,8 @@ import {
   LayersList,
   GetPickingInfoParams,
   assert,
+  LayerContext,
+  UpdateParameters,
 } from "@deck.gl/core/typed";
 import { SolidPolygonLayer } from "@deck.gl/layers/typed";
 import type { SolidPolygonLayerProps } from "@deck.gl/layers/typed";
@@ -21,8 +23,10 @@ import {
 } from "./utils.js";
 import { getPickingInfo } from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
-import { DEFAULT_COLOR, EXTENSION_NAME } from "./constants.js";
+import { EXTENSION_NAME } from "./constants.js";
 import { validateAccessors } from "./validate.js";
+import { spawn, Transfer, BlobWorker, Pool } from "threads";
+import type { FunctionThread } from "threads";
 
 /** All properties supported by GeoArrowSolidPolygonLayer */
 export type GeoArrowSolidPolygonLayerProps = Omit<
@@ -57,6 +61,19 @@ type _GeoArrowSolidPolygonLayerProps = {
    * @default true
    */
   _validate?: boolean;
+
+  /**
+   * URL to worker that performs earcut triangulation.
+   *
+   * By default this loads from the jsdelivr CDN, but end users may want to host
+   * this on their own domain.
+   */
+  earcutWorkerUrl?: string | URL;
+
+  /**
+   * The number of workers used for the earcut thread pool.
+   */
+  earcutWorkerPoolSize?: number;
 };
 
 // Remove data from the upstream default props
@@ -69,7 +86,11 @@ const {
 // Default props added by us
 const ourDefaultProps: Pick<
   GeoArrowSolidPolygonLayerProps,
-  "_normalize" | "_windingOrder" | "_validate"
+  | "_normalize"
+  | "_windingOrder"
+  | "_validate"
+  | "earcutWorkerUrl"
+  | "earcutWorkerPoolSize"
 > = {
   // Note: this diverges from upstream, where here we default to no
   // normalization
@@ -78,6 +99,12 @@ const ourDefaultProps: Pick<
   _windingOrder: "CCW",
 
   _validate: true,
+
+  // TODO: set this to current version
+  earcutWorkerUrl:
+    "https://cdn.jsdelivr.net/npm/@geoarrow/geoarrow-js@0.3.0-beta.1/dist/earcut-worker.min.js",
+
+  earcutWorkerPoolSize: 8,
 };
 
 // @ts-expect-error Type error in merging default props with ours
@@ -85,6 +112,8 @@ const defaultProps: DefaultProps<GeoArrowSolidPolygonLayerProps> = {
   ..._defaultProps,
   ...ourDefaultProps,
 };
+
+let cachedWorkerFetch: null | Promise<Response> = null;
 
 export class GeoArrowSolidPolygonLayer<
   ExtraProps extends {} = {},
@@ -94,12 +123,153 @@ export class GeoArrowSolidPolygonLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowSolidPolygonLayer";
 
+  declare state: CompositeLayer["state"] & {
+    table: arrow.Table | null;
+    triangles: Uint32Array[] | null;
+    earcutWorkerPool: Pool<FunctionThread> | null;
+    earcutWorkerRequest: Promise<string>;
+  };
+
+  initializeState(_context: LayerContext): void {
+    this.state = {
+      table: null,
+      triangles: null,
+      earcutWorkerRequest: fetch(this.props.earcutWorkerUrl).then((resp) =>
+        resp.text(),
+      ),
+      earcutWorkerPool: null,
+    };
+  }
+
+  // NOTE: I'm not 100% on the race condition implications of this; can we make
+  // sure we never construct two pools?
+  async initEarcutPool(): Promise<Pool<FunctionThread>> {
+    if (this.state.earcutWorkerPool) return this.state.earcutWorkerPool;
+
+    const workerText = await this.state.earcutWorkerRequest;
+    const pool = Pool<FunctionThread>(
+      () => spawn(BlobWorker.fromText(workerText)),
+      8,
+    );
+    this.state.earcutWorkerPool = pool;
+    return this.state.earcutWorkerPool;
+  }
+
+  async finalizeState(context: LayerContext): Promise<void> {
+    await this.state?.earcutWorkerPool?.terminate();
+    console.log("terminated");
+  }
+
+  async updateData() {
+    const { data: table } = this.props;
+    const earcutTriangles = await this._updateEarcut(table);
+    this.setState({ table: this.props.data, triangles: earcutTriangles });
+  }
+
+  async _updateEarcut(table: arrow.Table): Promise<Uint32Array[]> {
+    const polygonVector = getGeometryVector(table, EXTENSION_NAME.POLYGON);
+    if (polygonVector !== null) {
+      return this._earcutPolygonVector(polygonVector);
+    }
+
+    const MultiPolygonVector = getGeometryVector(
+      table,
+      EXTENSION_NAME.MULTIPOLYGON,
+    );
+    if (MultiPolygonVector !== null) {
+      return this._earcutMultiPolygonVector(MultiPolygonVector);
+    }
+
+    const geometryColumn = this.props.getPolygon;
+    if (ga.vector.isPolygonVector(geometryColumn)) {
+      return this._earcutPolygonVector(geometryColumn);
+    }
+
+    if (ga.vector.isMultiPolygonVector(geometryColumn)) {
+      return this._earcutMultiPolygonVector(geometryColumn);
+    }
+
+    throw new Error("geometryColumn not Polygon or MultiPolygon");
+  }
+
+  async _earcutPolygonVector(
+    geometryColumn: ga.vector.PolygonVector,
+  ): Promise<Uint32Array[]> {
+    const pool = await this.initEarcutPool();
+
+    const result: Uint32Array[] = new Array(geometryColumn.data.length);
+    console.time("earcut");
+
+    for (
+      let recordBatchIdx = 0;
+      recordBatchIdx < geometryColumn.data.length;
+      recordBatchIdx++
+    ) {
+      const polygonData = geometryColumn.data[recordBatchIdx];
+      const [preparedPolygonData, arrayBuffers] = ga.worker.preparePostMessage(
+        polygonData,
+        true,
+      );
+      pool.queue(async (earcutWorker) => {
+        const earcutTriangles = await earcutWorker(
+          Transfer(preparedPolygonData, arrayBuffers),
+        );
+        result[recordBatchIdx] = earcutTriangles;
+      });
+    }
+
+    await pool.completed();
+    console.timeEnd("earcut");
+
+    return result;
+  }
+
+  async _earcutMultiPolygonVector(
+    geometryColumn: ga.vector.MultiPolygonVector,
+  ): Promise<Uint32Array[]> {
+    const pool = await this.initEarcutPool();
+
+    const result: Uint32Array[] = new Array(geometryColumn.data.length);
+    console.time("earcut");
+
+    for (
+      let recordBatchIdx = 0;
+      recordBatchIdx < geometryColumn.data.length;
+      recordBatchIdx++
+    ) {
+      const multiPolygonData = geometryColumn.data[recordBatchIdx];
+      const polygonData = ga.child.getMultiPolygonChild(multiPolygonData);
+      const [preparedPolygonData, arrayBuffers] = ga.worker.preparePostMessage(
+        polygonData,
+        true,
+      );
+      pool.queue(async (earcutWorker) => {
+        const earcutTriangles = await earcutWorker(
+          Transfer(preparedPolygonData, arrayBuffers),
+        );
+        result[recordBatchIdx] = earcutTriangles;
+      });
+    }
+
+    await pool.completed();
+    console.timeEnd("earcut");
+
+    return result;
+  }
+
+  updateState({ props, changeFlags }: UpdateParameters<this>): void {
+    if (changeFlags.dataChanged) {
+      this.updateData();
+    }
+  }
+
   getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
     return getPickingInfo(params, this.props.data);
   }
 
   renderLayers(): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { table } = this.state;
+    if (!table) return null;
 
     const polygonVector = getGeometryVector(table, EXTENSION_NAME.POLYGON);
     if (polygonVector !== null) {
@@ -129,7 +299,8 @@ export class GeoArrowSolidPolygonLayer<
   _renderLayersPolygon(
     geometryColumn: ga.vector.PolygonVector,
   ): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { table } = this.state;
+    if (!table) return null;
 
     if (this.props._validate) {
       assert(ga.vector.isPolygonVector(geometryColumn));
@@ -154,13 +325,15 @@ export class GeoArrowSolidPolygonLayer<
 
       const nDim = pointData.type.listSize;
 
-      // const geomOffsets = polygonData.valueOffsets;
-      // const ringOffsets = ringData.valueOffsets;
       const flatCoordinateArray = coordData.values;
 
       const resolvedRingOffsets = getPolygonResolvedOffsets(polygonData);
 
-      const earcutTriangles = ga.algorithm.earcut(polygonData);
+      if (!this.state.triangles) {
+        return null;
+      }
+
+      const earcutTriangles = this.state.triangles[recordBatchIdx];
 
       const props: SolidPolygonLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
@@ -205,7 +378,8 @@ export class GeoArrowSolidPolygonLayer<
   _renderLayersMultiPolygon(
     geometryColumn: ga.vector.MultiPolygonVector,
   ): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { table } = this.state;
+    if (!table) return null;
 
     if (this.props._validate) {
       assert(ga.vector.isMultiPolygonVector(geometryColumn));
@@ -232,11 +406,13 @@ export class GeoArrowSolidPolygonLayer<
       const nDim = pointData.type.listSize;
 
       const geomOffsets = multiPolygonData.valueOffsets;
-      // const polygonOffsets = polygonData.valueOffsets;
-      // const ringOffsets = ringData.valueOffsets;
       const flatCoordinateArray = coordData.values;
 
-      const earcutTriangles = ga.algorithm.earcut(polygonData);
+      if (!this.state.triangles) {
+        return null;
+      }
+
+      const earcutTriangles = this.state.triangles[recordBatchIdx];
 
       // NOTE: we have two different uses of offsets. One is for _rendering_
       // each polygon. The other is for mapping _accessor attributes_ from one
