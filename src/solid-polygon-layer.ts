@@ -71,7 +71,7 @@ type _GeoArrowSolidPolygonLayerProps = {
   earcutWorkerUrl?: string | URL;
 
   /**
-   * The number of workers used for
+   * The number of workers used for the earcut thread pool.
    */
   earcutWorkerPoolSize?: number;
 };
@@ -220,7 +220,6 @@ export class GeoArrowSolidPolygonLayer<
 
     await pool.completed();
     console.timeEnd("earcut");
-    console.log(result);
 
     return result;
   }
@@ -231,6 +230,7 @@ export class GeoArrowSolidPolygonLayer<
     const pool = await this.initEarcutPool();
 
     const result: Uint32Array[] = new Array(geometryColumn.data.length);
+    console.time("earcut");
 
     for (
       let recordBatchIdx = 0;
@@ -253,7 +253,6 @@ export class GeoArrowSolidPolygonLayer<
 
     await pool.completed();
     console.timeEnd("earcut");
-    console.log(result);
 
     return result;
   }
