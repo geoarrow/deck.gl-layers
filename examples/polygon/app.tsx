@@ -56,8 +56,8 @@ function Root() {
         getFillColor: [0, 100, 60, 255],
         pickable: true,
         autoHighlight: true,
-        workerUrl: new URL(
-          "https://gist.githubusercontent.com/kylebarron/0553b763d118bed6bad48407e9729376/raw/698855d8b237b26af65e2199a4f7914af8e203cf/earcut-worker.js",
+        earcutWorkerUrl: new URL(
+          "https://cdn.jsdelivr.net/npm/@geoarrow/geoarrow-js@0.3.0-beta.1/dist/earcut-worker.min.js",
         ),
       }),
     );
