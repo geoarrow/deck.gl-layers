@@ -113,8 +113,6 @@ const defaultProps: DefaultProps<GeoArrowSolidPolygonLayerProps> = {
   ...ourDefaultProps,
 };
 
-let cachedWorkerFetch: null | Promise<Response> = null;
-
 export class GeoArrowSolidPolygonLayer<
   ExtraProps extends {} = {},
 > extends CompositeLayer<
