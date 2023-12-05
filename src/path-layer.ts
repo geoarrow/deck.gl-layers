@@ -76,7 +76,7 @@ const ourDefaultProps: Pick<GeoArrowPathLayerProps, "_pathType" | "_validate"> =
   };
 
 // @ts-expect-error not sure why this is failing
-const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
+export const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
   ..._defaultProps,
   ...ourDefaultProps,
 };
