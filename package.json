@@ -45,7 +45,6 @@
     "@deck.gl/core": "^8.9.23",
     "@deck.gl/geo-layers": "^8.9.23",
     "@deck.gl/layers": "^8.9.23",
-    "@deck.gl/geo-layers": "^8.9.23",
     "@math.gl/polygon": "^3.6.2",
     "apache-arrow": ">=14"
   },
@@ -54,7 +53,6 @@
     "@deck.gl/core": "^8.9.23",
     "@deck.gl/geo-layers": "^8.9.23",
     "@deck.gl/layers": "^8.9.23",
-    "@deck.gl/geo-layers": "^8.9.23",
     "@math.gl/polygon": "^3.6.2",
     "@rollup/plugin-terser": "^0.4.3",
     "@rollup/plugin-typescript": "^11.1.2",
