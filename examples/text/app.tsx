@@ -2,15 +2,15 @@ import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
 import DeckGL, { Layer, PickingInfo } from "deck.gl/typed";
-import { GeoArrowSolidPolygonLayer } from "@geoarrow/deck.gl-layers";
+import { _GeoArrowTextLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 
-const GEOARROW_POLYGON_DATA = "http://localhost:8080/utah.feather";
+const GEOARROW_POLYGON_DATA = "http://localhost:8080/text.arrow";
 
 const INITIAL_VIEW_STATE = {
   latitude: 40.63403641639511,
   longitude: -111.91530172951025,
-  zoom: 9,
+  zoom: 11,
   bearing: 0,
   pitch: 0,
 };
@@ -50,16 +50,15 @@ function Root() {
 
   table &&
     layers.push(
-      new GeoArrowSolidPolygonLayer({
+      new _GeoArrowTextLayer({
         id: "geoarrow-polygons",
         data: table,
-        getFillColor: [0, 100, 60, 255],
+        getColor: [0, 100, 60, 160],
+        getText: table.getChild("name")!,
+        character_set: "auto",
         pickable: true,
         autoHighlight: true,
-        earcutWorkerUrl: new URL(
-          "https://cdn.jsdelivr.net/npm/@geoarrow/geoarrow-js@0.3.0-beta.1/dist/earcut-worker.min.js",
-        ),
-      }),
+      })
     );
 
   return (

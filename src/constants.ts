@@ -9,3 +9,5 @@ export enum EXTENSION_NAME {
   MULTILINESTRING = "geoarrow.multilinestring",
   MULTIPOLYGON = "geoarrow.multipolygon",
 }
+
+export const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];

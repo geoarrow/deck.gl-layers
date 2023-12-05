@@ -5,105 +5,35 @@ import {
   GetPickingInfoParams,
   Layer,
   LayersList,
-  Unit,
+  assert,
 } from "@deck.gl/core/typed";
 import { ScatterplotLayer } from "@deck.gl/layers/typed";
 import type { ScatterplotLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
+import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
+  extractAccessorsFromProps,
   getGeometryVector,
-  getMultiPointChild,
-  getPointChild,
   invertOffsets,
-  isMultiPointVector,
-  isPointVector,
-  validateColorVector,
-  validateMultiPointType,
-  validatePointType,
-  validateVectorAccessors,
 } from "./utils.js";
-import {
-  ColorAccessor,
-  FloatAccessor,
-  GeoArrowPickingInfo,
-  MultiPointVector,
-  PointVector,
-} from "./types.js";
+import { getPickingInfo } from "./picking.js";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
-
-const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
+import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowScatterplotLayer */
-export type GeoArrowScatterplotLayerProps = _GeoArrowScatterplotLayerProps &
+export type GeoArrowScatterplotLayerProps = Omit<
+  ScatterplotLayerProps<arrow.Table>,
+  "data" | "getPosition" | "getRadius" | "getFillColor" | "getLineColor"
+> &
+  _GeoArrowScatterplotLayerProps &
   CompositeLayerProps;
 
 /** Properties added by GeoArrowScatterplotLayer */
 type _GeoArrowScatterplotLayerProps = {
   data: arrow.Table;
 
-  /**
-   * The units of the radius, one of `'meters'`, `'common'`, and `'pixels'`.
-   * @default 'meters'
-   */
-  radiusUnits?: Unit;
-  /**
-   * Radius multiplier.
-   * @default 1
-   */
-  radiusScale?: number;
-  /**
-   * The minimum radius in pixels. This prop can be used to prevent the circle from getting too small when zoomed out.
-   * @default 0
-   */
-  radiusMinPixels?: number;
-  /**
-   * The maximum radius in pixels. This prop can be used to prevent the circle from getting too big when zoomed in.
-   * @default Number.MAX_SAFE_INTEGER
-   */
-  radiusMaxPixels?: number;
-
-  /**
-   * The units of the stroke width, one of `'meters'`, `'common'`, and `'pixels'`.
-   * @default 'meters'
-   */
-  lineWidthUnits?: Unit;
-  /**
-   * Stroke width multiplier.
-   * @default 1
-   */
-  lineWidthScale?: number;
-  /**
-   * The minimum stroke width in pixels. This prop can be used to prevent the line from getting too thin when zoomed out.
-   * @default 0
-   */
-  lineWidthMinPixels?: number;
-  /**
-   * The maximum stroke width in pixels. This prop can be used to prevent the circle from getting too thick when zoomed in.
-   * @default Number.MAX_SAFE_INTEGER
-   */
-  lineWidthMaxPixels?: number;
-
-  /**
-   * Draw the outline of points.
-   * @default false
-   */
-  stroked?: boolean;
-  /**
-   * Draw the filled area of points.
-   * @default true
-   */
-  filled?: boolean;
-  /**
-   * If `true`, rendered circles always face the camera. If `false` circles face up (i.e. are parallel with the ground plane).
-   * @default false
-   */
-  billboard?: boolean;
-  /**
-   * If `true`, circles are rendered with smoothed edges. If `false`, circles are rendered with rough edges. Antialiasing can cause artifacts on edges of overlapping circles.
-   * @default true
-   */
-  antialiasing?: boolean;
   /**
    * If `true`, validate the arrays provided (e.g. chunk lengths)
    * @default true
@@ -114,7 +44,7 @@ type _GeoArrowScatterplotLayerProps = {
    * If not provided, will be inferred by finding a column with extension type
    * `"geoarrow.point"` or `"geoarrow.multipoint"`.
    */
-  getPosition?: PointVector | MultiPointVector;
+  getPosition?: ga.vector.PointVector | ga.vector.MultiPointVector;
   /**
    * Radius accessor.
    * @default 1
@@ -137,73 +67,32 @@ type _GeoArrowScatterplotLayerProps = {
   getLineWidth?: FloatAccessor;
 };
 
-const defaultProps: DefaultProps<GeoArrowScatterplotLayerProps> = {
-  radiusUnits: "meters",
-  radiusScale: { type: "number", min: 0, value: 1 },
-  radiusMinPixels: { type: "number", min: 0, value: 0 }, //  min point radius in pixels
-  radiusMaxPixels: { type: "number", min: 0, value: Number.MAX_SAFE_INTEGER }, // max point radius in pixels
+// Remove data and getPosition from the upstream default props
+const {
+  data: _data,
+  getPosition: _getPosition,
+  ..._upstreamDefaultProps
+} = ScatterplotLayer.defaultProps;
 
-  lineWidthUnits: "meters",
-  lineWidthScale: { type: "number", min: 0, value: 1 },
-  lineWidthMinPixels: { type: "number", min: 0, value: 0 },
-  lineWidthMaxPixels: {
-    type: "number",
-    min: 0,
-    value: Number.MAX_SAFE_INTEGER,
-  },
-
-  stroked: false,
-  filled: true,
-  billboard: false,
-  antialiasing: true,
+// Default props added by us
+const ourDefaultProps = {
   _validate: true,
+};
 
-  getRadius: { type: "accessor", value: 1 },
-  getFillColor: { type: "accessor", value: DEFAULT_COLOR },
-  getLineColor: { type: "accessor", value: DEFAULT_COLOR },
-  getLineWidth: { type: "accessor", value: 1 },
+// @ts-expect-error Type error in merging default props with ours
+const defaultProps: DefaultProps<GeoArrowScatterplotLayerProps> = {
+  ..._upstreamDefaultProps,
+  ...ourDefaultProps,
 };
 
 export class GeoArrowScatterplotLayer<
-  ExtraProps extends {} = {}
+  ExtraProps extends {} = {},
 > extends CompositeLayer<Required<GeoArrowScatterplotLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowScatterplotLayer";
 
-  getPickingInfo({
-    info,
-    sourceLayer,
-  }: GetPickingInfoParams): GeoArrowPickingInfo {
-    const { data: table } = this.props;
-
-    // Geometry index as rendered
-    let index = info.index;
-
-    // if a MultiPoint dataset, map from the rendered index back to the feature
-    // index
-    // @ts-expect-error `invertedGeomOffsets` is manually set on layer props
-    if (sourceLayer.props.invertedGeomOffsets) {
-      // @ts-expect-error `invertedGeomOffsets` is manually set on layer props
-      index = sourceLayer.props.invertedGeomOffsets[index];
-    }
-
-    // @ts-expect-error `recordBatchIdx` is manually set on layer props
-    const recordBatchIdx: number = sourceLayer.props.recordBatchIdx;
-    const batch = table.batches[recordBatchIdx];
-    const row = batch.get(index);
-
-    // @ts-expect-error hack: using private method to avoid recomputing via
-    // batch lengths on each iteration
-    const offsets: number[] = table._offsets;
-    const currentBatchOffset = offsets[recordBatchIdx];
-
-    // Update index to be _global_ index, not within the specific record batch
-    index += currentBatchOffset;
-    return {
-      ...info,
-      index,
-      object: row,
-    };
+  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+    return getPickingInfo(params, this.props.data);
   }
 
   renderLayers(): Layer<{}> | LayersList | null {
@@ -216,18 +105,18 @@ export class GeoArrowScatterplotLayer<
 
     const multiPointVector = getGeometryVector(
       table,
-      EXTENSION_NAME.MULTIPOINT
+      EXTENSION_NAME.MULTIPOINT,
     );
     if (multiPointVector !== null) {
       return this._renderLayersMultiPoint(multiPointVector);
     }
 
     const geometryColumn = this.props.getPosition;
-    if (isPointVector(geometryColumn)) {
+    if (ga.vector.isPointVector(geometryColumn)) {
       return this._renderLayersPoint(geometryColumn);
     }
 
-    if (isMultiPointVector(geometryColumn)) {
+    if (ga.vector.isMultiPointVector(geometryColumn)) {
       return this._renderLayersMultiPoint(geometryColumn);
     }
 
@@ -235,33 +124,19 @@ export class GeoArrowScatterplotLayer<
   }
 
   _renderLayersPoint(
-    geometryColumn: PointVector
+    geometryColumn: ga.vector.PointVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      const vectorAccessors: arrow.Vector[] = [geometryColumn];
-      for (const accessor of [
-        this.props.getRadius,
-        this.props.getFillColor,
-        this.props.getLineColor,
-        this.props.getLineWidth,
-      ]) {
-        if (accessor instanceof arrow.Vector) {
-          vectorAccessors.push(accessor);
-        }
-      }
-
-      validatePointType(geometryColumn.type);
-      validateVectorAccessors(table, vectorAccessors);
-
-      if (this.props.getFillColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getFillColor);
-      }
-      if (this.props.getLineColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getLineColor);
-      }
+      assert(ga.vector.isPointVector(geometryColumn));
+      validateAccessors(this.props, table);
     }
+
+    // Exclude manually-set accessors
+    const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+      "getPosition",
+    ]);
 
     const layers: ScatterplotLayer[] = [];
     for (
@@ -270,25 +145,19 @@ export class GeoArrowScatterplotLayer<
       recordBatchIdx++
     ) {
       const geometryData = geometryColumn.data[recordBatchIdx];
-      const flatCoordinateArray = geometryData.children[0].values;
+      const flatCoordsData = ga.child.getPointChild(geometryData);
+      const flatCoordinateArray = flatCoordsData.values;
 
       const props: ScatterplotLayerProps = {
+        // Note: because this is a composite layer and not doing the rendering
+        // itself, we still have to pass in our defaultProps
+        ...ourDefaultProps,
+        ...otherProps,
+
         // @ts-expect-error used for picking purposes
         recordBatchIdx,
 
         id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,
-        radiusUnits: this.props.radiusUnits,
-        radiusScale: this.props.radiusScale,
-        radiusMinPixels: this.props.radiusMinPixels,
-        radiusMaxPixels: this.props.radiusMaxPixels,
-        lineWidthUnits: this.props.lineWidthUnits,
-        lineWidthScale: this.props.lineWidthScale,
-        lineWidthMinPixels: this.props.lineWidthMinPixels,
-        lineWidthMaxPixels: this.props.lineWidthMaxPixels,
-        stroked: this.props.stroked,
-        filled: this.props.filled,
-        billboard: this.props.billboard,
-        antialiasing: this.props.antialiasing,
         data: {
           length: geometryData.length,
           attributes: {
@@ -300,30 +169,14 @@ export class GeoArrowScatterplotLayer<
         },
       };
 
-      assignAccessor({
-        props,
-        propName: "getRadius",
-        propInput: this.props.getRadius,
-        chunkIdx: recordBatchIdx,
-      });
-      assignAccessor({
-        props,
-        propName: "getFillColor",
-        propInput: this.props.getFillColor,
-        chunkIdx: recordBatchIdx,
-      });
-      assignAccessor({
-        props,
-        propName: "getLineColor",
-        propInput: this.props.getLineColor,
-        chunkIdx: recordBatchIdx,
-      });
-      assignAccessor({
-        props,
-        propName: "getLineWidth",
-        propInput: this.props.getLineWidth,
-        chunkIdx: recordBatchIdx,
-      });
+      for (const [propName, propInput] of Object.entries(accessors)) {
+        assignAccessor({
+          props,
+          propName,
+          propInput,
+          chunkIdx: recordBatchIdx,
+        });
+      }
 
       const layer = new ScatterplotLayer(this.getSubLayerProps(props));
       layers.push(layer);
@@ -333,35 +186,21 @@ export class GeoArrowScatterplotLayer<
   }
 
   _renderLayersMultiPoint(
-    geometryColumn: MultiPointVector
+    geometryColumn: ga.vector.MultiPointVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
     // TODO: validate that if nested, accessor props have the same nesting
     // structure as the main geometry column.
     if (this.props._validate) {
-      const vectorAccessors: arrow.Vector[] = [geometryColumn];
-      for (const accessor of [
-        this.props.getRadius,
-        this.props.getFillColor,
-        this.props.getLineColor,
-        this.props.getLineWidth,
-      ]) {
-        if (accessor instanceof arrow.Vector) {
-          vectorAccessors.push(accessor);
-        }
-      }
-
-      validateMultiPointType(geometryColumn.type);
-      validateVectorAccessors(table, vectorAccessors);
-
-      if (this.props.getFillColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getFillColor);
-      }
-      if (this.props.getLineColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getLineColor);
-      }
+      assert(ga.vector.isMultiPointVector(geometryColumn));
+      validateAccessors(this.props, table);
     }
+
+    // Exclude manually-set accessors
+    const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+      "getPosition",
+    ]);
 
     const layers: ScatterplotLayer[] = [];
     for (
@@ -370,29 +209,22 @@ export class GeoArrowScatterplotLayer<
       recordBatchIdx++
     ) {
       const multiPointData = geometryColumn.data[recordBatchIdx];
-      const pointData = getMultiPointChild(multiPointData);
+      const pointData = ga.child.getMultiPointChild(multiPointData);
       const geomOffsets = multiPointData.valueOffsets;
-      const flatCoordsData = getPointChild(pointData);
+      const flatCoordsData = ga.child.getPointChild(pointData);
       const flatCoordinateArray = flatCoordsData.values;
 
       const props: ScatterplotLayerProps = {
+        // Note: because this is a composite layer and not doing the rendering
+        // itself, we still have to pass in our defaultProps
+        ...ourDefaultProps,
+        ...otherProps,
+
         // @ts-expect-error used for picking purposes
         recordBatchIdx,
         invertedGeomOffsets: invertOffsets(geomOffsets),
 
         id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,
-        radiusUnits: this.props.radiusUnits,
-        radiusScale: this.props.radiusScale,
-        radiusMinPixels: this.props.radiusMinPixels,
-        radiusMaxPixels: this.props.radiusMaxPixels,
-        lineWidthUnits: this.props.lineWidthUnits,
-        lineWidthScale: this.props.lineWidthScale,
-        lineWidthMinPixels: this.props.lineWidthMinPixels,
-        lineWidthMaxPixels: this.props.lineWidthMaxPixels,
-        stroked: this.props.stroked,
-        filled: this.props.filled,
-        billboard: this.props.billboard,
-        antialiasing: this.props.antialiasing,
         data: {
           // Note: this needs to be the length one level down.
           length: pointData.length,
@@ -405,34 +237,15 @@ export class GeoArrowScatterplotLayer<
         },
       };
 
-      assignAccessor({
-        props,
-        propName: "getRadius",
-        propInput: this.props.getRadius,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: geomOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getFillColor",
-        propInput: this.props.getFillColor,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: geomOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getLineColor",
-        propInput: this.props.getLineColor,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: geomOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getLineWidth",
-        propInput: this.props.getLineWidth,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: geomOffsets,
-      });
+      for (const [propName, propInput] of Object.entries(accessors)) {
+        assignAccessor({
+          props,
+          propName,
+          propInput,
+          chunkIdx: recordBatchIdx,
+          geomCoordOffsets: geomOffsets,
+        });
+      }
 
       const layer = new ScatterplotLayer(this.getSubLayerProps(props));
       layers.push(layer);

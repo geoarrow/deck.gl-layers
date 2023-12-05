@@ -1,95 +1,47 @@
 import {
   CompositeLayer,
   CompositeLayerProps,
-  Material,
   DefaultProps,
   Layer,
   LayersList,
   GetPickingInfoParams,
+  assert,
+  LayerContext,
+  UpdateParameters,
 } from "@deck.gl/core/typed";
 import { SolidPolygonLayer } from "@deck.gl/layers/typed";
 import type { SolidPolygonLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
+import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
+  extractAccessorsFromProps,
   getGeometryVector,
-  getLineStringChild,
-  getMultiPolygonChild,
   getMultiPolygonResolvedOffsets,
-  getPointChild,
-  getPolygonChild,
   getPolygonResolvedOffsets,
   invertOffsets,
-  isMultiPolygonVector,
-  isPolygonVector,
-  validateColorVector,
-  validateMultiPolygonType,
-  validatePolygonType,
-  validateVectorAccessors,
 } from "./utils.js";
-import {
-  ColorAccessor,
-  FloatAccessor,
-  GeoArrowPickingInfo,
-  MultiPolygonVector,
-  PolygonVector,
-} from "./types.js";
+import { getPickingInfo } from "./picking.js";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
-import { earcutPolygonArray } from "./earcut.js";
-
-const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
+import { validateAccessors } from "./validate.js";
+import { spawn, Transfer, BlobWorker, Pool } from "threads";
+import type { FunctionThread } from "threads";
 
 /** All properties supported by GeoArrowSolidPolygonLayer */
-export type GeoArrowSolidPolygonLayerProps = _GeoArrowSolidPolygonLayerProps &
+export type GeoArrowSolidPolygonLayerProps = Omit<
+  SolidPolygonLayerProps,
+  "data" | "getPolygon" | "getElevation" | "getFillColor" | "getLineColor"
+> &
+  _GeoArrowSolidPolygonLayerProps &
   CompositeLayerProps;
 
 /** Properties added by GeoArrowSolidPolygonLayer */
 type _GeoArrowSolidPolygonLayerProps = {
   data: arrow.Table;
 
-  /** Whether to fill the polygons
-   * @default true
-   */
-  filled?: boolean;
-  /** Whether to extrude the polygons
-   * @default false
-   */
-  extruded?: boolean;
-  /** Whether to generate a line wireframe of the polygon.
-   * @default false
-   */
-  wireframe?: boolean;
-  /**
-   * (Experimental) If `false`, will skip normalizing the coordinates returned by `getPolygon`.
-   * @default true
-   */
-  _normalize?: boolean;
-  /**
-   * (Experimental) This prop is only effective with `_normalize: false`.
-   * It specifies the winding order of rings in the polygon data, one of 'CW' (clockwise) and 'CCW' (counter-clockwise)
-   */
-  _windingOrder?: "CW" | "CCW";
-
-  /**
-   * (Experimental) This prop is only effective with `XYZ` data.
-   * When true, polygon tesselation will be performed on the plane with the largest area, instead of the xy plane.
-   * @default false
-   */
-  _full3d?: boolean;
-
-  /**
-   * If `true`, validate the arrays provided (e.g. chunk lengths)
-   * @default true
-   */
-  _validate?: boolean;
-
-  /** Elevation multiplier.
-   * @default 1
-   */
-  elevationScale?: number;
-
   /** Polygon geometry accessor. */
-  getPolygon?: PolygonVector | MultiPolygonVector;
+  getPolygon?: ga.vector.PolygonVector | ga.vector.MultiPolygonVector;
 
   /** Extrusion height accessor.
    * @default 1000
@@ -105,81 +57,217 @@ type _GeoArrowSolidPolygonLayerProps = {
   getLineColor?: ColorAccessor;
 
   /**
-   * Material settings for lighting effect. Applies if `extruded: true`
-   *
+   * If `true`, validate the arrays provided (e.g. chunk lengths)
    * @default true
-   * @see https://deck.gl/docs/developer-guide/using-lighting
    */
-  material?: Material;
+  _validate?: boolean;
+
+  /**
+   * URL to worker that performs earcut triangulation.
+   *
+   * By default this loads from the jsdelivr CDN, but end users may want to host
+   * this on their own domain.
+   */
+  earcutWorkerUrl?: string | URL;
+
+  /**
+   * The number of workers used for the earcut thread pool.
+   */
+  earcutWorkerPoolSize?: number;
 };
 
-const defaultProps: DefaultProps<GeoArrowSolidPolygonLayerProps> = {
-  filled: true,
-  extruded: false,
-  wireframe: false,
+// Remove data from the upstream default props
+const {
+  data: _data,
+  getPolygon: _getPolygon,
+  ..._defaultProps
+} = SolidPolygonLayer.defaultProps;
+
+// Default props added by us
+const ourDefaultProps: Pick<
+  GeoArrowSolidPolygonLayerProps,
+  | "_normalize"
+  | "_windingOrder"
+  | "_validate"
+  | "earcutWorkerUrl"
+  | "earcutWorkerPoolSize"
+> = {
   // Note: this diverges from upstream, where here we default to no
   // normalization
   _normalize: false,
   // Note: this diverges from upstream, where here we default to CCW
   _windingOrder: "CCW",
-  _full3d: false,
+
   _validate: true,
 
-  elevationScale: { type: "number", min: 0, value: 1 },
+  // TODO: set this to current version
+  earcutWorkerUrl:
+    "https://cdn.jsdelivr.net/npm/@geoarrow/geoarrow-js@0.3.0-beta.1/dist/earcut-worker.min.js",
 
-  getElevation: { type: "accessor", value: 1000 },
-  getFillColor: { type: "accessor", value: DEFAULT_COLOR },
-  getLineColor: { type: "accessor", value: DEFAULT_COLOR },
+  earcutWorkerPoolSize: 8,
+};
 
-  material: true,
+// @ts-expect-error Type error in merging default props with ours
+const defaultProps: DefaultProps<GeoArrowSolidPolygonLayerProps> = {
+  ..._defaultProps,
+  ...ourDefaultProps,
 };
 
 export class GeoArrowSolidPolygonLayer<
-  ExtraProps extends {} = {}
+  ExtraProps extends {} = {},
 > extends CompositeLayer<
   Required<GeoArrowSolidPolygonLayerProps> & ExtraProps
 > {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowSolidPolygonLayer";
 
-  getPickingInfo({
-    info,
-    sourceLayer,
-  }: GetPickingInfoParams): GeoArrowPickingInfo {
-    const { data: table } = this.props;
+  declare state: CompositeLayer["state"] & {
+    table: arrow.Table | null;
+    triangles: Uint32Array[] | null;
+    earcutWorkerPool: Pool<FunctionThread> | null;
+    earcutWorkerRequest: Promise<string>;
+  };
 
-    // Geometry index as rendered
-    let index = info.index;
-
-    // if a MultiPolygon dataset, map from the rendered index back to the
-    // feature index
-    // @ts-expect-error `invertedGeomOffsets` is manually set on layer props
-    if (sourceLayer.props.invertedGeomOffsets) {
-      // @ts-expect-error `invertedGeomOffsets` is manually set on layer props
-      index = sourceLayer.props.invertedGeomOffsets[index];
-    }
-
-    // @ts-expect-error `recordBatchIdx` is manually set on layer props
-    const recordBatchIdx: number = sourceLayer.props.recordBatchIdx;
-    const batch = table.batches[recordBatchIdx];
-    const row = batch.get(index);
-
-    // @ts-expect-error hack: using private method to avoid recomputing via
-    // batch lengths on each iteration
-    const offsets: number[] = table._offsets;
-    const currentBatchOffset = offsets[recordBatchIdx];
-
-    // Update index to be _global_ index, not within the specific record batch
-    index += currentBatchOffset;
-    return {
-      ...info,
-      index,
-      object: row,
+  initializeState(_context: LayerContext): void {
+    this.state = {
+      table: null,
+      triangles: null,
+      earcutWorkerRequest: fetch(this.props.earcutWorkerUrl).then((resp) =>
+        resp.text(),
+      ),
+      earcutWorkerPool: null,
     };
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  // NOTE: I'm not 100% on the race condition implications of this; can we make
+  // sure we never construct two pools?
+  async initEarcutPool(): Promise<Pool<FunctionThread>> {
+    if (this.state.earcutWorkerPool) return this.state.earcutWorkerPool;
+
+    const workerText = await this.state.earcutWorkerRequest;
+    const pool = Pool<FunctionThread>(
+      () => spawn(BlobWorker.fromText(workerText)),
+      8,
+    );
+    this.state.earcutWorkerPool = pool;
+    return this.state.earcutWorkerPool;
+  }
+
+  async finalizeState(context: LayerContext): Promise<void> {
+    await this.state?.earcutWorkerPool?.terminate();
+    console.log("terminated");
+  }
+
+  async updateData() {
     const { data: table } = this.props;
+    const earcutTriangles = await this._updateEarcut(table);
+    this.setState({ table: this.props.data, triangles: earcutTriangles });
+  }
+
+  async _updateEarcut(table: arrow.Table): Promise<Uint32Array[]> {
+    const polygonVector = getGeometryVector(table, EXTENSION_NAME.POLYGON);
+    if (polygonVector !== null) {
+      return this._earcutPolygonVector(polygonVector);
+    }
+
+    const MultiPolygonVector = getGeometryVector(
+      table,
+      EXTENSION_NAME.MULTIPOLYGON,
+    );
+    if (MultiPolygonVector !== null) {
+      return this._earcutMultiPolygonVector(MultiPolygonVector);
+    }
+
+    const geometryColumn = this.props.getPolygon;
+    if (ga.vector.isPolygonVector(geometryColumn)) {
+      return this._earcutPolygonVector(geometryColumn);
+    }
+
+    if (ga.vector.isMultiPolygonVector(geometryColumn)) {
+      return this._earcutMultiPolygonVector(geometryColumn);
+    }
+
+    throw new Error("geometryColumn not Polygon or MultiPolygon");
+  }
+
+  async _earcutPolygonVector(
+    geometryColumn: ga.vector.PolygonVector,
+  ): Promise<Uint32Array[]> {
+    const pool = await this.initEarcutPool();
+
+    const result: Uint32Array[] = new Array(geometryColumn.data.length);
+    console.time("earcut");
+
+    for (
+      let recordBatchIdx = 0;
+      recordBatchIdx < geometryColumn.data.length;
+      recordBatchIdx++
+    ) {
+      const polygonData = geometryColumn.data[recordBatchIdx];
+      const [preparedPolygonData, arrayBuffers] = ga.worker.preparePostMessage(
+        polygonData,
+        true,
+      );
+      pool.queue(async (earcutWorker) => {
+        const earcutTriangles = await earcutWorker(
+          Transfer(preparedPolygonData, arrayBuffers),
+        );
+        result[recordBatchIdx] = earcutTriangles;
+      });
+    }
+
+    await pool.completed();
+    console.timeEnd("earcut");
+
+    return result;
+  }
+
+  async _earcutMultiPolygonVector(
+    geometryColumn: ga.vector.MultiPolygonVector,
+  ): Promise<Uint32Array[]> {
+    const pool = await this.initEarcutPool();
+
+    const result: Uint32Array[] = new Array(geometryColumn.data.length);
+    console.time("earcut");
+
+    for (
+      let recordBatchIdx = 0;
+      recordBatchIdx < geometryColumn.data.length;
+      recordBatchIdx++
+    ) {
+      const multiPolygonData = geometryColumn.data[recordBatchIdx];
+      const polygonData = ga.child.getMultiPolygonChild(multiPolygonData);
+      const [preparedPolygonData, arrayBuffers] = ga.worker.preparePostMessage(
+        polygonData,
+        true,
+      );
+      pool.queue(async (earcutWorker) => {
+        const earcutTriangles = await earcutWorker(
+          Transfer(preparedPolygonData, arrayBuffers),
+        );
+        result[recordBatchIdx] = earcutTriangles;
+      });
+    }
+
+    await pool.completed();
+    console.timeEnd("earcut");
+
+    return result;
+  }
+
+  updateState({ props, changeFlags }: UpdateParameters<this>): void {
+    if (changeFlags.dataChanged) {
+      this.updateData();
+    }
+  }
+
+  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+    return getPickingInfo(params, this.props.data);
+  }
+
+  renderLayers(): Layer<{}> | LayersList | null {
+    const { table } = this.state;
+    if (!table) return null;
 
     const polygonVector = getGeometryVector(table, EXTENSION_NAME.POLYGON);
     if (polygonVector !== null) {
@@ -188,18 +276,18 @@ export class GeoArrowSolidPolygonLayer<
 
     const MultiPolygonVector = getGeometryVector(
       table,
-      EXTENSION_NAME.MULTIPOLYGON
+      EXTENSION_NAME.MULTIPOLYGON,
     );
     if (MultiPolygonVector !== null) {
       return this._renderLayersMultiPolygon(MultiPolygonVector);
     }
 
     const geometryColumn = this.props.getPolygon;
-    if (isPolygonVector(geometryColumn)) {
+    if (ga.vector.isPolygonVector(geometryColumn)) {
       return this._renderLayersPolygon(geometryColumn);
     }
 
-    if (isMultiPolygonVector(geometryColumn)) {
+    if (ga.vector.isMultiPolygonVector(geometryColumn)) {
       return this._renderLayersMultiPolygon(geometryColumn);
     }
 
@@ -207,32 +295,20 @@ export class GeoArrowSolidPolygonLayer<
   }
 
   _renderLayersPolygon(
-    geometryColumn: PolygonVector
+    geometryColumn: ga.vector.PolygonVector,
   ): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { table } = this.state;
+    if (!table) return null;
 
     if (this.props._validate) {
-      const vectorAccessors: arrow.Vector[] = [geometryColumn];
-      for (const accessor of [
-        this.props.getElevation,
-        this.props.getFillColor,
-        this.props.getLineColor,
-      ]) {
-        if (accessor instanceof arrow.Vector) {
-          vectorAccessors.push(accessor);
-        }
-      }
-
-      validatePolygonType(geometryColumn.type);
-      validateVectorAccessors(table, vectorAccessors);
-
-      if (this.props.getFillColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getFillColor);
-      }
-      if (this.props.getLineColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getLineColor);
-      }
+      assert(ga.vector.isPolygonVector(geometryColumn));
+      validateAccessors(this.props, table);
     }
+
+    // Exclude manually-set accessors
+    const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+      "getPolygon",
+    ]);
 
     const layers: SolidPolygonLayer[] = [];
     for (
@@ -241,33 +317,32 @@ export class GeoArrowSolidPolygonLayer<
       recordBatchIdx++
     ) {
       const polygonData = geometryColumn.data[recordBatchIdx];
-      const ringData = getPolygonChild(polygonData);
-      const pointData = getLineStringChild(ringData);
-      const coordData = getPointChild(pointData);
+      const ringData = ga.child.getPolygonChild(polygonData);
+      const pointData = ga.child.getLineStringChild(ringData);
+      const coordData = ga.child.getPointChild(pointData);
 
       const nDim = pointData.type.listSize;
 
-      // const geomOffsets = polygonData.valueOffsets;
-      // const ringOffsets = ringData.valueOffsets;
       const flatCoordinateArray = coordData.values;
 
       const resolvedRingOffsets = getPolygonResolvedOffsets(polygonData);
 
-      const earcutTriangles = earcutPolygonArray(polygonData);
+      if (!this.state.triangles) {
+        return null;
+      }
+
+      const earcutTriangles = this.state.triangles[recordBatchIdx];
 
       const props: SolidPolygonLayerProps = {
+        // Note: because this is a composite layer and not doing the rendering
+        // itself, we still have to pass in our defaultProps
+        ...ourDefaultProps,
+        ...otherProps,
+
         // used for picking purposes
         recordBatchIdx,
 
         id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
-        filled: this.props.filled,
-        extruded: this.props.extruded,
-        wireframe: this.props.wireframe,
-        _normalize: this.props._normalize,
-        _windingOrder: this.props._windingOrder,
-        _full3d: this.props._full3d,
-        elevationScale: this.props.elevationScale,
-        material: this.props.material,
         data: {
           // Number of geometries
           length: polygonData.length,
@@ -281,27 +356,15 @@ export class GeoArrowSolidPolygonLayer<
         },
       };
 
-      assignAccessor({
-        props,
-        propName: "getElevation",
-        propInput: this.props.getElevation,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedRingOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getFillColor",
-        propInput: this.props.getFillColor,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedRingOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getLineColor",
-        propInput: this.props.getLineColor,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedRingOffsets,
-      });
+      for (const [propName, propInput] of Object.entries(accessors)) {
+        assignAccessor({
+          props,
+          propName,
+          propInput,
+          chunkIdx: recordBatchIdx,
+          geomCoordOffsets: resolvedRingOffsets,
+        });
+      }
 
       const layer = new SolidPolygonLayer(this.getSubLayerProps(props));
       layers.push(layer);
@@ -311,32 +374,20 @@ export class GeoArrowSolidPolygonLayer<
   }
 
   _renderLayersMultiPolygon(
-    geometryColumn: MultiPolygonVector
+    geometryColumn: ga.vector.MultiPolygonVector,
   ): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { table } = this.state;
+    if (!table) return null;
 
     if (this.props._validate) {
-      const vectorAccessors: arrow.Vector[] = [geometryColumn];
-      for (const accessor of [
-        this.props.getElevation,
-        this.props.getFillColor,
-        this.props.getLineColor,
-      ]) {
-        if (accessor instanceof arrow.Vector) {
-          vectorAccessors.push(accessor);
-        }
-      }
-
-      validateMultiPolygonType(geometryColumn.type);
-      validateVectorAccessors(table, vectorAccessors);
-
-      if (this.props.getFillColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getFillColor);
-      }
-      if (this.props.getLineColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getLineColor);
-      }
+      assert(ga.vector.isMultiPolygonVector(geometryColumn));
+      validateAccessors(this.props, table);
     }
+
+    // Exclude manually-set accessors
+    const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+      "getPolygon",
+    ]);
 
     const layers: SolidPolygonLayer[] = [];
     for (
@@ -345,19 +396,21 @@ export class GeoArrowSolidPolygonLayer<
       recordBatchIdx++
     ) {
       const multiPolygonData = geometryColumn.data[recordBatchIdx];
-      const polygonData = getMultiPolygonChild(multiPolygonData);
-      const ringData = getPolygonChild(polygonData);
-      const pointData = getLineStringChild(ringData);
-      const coordData = getPointChild(pointData);
+      const polygonData = ga.child.getMultiPolygonChild(multiPolygonData);
+      const ringData = ga.child.getPolygonChild(polygonData);
+      const pointData = ga.child.getLineStringChild(ringData);
+      const coordData = ga.child.getPointChild(pointData);
 
       const nDim = pointData.type.listSize;
 
       const geomOffsets = multiPolygonData.valueOffsets;
-      // const polygonOffsets = polygonData.valueOffsets;
-      // const ringOffsets = ringData.valueOffsets;
       const flatCoordinateArray = coordData.values;
 
-      const earcutTriangles = earcutPolygonArray(polygonData);
+      if (!this.state.triangles) {
+        return null;
+      }
+
+      const earcutTriangles = this.state.triangles[recordBatchIdx];
 
       // NOTE: we have two different uses of offsets. One is for _rendering_
       // each polygon. The other is for mapping _accessor attributes_ from one
@@ -374,19 +427,16 @@ export class GeoArrowSolidPolygonLayer<
         getMultiPolygonResolvedOffsets(multiPolygonData);
 
       const props: SolidPolygonLayerProps = {
+        // Note: because this is a composite layer and not doing the rendering
+        // itself, we still have to pass in our defaultProps
+        ...ourDefaultProps,
+        ...otherProps,
+
         // used for picking purposes
         recordBatchIdx,
         invertedGeomOffsets: invertOffsets(geomOffsets),
 
         id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
-        filled: this.props.filled,
-        extruded: this.props.extruded,
-        wireframe: this.props.wireframe,
-        _normalize: this.props._normalize,
-        _windingOrder: this.props._windingOrder,
-        _full3d: this.props._full3d,
-        elevationScale: this.props.elevationScale,
-        material: this.props.material,
         data: {
           // Number of polygons
           // Note: this needs to be the length one level down, because we're
@@ -412,27 +462,15 @@ export class GeoArrowSolidPolygonLayer<
         },
       };
 
-      assignAccessor({
-        props,
-        propName: "getElevation",
-        propInput: this.props.getElevation,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedMultiPolygonToCoordOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getFillColor",
-        propInput: this.props.getFillColor,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedMultiPolygonToCoordOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getLineColor",
-        propInput: this.props.getLineColor,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: resolvedMultiPolygonToCoordOffsets,
-      });
+      for (const [propName, propInput] of Object.entries(accessors)) {
+        assignAccessor({
+          props,
+          propName,
+          propInput,
+          chunkIdx: recordBatchIdx,
+          geomCoordOffsets: resolvedMultiPolygonToCoordOffsets,
+        });
+      }
 
       const layer = new SolidPolygonLayer(this.getSubLayerProps(props));
       layers.push(layer);
@@ -444,12 +482,12 @@ export class GeoArrowSolidPolygonLayer<
 
 function encodePickingColors(
   geomToCoordOffsets: Int32Array,
-  encodePickingColor: (id: number, result: number[]) => void
+  encodePickingColor: (id: number, result: number[]) => void,
 ): Uint8ClampedArray {
   const largestOffset = geomToCoordOffsets[geomToCoordOffsets.length - 1];
   const pickingColors = new Uint8ClampedArray(largestOffset);
 
-  const pickingColor = [];
+  const pickingColor: number[] = [];
   for (let arrayIdx = 0; arrayIdx < geomToCoordOffsets.length - 1; arrayIdx++) {
     const thisOffset = geomToCoordOffsets[arrayIdx];
     const nextOffset = geomToCoordOffsets[arrayIdx + 1];

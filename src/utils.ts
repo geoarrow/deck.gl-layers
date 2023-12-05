@@ -1,23 +1,6 @@
 import { assert } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
-import {
-  Coord,
-  LineString,
-  LineStringData,
-  LineStringVector,
-  MultiLineStringData,
-  MultiLineStringVector,
-  MultiPoint,
-  MultiPointData,
-  MultiPointVector,
-  MultiPolygonData,
-  MultiPolygonVector,
-  PointData,
-  PointVector,
-  Polygon,
-  PolygonData,
-  PolygonVector,
-} from "./types";
+import * as ga from "@geoarrow/geoarrow-js";
 
 export type TypedArray =
   | Uint8Array
@@ -33,12 +16,12 @@ export type TypedArray =
 export function findGeometryColumnIndex(
   schema: arrow.Schema,
   extensionName: string,
-  geometryColumnName?: string | null
+  geometryColumnName?: string | null,
 ): number | null {
   const index = schema.fields.findIndex(
     (field) =>
       field.name === geometryColumnName ||
-      field.metadata.get("ARROW:extension:name") === extensionName
+      field.metadata.get("ARROW:extension:name") === extensionName,
   );
   return index !== -1 ? index : null;
 }
@@ -51,14 +34,14 @@ export function isColumnReference(input: any): input is string {
 }
 
 function isDataInterleavedCoords(
-  data: arrow.Data
+  data: arrow.Data,
 ): data is arrow.Data<arrow.FixedSizeList<arrow.Float64>> {
   // TODO: also check 2 or 3d? Float64?
   return data.type instanceof arrow.FixedSizeList;
 }
 
 function isDataSeparatedCoords(
-  data: arrow.Data
+  data: arrow.Data,
 ): data is arrow.Data<arrow.Struct<{ x: arrow.Float64; y: arrow.Float64 }>> {
   // TODO: also check child names? Float64?
   return data.type instanceof arrow.Struct;
@@ -74,7 +57,7 @@ function isDataSeparatedCoords(
 function convertStructToFixedSizeList(
   coords:
     | arrow.Data<arrow.FixedSizeList<arrow.Float64>>
-    | arrow.Data<arrow.Struct<{ x: arrow.Float64; y: arrow.Float64 }>>
+    | arrow.Data<arrow.Struct<{ x: arrow.Float64; y: arrow.Float64 }>>,
 ): arrow.Data<arrow.FixedSizeList<arrow.Float64>> {
   if (isDataInterleavedCoords(coords)) {
     return coords;
@@ -90,7 +73,7 @@ function convertStructToFixedSizeList(
     const childDataType = new arrow.Float64();
     const dataType = new arrow.FixedSizeList(
       2,
-      new arrow.Field("coords", childDataType)
+      new arrow.Field("coords", childDataType),
     );
 
     const interleavedCoordsData = arrow.makeData({
@@ -113,7 +96,7 @@ function convertStructToFixedSizeList(
 
 type AssignAccessorProps = {
   /** The object on which to assign the resolved accesor */
-  props: object;
+  props: Record<string, any>;
   /** The name of the prop to set */
   propName: string;
   /** The user-supplied input to the layer. Must either be a scalar value or a reference to a column in the table. */
@@ -149,11 +132,10 @@ export function assignAccessor(args: AssignAccessorProps) {
         values = expandArrayToCoords(
           values,
           columnData.type.listSize,
-          geomCoordOffsets
+          geomCoordOffsets,
         );
       }
 
-      // @ts-expect-error Property 'data' does not exist on type 'object'.
       props.data.attributes[propName] = {
         value: values,
         size: columnData.type.listSize,
@@ -169,7 +151,6 @@ export function assignAccessor(args: AssignAccessorProps) {
         values = expandArrayToCoords(values, 1, geomCoordOffsets);
       }
 
-      // @ts-expect-error Property 'data' does not exist on type 'object'.
       props.data.attributes[propName] = {
         value: values,
         size: 1,
@@ -192,7 +173,7 @@ export function assignAccessor(args: AssignAccessorProps) {
 export function expandArrayToCoords<T extends TypedArray>(
   input: T,
   size: number,
-  geomOffsets: Int32Array
+  geomOffsets: Int32Array,
 ): T {
   const numCoords = geomOffsets[geomOffsets.length - 1];
   // @ts-expect-error
@@ -225,11 +206,11 @@ export function expandArrayToCoords<T extends TypedArray>(
  */
 export function getGeometryVector(
   table: arrow.Table,
-  geoarrowTypeName: string
+  geoarrowTypeName: string,
 ): arrow.Vector | null {
   const geometryColumnIdx = findGeometryColumnIndex(
     table.schema,
-    geoarrowTypeName
+    geoarrowTypeName,
   );
 
   if (geometryColumnIdx === null) {
@@ -238,217 +219,6 @@ export function getGeometryVector(
   }
 
   return table.getChildAt(geometryColumnIdx);
-}
-
-/**
- * Provide validation for accessors provided
- *
- * - Assert that all vectors have the same number of chunks as the main table
- * - Assert that all chunks in each vector have the same number of rows as the
- *   relevant batch in the main table.
- *
- */
-export function validateVectorAccessors(
-  table: arrow.Table,
-  vectorAccessors: arrow.Vector[]
-) {
-  // Check the same number of chunks as the table's batches
-  for (const vectorAccessor of vectorAccessors) {
-    assert(table.batches.length === vectorAccessor.data.length);
-  }
-
-  // Check that each table batch/vector data has the same number of rows
-  for (const vectorAccessor of vectorAccessors) {
-    for (let i = 0; i < table.batches.length; i++) {
-      assert(table.batches[i].numRows === vectorAccessor.data[i].length);
-    }
-  }
-}
-
-export function validateColorVector(vector: arrow.Vector) {
-  // Assert the color vector is a FixedSizeList
-  assert(arrow.DataType.isFixedSizeList(vector.type));
-
-  // Assert it has 3 or 4 values
-  assert(vector.type.listSize === 3 || vector.type.listSize === 4);
-
-  // Assert the child type is an integer
-  assert(arrow.DataType.isInt(vector.type.children[0]));
-
-  // Assert the child type is a Uint8
-  // @ts-ignore
-  // Property 'type' does not exist on type 'Int_<Ints>'. Did you mean 'TType'?
-  assert(vector.type.children[0].type.bitWidth === 8);
-}
-
-export function isPointVector(vector: arrow.Vector): vector is PointVector {
-  // Check FixedSizeList
-  if (!arrow.DataType.isFixedSizeList(vector.type)) {
-    return false;
-  }
-
-  // Check list size of 2 or 3
-  if (vector.type.listSize !== 2 && vector.type.listSize !== 3) {
-    return false;
-  }
-
-  // Check child of FixedSizeList is floating type
-  if (!arrow.DataType.isFloat(vector.type.children[0])) {
-    return false;
-  }
-
-  return true;
-}
-
-export function isLineStringVector(
-  vector: arrow.Vector
-): vector is LineStringVector {
-  // Check the outer vector is a List
-  if (!arrow.DataType.isList(vector.type)) {
-    return false;
-  }
-
-  // Check the child is a point vector
-  if (!isPointVector(vector.getChildAt(0))) {
-    return false;
-  }
-
-  return true;
-}
-
-export function isPolygonVector(vector: arrow.Vector): vector is PolygonVector {
-  // Check the outer vector is a List
-  if (!arrow.DataType.isList(vector.type)) {
-    return false;
-  }
-
-  // Check the child is a linestring vector
-  if (!isLineStringVector(vector.getChildAt(0))) {
-    return false;
-  }
-
-  return true;
-}
-
-export function isMultiPointVector(
-  vector: arrow.Vector
-): vector is MultiPointVector {
-  // Check the outer vector is a List
-  if (!arrow.DataType.isList(vector.type)) {
-    return false;
-  }
-
-  // Check the child is a point vector
-  if (!isPointVector(vector.getChildAt(0))) {
-    return false;
-  }
-
-  return true;
-}
-
-export function isMultiLineStringVector(
-  vector: arrow.Vector
-): vector is MultiLineStringVector {
-  // Check the outer vector is a List
-  if (!arrow.DataType.isList(vector.type)) {
-    return false;
-  }
-
-  // Check the child is a linestring vector
-  if (!isLineStringVector(vector.getChildAt(0))) {
-    return false;
-  }
-
-  return true;
-}
-
-export function isMultiPolygonVector(
-  vector: arrow.Vector
-): vector is MultiPolygonVector {
-  // Check the outer vector is a List
-  if (!arrow.DataType.isList(vector.type)) {
-    return false;
-  }
-
-  // Check the child is a polygon vector
-  if (!isPolygonVector(vector.getChildAt(0))) {
-    return false;
-  }
-
-  return true;
-}
-
-export function validatePointType(type: arrow.DataType): type is Coord {
-  // Assert the point vector is a FixedSizeList
-  // TODO: support struct
-  assert(arrow.DataType.isFixedSizeList(type));
-
-  // Assert it has 2 or 3 values
-  assert(type.listSize === 2 || type.listSize === 3);
-
-  // Assert the child type is a float
-  assert(arrow.DataType.isFloat(type.children[0]));
-
-  return true;
-}
-
-export function validateLineStringType(
-  type: arrow.DataType
-): type is LineString {
-  // Assert the outer vector is a List
-  assert(arrow.DataType.isList(type));
-
-  // Assert its inner vector is a point layout
-  validatePointType(type.children[0].type);
-
-  return true;
-}
-
-export function validatePolygonType(type: arrow.DataType): type is Polygon {
-  // Assert the outer vector is a List
-  assert(arrow.DataType.isList(type));
-
-  // Assert its inner vector is a linestring layout
-  validateLineStringType(type.children[0].type);
-
-  return true;
-}
-
-// Note: this is the same as validateLineStringType
-export function validateMultiPointType(
-  type: arrow.DataType
-): type is MultiPoint {
-  // Assert the outer vector is a List
-  assert(arrow.DataType.isList(type));
-
-  // Assert its inner vector is a point layout
-  validatePointType(type.children[0].type);
-
-  return true;
-}
-
-export function validateMultiLineStringType(
-  type: arrow.DataType
-): type is Polygon {
-  // Assert the outer vector is a List
-  assert(arrow.DataType.isList(type));
-
-  // Assert its inner vector is a linestring layout
-  validateLineStringType(type.children[0].type);
-
-  return true;
-}
-
-export function validateMultiPolygonType(
-  type: arrow.DataType
-): type is Polygon {
-  // Assert the outer vector is a List
-  assert(arrow.DataType.isList(type));
-
-  // Assert its inner vector is a linestring layout
-  validatePolygonType(type.children[0].type);
-
-  return true;
 }
 
 export function getListNestingLevels(data: arrow.Data): number {
@@ -460,43 +230,11 @@ export function getListNestingLevels(data: arrow.Data): number {
   return nestingLevels;
 }
 
-export function getPointChild(data: PointData): arrow.Data<arrow.Float> {
-  // @ts-expect-error
-  return data.children[0];
-}
-
-export function getLineStringChild(data: LineStringData): PointData {
-  // @ts-expect-error
-  return data.children[0];
-}
-
-export function getPolygonChild(data: PolygonData): LineStringData {
-  // @ts-expect-error
-  return data.children[0];
-}
-
-export function getMultiPointChild(data: MultiPointData): PointData {
-  // @ts-expect-error
-  return data.children[0];
-}
-
-export function getMultiLineStringChild(
-  data: MultiLineStringData
-): LineStringData {
-  // @ts-expect-error
-  return data.children[0];
-}
-
-export function getMultiPolygonChild(data: MultiPolygonData): PolygonData {
-  // @ts-expect-error
-  return data.children[0];
-}
-
 export function getMultiLineStringResolvedOffsets(
-  data: MultiLineStringData
+  data: ga.data.MultiLineStringData,
 ): Int32Array {
   const geomOffsets = data.valueOffsets;
-  const lineStringData = getMultiLineStringChild(data);
+  const lineStringData = ga.child.getMultiLineStringChild(data);
   const ringOffsets = lineStringData.valueOffsets;
 
   const resolvedRingOffsets = new Int32Array(geomOffsets.length);
@@ -509,9 +247,11 @@ export function getMultiLineStringResolvedOffsets(
   return resolvedRingOffsets;
 }
 
-export function getPolygonResolvedOffsets(data: PolygonData): Int32Array {
+export function getPolygonResolvedOffsets(
+  data: ga.data.PolygonData,
+): Int32Array {
   const geomOffsets = data.valueOffsets;
-  const ringData = getPolygonChild(data);
+  const ringData = ga.child.getPolygonChild(data);
   const ringOffsets = ringData.valueOffsets;
 
   const resolvedRingOffsets = new Int32Array(geomOffsets.length);
@@ -525,10 +265,10 @@ export function getPolygonResolvedOffsets(data: PolygonData): Int32Array {
 }
 
 export function getMultiPolygonResolvedOffsets(
-  data: MultiPolygonData
+  data: ga.data.MultiPolygonData,
 ): Int32Array {
-  const polygonData = getMultiPolygonChild(data);
-  const ringData = getPolygonChild(polygonData);
+  const polygonData = ga.child.getMultiPolygonChild(data);
+  const ringData = ga.child.getPolygonChild(polygonData);
 
   const geomOffsets = data.valueOffsets;
   const polygonOffsets = polygonData.valueOffsets;
@@ -546,7 +286,7 @@ export function getMultiPolygonResolvedOffsets(
  * Invert offsets so that lookup can go in the opposite direction
  */
 export function invertOffsets(
-  offsets: Int32Array
+  offsets: Int32Array,
 ): Uint8Array | Uint16Array | Uint32Array {
   const largestOffset = offsets[offsets.length - 1];
 
@@ -554,8 +294,8 @@ export function invertOffsets(
     offsets.length < Math.pow(2, 8)
       ? Uint8Array
       : offsets.length < Math.pow(2, 16)
-      ? Uint16Array
-      : Uint32Array;
+        ? Uint16Array
+        : Uint32Array;
 
   const invertedOffsets = new arrayConstructor(largestOffset);
   for (let arrayIdx = 0; arrayIdx < offsets.length - 1; arrayIdx++) {
@@ -567,4 +307,26 @@ export function invertOffsets(
   }
 
   return invertedOffsets;
+}
+
+// TODO: better typing
+export function extractAccessorsFromProps(
+  props: Record<string, any>,
+  excludeKeys: string[],
+): [Record<string, any>, Record<string, any>] {
+  const accessors: Record<string, any> = {};
+  const otherProps: Record<string, any> = {};
+  for (const [key, value] of Object.entries(props)) {
+    if (excludeKeys.includes(key)) {
+      continue;
+    }
+
+    if (key.startsWith("get")) {
+      accessors[key] = value;
+    } else {
+      otherProps[key] = value;
+    }
+  }
+
+  return [accessors, otherProps];
 }
