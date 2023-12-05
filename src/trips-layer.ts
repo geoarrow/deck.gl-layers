@@ -1,31 +1,30 @@
 import {
-  Accessor,
-  Color,
   CompositeLayer,
   CompositeLayerProps,
   DefaultProps,
   Layer,
   LayersList,
-  Unit,
+  assert,
 } from "@deck.gl/core/typed";
 import { TripsLayer } from "@deck.gl/geo-layers/typed";
-import * as arrow from "apache-arrow";
+import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
+  extractAccessorsFromProps,
   getGeometryVector,
-  validateColorVector,
-  validateLineStringType,
-  validateVectorAccessors,
 } from "./utils.js";
-import { LineStringVector, TimestampAccessor } from "./types.js";
+import { TimestampAccessor } from "./types.js";
 import {
   GeoArrowPathLayerProps,
   defaultProps as pathLayerDefaultProps,
 } from "./path-layer.js";
+import { validateAccessors } from "./validate.js";
+import { EXTENSION_NAME } from "./constants.js";
+import { TripsLayerProps } from "@deck.gl/geo-layers/typed/trips-layer/trips-layer.js";
 
 /** All properties supported by GeoArrowTripsLayer */
 export type GeoArrowTripsLayerProps = _GeoArrowTripsLayerProps &
-  GeoArrowPathLayerProps &
+  Omit<GeoArrowPathLayerProps, "getPath"> &
   CompositeLayerProps;
 
 /** Properties added by GeoArrowTripsLayer */
@@ -49,20 +48,35 @@ type _GeoArrowTripsLayerProps = {
    * Timestamp accessor.
    */
   getTimestamps: TimestampAccessor;
+  /**
+   * If `true`, validate the arrays provided (e.g. chunk lengths)
+   * @default true
+   */
+  _validate?: boolean;
+  /**
+   * Path geometry accessor.
+   */
+  getPath?: ga.vector.LineStringVector;
 };
 
+// Remove data and getPosition from the upstream default props
+const {
+  data: _data,
+  getPath: _getPath,
+  ..._defaultProps
+} = pathLayerDefaultProps;
+
 const defaultProps: DefaultProps<GeoArrowTripsLayerProps> = {
-  ...pathLayerDefaultProps,
+  ..._defaultProps,
   fadeTrail: true,
   trailLength: { type: "number", value: 120, min: 0 },
   currentTime: { type: "number", value: 0, min: 0 },
-  // No default, making it required
-  // getTimestamps: { type: "accessor", value: (d) => d.timestamps },
+  _validate: true,
 };
 
 /** Render animated paths that represent vehicle trips. */
 export class GeoArrowTripsLayer<
-  ExtraProps extends {} = {}
+  ExtraProps extends {} = {},
 > extends CompositeLayer<Required<GeoArrowTripsLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowTripsLayer";
@@ -70,24 +84,36 @@ export class GeoArrowTripsLayer<
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
-    const geometryColumn: LineStringVector =
-      this.props.getPath || getGeometryVector(table, "geoarrow.linestring");
+    const lineStringVector = getGeometryVector(
+      table,
+      EXTENSION_NAME.LINESTRING,
+    );
+    if (lineStringVector !== null) {
+      return this._renderLayersLineString(lineStringVector);
+    }
+
+    const geometryColumn = this.props.getPath;
+    if (ga.vector.isLineStringVector(geometryColumn)) {
+      return this._renderLayersLineString(geometryColumn);
+    }
+
+    throw new Error("geometryColumn not LineString");
+  }
+
+  _renderLayersLineString(
+    geometryColumn: ga.vector.LineStringVector,
+  ): Layer<{}> | LayersList | null {
+    const { data: table } = this.props;
 
     if (this.props._validate) {
-      const vectorAccessors: arrow.Vector[] = [geometryColumn];
-      for (const accessor of [this.props.getColor, this.props.getWidth]) {
-        if (accessor instanceof arrow.Vector) {
-          vectorAccessors.push(accessor);
-        }
-      }
-
-      validateLineStringType(geometryColumn.type);
-      validateVectorAccessors(table, vectorAccessors);
-
-      if (this.props.getColor instanceof arrow.Vector) {
-        validateColorVector(this.props.getColor);
-      }
+      assert(ga.vector.isLineStringVector(geometryColumn));
+      validateAccessors(this.props, table);
     }
+
+    // Exclude manually-set accessors
+    const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+      "getPath",
+    ]);
 
     const layers: TripsLayer[] = [];
     for (
@@ -95,24 +121,25 @@ export class GeoArrowTripsLayer<
       recordBatchIdx < table.batches.length;
       recordBatchIdx++
     ) {
-      const geometryData = geometryColumn.data[recordBatchIdx];
-      const geomOffsets = geometryData.valueOffsets;
-      const nDim = geometryData.type.children[0].type.listSize;
-      const flatCoordinateArray = geometryData.children[0].children[0].values;
+      const lineStringData = geometryColumn.data[recordBatchIdx];
+      const geomOffsets = lineStringData.valueOffsets;
+      const pointData = ga.child.getLineStringChild(lineStringData);
+      const nDim = pointData.type.listSize;
+      const coordData = ga.child.getPointChild(pointData);
+      const flatCoordinateArray = coordData.values;
 
-      const props = {
-        id: `${this.props.id}-geoarrow-linestring-${recordBatchIdx}`,
-        widthUnits: this.props.widthUnits,
-        widthScale: this.props.widthScale,
-        widthMinPixels: this.props.widthMinPixels,
-        widthMaxPixels: this.props.widthMaxPixels,
-        jointRounded: this.props.jointRounded,
-        capRounded: this.props.capRounded,
-        miterLimit: this.props.miterLimit,
-        billboard: this.props.billboard,
-        _pathType: this.props._pathType,
+      const props: TripsLayerProps = {
+        // Note: because this is a composite layer and not doing the rendering
+        // itself, we still have to pass in our defaultProps
+        ...ourDefaultProps,
+        ...otherProps,
+
+        // used for picking purposes
+        recordBatchIdx,
+
+        id: `${this.props.id}-geoarrow-trip-${recordBatchIdx}`,
         data: {
-          length: geometryData.length,
+          length: lineStringData.length,
           // @ts-ignore
           startIndices: geomOffsets,
           attributes: {
@@ -121,20 +148,15 @@ export class GeoArrowTripsLayer<
         },
       };
 
-      assignAccessor({
-        props,
-        propName: "getColor",
-        propInput: this.props.getColor,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: geomOffsets,
-      });
-      assignAccessor({
-        props,
-        propName: "getWidth",
-        propInput: this.props.getWidth,
-        chunkIdx: recordBatchIdx,
-        geomCoordOffsets: geomOffsets,
-      });
+      for (const [propName, propInput] of Object.entries(accessors)) {
+        assignAccessor({
+          props,
+          propName,
+          propInput,
+          chunkIdx: recordBatchIdx,
+          geomCoordOffsets: geomOffsets,
+        });
+      }
 
       const layer = new TripsLayer(props);
       layers.push(layer);
