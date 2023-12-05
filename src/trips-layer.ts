@@ -7,13 +7,14 @@ import {
   assert,
 } from "@deck.gl/core/typed";
 import { TripsLayer } from "@deck.gl/geo-layers/typed";
+import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
 } from "./utils.js";
-import { TimestampAccessor } from "./types.js";
+import { TimestampAccessor, ColorAccessor, FloatAccessor } from "./types.js";
 import {
   GeoArrowPathLayerProps,
   defaultProps as pathLayerDefaultProps,
@@ -23,31 +24,17 @@ import { EXTENSION_NAME } from "./constants.js";
 import { TripsLayerProps } from "@deck.gl/geo-layers/typed/trips-layer/trips-layer.js";
 
 /** All properties supported by GeoArrowTripsLayer */
-export type GeoArrowTripsLayerProps = _GeoArrowTripsLayerProps &
-  Omit<GeoArrowPathLayerProps, "getPath"> &
+export type GeoArrowTripsLayerProps = Omit<
+  TripsLayerProps<arrow.Table>,
+  "data" | "getPath" | "getColor" | "getWidth" | "getTimestamps"
+> &
+  _GeoArrowTripsLayerProps &
   CompositeLayerProps;
 
 /** Properties added by GeoArrowTripsLayer */
 type _GeoArrowTripsLayerProps = {
-  /**
-   * Whether or not the path fades out.
-   * @default true
-   */
-  fadeTrail?: boolean;
-  /**
-   * Trail length.
-   * @default 120
-   */
-  trailLength?: number;
-  /**
-   * The current time of the frame.
-   * @default 0
-   */
-  currentTime?: number;
-  /**
-   * Timestamp accessor.
-   */
-  getTimestamps: TimestampAccessor;
+  data: arrow.Table;
+
   /**
    * If `true`, validate the arrays provided (e.g. chunk lengths)
    * @default true
@@ -57,6 +44,20 @@ type _GeoArrowTripsLayerProps = {
    * Path geometry accessor.
    */
   getPath?: ga.vector.LineStringVector;
+  /**
+   * Path color accessor.
+   * @default [0, 0, 0, 255]
+   */
+  getColor?: ColorAccessor;
+  /**
+   * Path width accessor.
+   * @default 1
+   */
+  getWidth?: FloatAccessor;
+  /**
+   * Timestamp accessor.
+   */
+  getTimestamps: TimestampAccessor;
 };
 
 // Remove data and getPosition from the upstream default props
@@ -66,12 +67,20 @@ const {
   ..._defaultProps
 } = pathLayerDefaultProps;
 
+// Default props added by us
+const ourDefaultProps: Pick<GeoArrowPathLayerProps, "_pathType" | "_validate"> =
+  {
+    // Note: this diverges from upstream, where here we _default into_ binary
+    // rendering
+    // This instructs the layer to skip normalization and use the binary
+    // as-is
+    _pathType: "open",
+    _validate: true,
+  };
+
 const defaultProps: DefaultProps<GeoArrowTripsLayerProps> = {
   ..._defaultProps,
-  fadeTrail: true,
-  trailLength: { type: "number", value: 120, min: 0 },
-  currentTime: { type: "number", value: 0, min: 0 },
-  _validate: true,
+  ...ourDefaultProps,
 };
 
 /** Render animated paths that represent vehicle trips. */
