@@ -68,15 +68,17 @@ const {
 } = pathLayerDefaultProps;
 
 // Default props added by us
-const ourDefaultProps: Pick<GeoArrowPathLayerProps, "_pathType" | "_validate"> =
-  {
-    // Note: this diverges from upstream, where here we _default into_ binary
-    // rendering
-    // This instructs the layer to skip normalization and use the binary
-    // as-is
-    _pathType: "open",
-    _validate: true,
-  };
+const ourDefaultProps: Pick<
+  GeoArrowTripsLayerProps,
+  "_pathType" | "_validate"
+> = {
+  // Note: this diverges from upstream, where here we _default into_ binary
+  // rendering
+  // This instructs the layer to skip normalization and use the binary
+  // as-is
+  _pathType: "open",
+  _validate: true,
+};
 
 const defaultProps: DefaultProps<GeoArrowTripsLayerProps> = {
   ..._defaultProps,
@@ -114,6 +116,7 @@ export class GeoArrowTripsLayer<
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
+    const timestampColumn = this.props.getTimestamps;
     if (this.props._validate) {
       assert(ga.vector.isLineStringVector(geometryColumn));
       validateAccessors(this.props, table);
@@ -122,6 +125,7 @@ export class GeoArrowTripsLayer<
     // Exclude manually-set accessors
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPath",
+      "getTimestamps",
     ]);
 
     const layers: TripsLayer[] = [];
@@ -136,6 +140,8 @@ export class GeoArrowTripsLayer<
       const nDim = pointData.type.listSize;
       const coordData = ga.child.getPointChild(pointData);
       const flatCoordinateArray = coordData.values;
+      const timestampData = timestampColumn.data[recordBatchIdx];
+      const timestampValues = timestampData.children[0].values;
 
       const props: TripsLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
@@ -153,6 +159,7 @@ export class GeoArrowTripsLayer<
           startIndices: geomOffsets,
           attributes: {
             getPath: { value: flatCoordinateArray, size: nDim },
+            getTimestamps: { value: timestampValues, size: 1 },
           },
         },
       };

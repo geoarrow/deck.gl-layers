@@ -9,7 +9,7 @@ export type FloatAccessor =
   | arrow.Vector<arrow.Float>
   | Accessor<arrow.Table, number>;
 export type TimestampAccessor =
-  | arrow.Vector<arrow.List<arrow.Uint32>>;
+  | arrow.Vector<arrow.List<arrow.Float>>;
 export type ColorAccessor =
   | arrow.Vector<arrow.FixedSizeList<arrow.Uint8>>
   | Accessor<arrow.Table, Color | Color[]>;
