@@ -1,0 +1,6 @@
+{
+  "include": ["dist/**/*.d.ts"],
+  "compilerOptions": {
+    "skipLibCheck": true
+  }
+}
