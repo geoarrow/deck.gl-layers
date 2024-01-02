@@ -39,7 +39,7 @@
     "dist/",
     "src/"
   ],
-  "repository": "https://github.com/geoarrow/deck.gl-geoarrow",
+  "repository": "https://github.com/geoarrow/deck.gl-layers",
   "author": "Kyle Barron <kylebarron2@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
