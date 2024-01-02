@@ -45,7 +45,7 @@ export default [
     output: {
       file: "dist/dist.umd.js",
       format: "umd",
-      name: "@geoarrow/deck.gl-geoarrow",
+      name: "@geoarrow/deck.gl-layers",
       sourcemap,
       globals: {
         "@deck.gl/aggregation-layers/typed": "deck",
