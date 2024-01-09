@@ -9,8 +9,8 @@ export function getPickingInfo(
   // Geometry index as rendered
   let index = info.index;
 
-  // if a MultiPoint dataset, map from the rendered index back to the feature
-  // index
+  // if a Multi- geometry dataset, map from the rendered index back to the
+  // feature index
   // @ts-expect-error `invertedGeomOffsets` is manually set on layer props
   if (sourceLayer.props.invertedGeomOffsets) {
     // @ts-expect-error `invertedGeomOffsets` is manually set on layer props
@@ -19,16 +19,16 @@ export function getPickingInfo(
 
   // @ts-expect-error `recordBatchIdx` is manually set on layer props
   const recordBatchIdx: number = sourceLayer.props.recordBatchIdx;
+  // @ts-expect-error `tableOffsets` is manually set on layer props
+  const tableOffsets: Uint32Array = sourceLayer.props.tableOffsets;
+
   const batch = table.batches[recordBatchIdx];
   const row = batch.get(index);
   if (row === null) {
     return info;
   }
 
-  // @ts-expect-error hack: using private method to avoid recomputing via
-  // batch lengths on each iteration
-  const offsets: number[] = table._offsets;
-  const currentBatchOffset = offsets[recordBatchIdx];
+  const currentBatchOffset = tableOffsets[recordBatchIdx];
 
   // Update index to be _global_ index, not within the specific record batch
   index += currentBatchOffset;
@@ -37,4 +37,17 @@ export function getPickingInfo(
     index,
     object: row,
   };
+}
+
+// This is vendored from Arrow JS because it's a private API
+export function computeChunkOffsets<T extends arrow.DataType>(
+  chunks: ReadonlyArray<arrow.Data<T>>,
+) {
+  return chunks.reduce(
+    (offsets, chunk, index) => {
+      offsets[index + 1] = offsets[index] + chunk.length;
+      return offsets;
+    },
+    new Uint32Array(chunks.length + 1),
+  );
 }
