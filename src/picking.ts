@@ -2,8 +2,19 @@ import * as arrow from "apache-arrow";
 import { GetPickingInfoParams } from "@deck.gl/core/typed";
 import { GeoArrowPickingInfo } from "./types";
 
+export interface GeoArrowExtraPickingProps {
+  recordBatchIdx: number;
+  tableOffsets: Uint32Array;
+  invertedGeomOffsets?: Uint8Array | Uint16Array | Uint32Array;
+}
+
 export function getPickingInfo(
-  { info, sourceLayer }: GetPickingInfoParams,
+  {
+    info,
+    sourceLayer,
+  }: GetPickingInfoParams & {
+    sourceLayer: { props: GeoArrowExtraPickingProps };
+  },
   table: arrow.Table,
 ): GeoArrowPickingInfo {
   // Geometry index as rendered
@@ -11,16 +22,12 @@ export function getPickingInfo(
 
   // if a Multi- geometry dataset, map from the rendered index back to the
   // feature index
-  // @ts-expect-error `invertedGeomOffsets` is manually set on layer props
   if (sourceLayer.props.invertedGeomOffsets) {
-    // @ts-expect-error `invertedGeomOffsets` is manually set on layer props
     index = sourceLayer.props.invertedGeomOffsets[index];
   }
 
-  // @ts-expect-error `recordBatchIdx` is manually set on layer props
-  const recordBatchIdx: number = sourceLayer.props.recordBatchIdx;
-  // @ts-expect-error `tableOffsets` is manually set on layer props
-  const tableOffsets: Uint32Array = sourceLayer.props.tableOffsets;
+  const recordBatchIdx = sourceLayer.props.recordBatchIdx;
+  const tableOffsets = sourceLayer.props.tableOffsets;
 
   const batch = table.batches[recordBatchIdx];
   const row = batch.get(index);

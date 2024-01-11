@@ -18,7 +18,11 @@ import {
 import * as ga from "@geoarrow/geoarrow-js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
-import { getPickingInfo } from "./picking.js";
+import {
+  GeoArrowExtraPickingProps,
+  computeChunkOffsets,
+  getPickingInfo,
+} from "./picking.js";
 import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowColumnLayer */
@@ -105,7 +109,11 @@ export class GeoArrowColumnLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowColumnLayer";
 
-  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+  getPickingInfo(
+    params: GetPickingInfoParams & {
+      sourceLayer: { props: GeoArrowExtraPickingProps };
+    },
+  ): GeoArrowPickingInfo {
     return getPickingInfo(params, this.props.data);
   }
 
@@ -139,6 +147,7 @@ export class GeoArrowColumnLayer<
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPosition",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: ColumnLayer[] = [];
     for (
@@ -158,6 +167,7 @@ export class GeoArrowColumnLayer<
 
         // @ts-expect-error used for picking purposes
         recordBatchIdx,
+        tableOffsets,
 
         id: `${this.props.id}-geoarrow-column-${recordBatchIdx}`,
         data: {

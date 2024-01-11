@@ -11,7 +11,11 @@ import type { H3HexagonLayerProps } from "@deck.gl/geo-layers/typed";
 import * as arrow from "apache-arrow";
 import { assignAccessor, extractAccessorsFromProps } from "./utils.js";
 import { GeoArrowPickingInfo } from "./types.js";
-import { getPickingInfo } from "./picking.js";
+import {
+  GeoArrowExtraPickingProps,
+  computeChunkOffsets,
+  getPickingInfo,
+} from "./picking.js";
 import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowH3HexagonLayer */
@@ -61,7 +65,11 @@ export class GeoArrowH3HexagonLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowH3HexagonLayer";
 
-  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+  getPickingInfo(
+    params: GetPickingInfoParams & {
+      sourceLayer: { props: GeoArrowExtraPickingProps };
+    },
+  ): GeoArrowPickingInfo {
     return getPickingInfo(params, this.props.data);
   }
 
@@ -80,6 +88,7 @@ export class GeoArrowH3HexagonLayer<
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getHexagon",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: H3HexagonLayer[] = [];
     for (
@@ -98,6 +107,7 @@ export class GeoArrowH3HexagonLayer<
 
         // @ts-expect-error used for picking purposes
         recordBatchIdx,
+        tableOffsets,
 
         id: `${this.props.id}-geoarrow-arc-${recordBatchIdx}`,
 

@@ -17,7 +17,11 @@ import {
   extractAccessorsFromProps,
   getGeometryVector,
 } from "./utils.js";
-import { getPickingInfo } from "./picking.js";
+import {
+  GeoArrowExtraPickingProps,
+  computeChunkOffsets,
+  getPickingInfo,
+} from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { validateAccessors } from "./validate.js";
@@ -143,7 +147,11 @@ export class GeoArrowTextLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowTextLayer";
 
-  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+  getPickingInfo(
+    params: GetPickingInfoParams & {
+      sourceLayer: { props: GeoArrowExtraPickingProps };
+    },
+  ): GeoArrowPickingInfo {
     return getPickingInfo(params, this.props.data);
   }
 
@@ -178,6 +186,7 @@ export class GeoArrowTextLayer<
       "getPosition",
       "getText",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: TextLayer[] = [];
     for (
@@ -201,6 +210,7 @@ export class GeoArrowTextLayer<
 
         // // @ts-expect-error used for picking purposes
         recordBatchIdx,
+        tableOffsets,
 
         id: `${this.props.id}-geoarrow-heatmap-${recordBatchIdx}`,
         data: {
