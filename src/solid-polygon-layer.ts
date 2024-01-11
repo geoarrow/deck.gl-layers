@@ -21,7 +21,11 @@ import {
   getPolygonResolvedOffsets,
   invertOffsets,
 } from "./utils.js";
-import { getPickingInfo } from "./picking.js";
+import {
+  GeoArrowExtraPickingProps,
+  computeChunkOffsets,
+  getPickingInfo,
+} from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { validateAccessors } from "./validate.js";
@@ -123,6 +127,7 @@ export class GeoArrowSolidPolygonLayer<
 
   declare state: CompositeLayer["state"] & {
     table: arrow.Table | null;
+    tableOffsets: Uint16Array | null;
     triangles: Uint32Array[] | null;
     earcutWorkerPool: Pool<FunctionThread> | null;
     earcutWorkerRequest: Promise<string>;
@@ -131,6 +136,7 @@ export class GeoArrowSolidPolygonLayer<
   initializeState(_context: LayerContext): void {
     this.state = {
       table: null,
+      tableOffsets: null,
       triangles: null,
       earcutWorkerRequest: fetch(this.props.earcutWorkerUrl).then((resp) =>
         resp.text(),
@@ -161,7 +167,12 @@ export class GeoArrowSolidPolygonLayer<
   async updateData() {
     const { data: table } = this.props;
     const earcutTriangles = await this._updateEarcut(table);
-    this.setState({ table: this.props.data, triangles: earcutTriangles });
+    const tableOffsets = computeChunkOffsets(table.data);
+    this.setState({
+      table: this.props.data,
+      triangles: earcutTriangles,
+      tableOffsets,
+    });
   }
 
   async _updateEarcut(table: arrow.Table): Promise<Uint32Array[]> {
@@ -261,7 +272,11 @@ export class GeoArrowSolidPolygonLayer<
     }
   }
 
-  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+  getPickingInfo(
+    params: GetPickingInfoParams & {
+      sourceLayer: { props: GeoArrowExtraPickingProps };
+    },
+  ): GeoArrowPickingInfo {
     return getPickingInfo(params, this.props.data);
   }
 
@@ -341,6 +356,7 @@ export class GeoArrowSolidPolygonLayer<
 
         // used for picking purposes
         recordBatchIdx,
+        tableOffsets: this.state.tableOffsets,
 
         id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
         data: {
@@ -434,6 +450,7 @@ export class GeoArrowSolidPolygonLayer<
 
         // used for picking purposes
         recordBatchIdx,
+        tableOffsets: this.state.tableOffsets,
         invertedGeomOffsets: invertOffsets(geomOffsets),
 
         id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,

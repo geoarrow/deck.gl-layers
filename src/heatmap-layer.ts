@@ -18,6 +18,7 @@ import {
 import { FloatAccessor } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { validateAccessors } from "./validate.js";
+import { computeChunkOffsets } from "./picking.js";
 
 /** All properties supported by GeoArrowHeatmapLayer */
 export type GeoArrowHeatmapLayerProps = Omit<
@@ -106,6 +107,7 @@ export class GeoArrowHeatmapLayer<
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPosition",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: HeatmapLayer[] = [];
     for (
@@ -125,6 +127,7 @@ export class GeoArrowHeatmapLayer<
 
         // @ts-expect-error used for picking purposes
         recordBatchIdx,
+        tableOffsets,
 
         id: `${this.props.id}-geoarrow-heatmap-${recordBatchIdx}`,
         data: {

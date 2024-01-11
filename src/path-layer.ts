@@ -19,7 +19,11 @@ import {
   getMultiLineStringResolvedOffsets,
   invertOffsets,
 } from "./utils.js";
-import { getPickingInfo } from "./picking.js";
+import {
+  GeoArrowExtraPickingProps,
+  computeChunkOffsets,
+  getPickingInfo,
+} from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { validateAccessors } from "./validate.js";
@@ -90,7 +94,11 @@ export class GeoArrowPathLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowPathLayer";
 
-  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+  getPickingInfo(
+    params: GetPickingInfoParams & {
+      sourceLayer: { props: GeoArrowExtraPickingProps };
+    },
+  ): GeoArrowPickingInfo {
     return getPickingInfo(params, this.props.data);
   }
 
@@ -141,6 +149,7 @@ export class GeoArrowPathLayer<
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPath",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: PathLayer[] = [];
     for (
@@ -163,6 +172,7 @@ export class GeoArrowPathLayer<
 
         // used for picking purposes
         recordBatchIdx,
+        tableOffsets,
 
         id: `${this.props.id}-geoarrow-path-${recordBatchIdx}`,
         data: {
@@ -208,6 +218,7 @@ export class GeoArrowPathLayer<
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPath",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: PathLayer[] = [];
     for (
@@ -237,6 +248,7 @@ export class GeoArrowPathLayer<
 
         // used for picking purposes
         recordBatchIdx,
+        tableOffsets,
         invertedGeomOffsets: invertOffsets(geomOffsets),
 
         id: `${this.props.id}-geoarrow-path-${recordBatchIdx}`,

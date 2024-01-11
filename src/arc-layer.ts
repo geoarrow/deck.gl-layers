@@ -13,7 +13,11 @@ import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
 import { assignAccessor, extractAccessorsFromProps } from "./utils.js";
 import { child } from "@geoarrow/geoarrow-js";
-import { getPickingInfo } from "./picking.js";
+import {
+  GeoArrowExtraPickingProps,
+  computeChunkOffsets,
+  getPickingInfo,
+} from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { validateAccessors } from "./validate.js";
 
@@ -108,7 +112,11 @@ export class GeoArrowArcLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowArcLayer";
 
-  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+  getPickingInfo(
+    params: GetPickingInfoParams & {
+      sourceLayer: { props: GeoArrowExtraPickingProps };
+    },
+  ): GeoArrowPickingInfo {
     return getPickingInfo(params, this.props.data);
   }
 
@@ -137,6 +145,7 @@ export class GeoArrowArcLayer<
       "getSourcePosition",
       "getTargetPosition",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: ArcLayer[] = [];
     for (
@@ -157,6 +166,7 @@ export class GeoArrowArcLayer<
 
         // @ts-expect-error used for picking purposes
         recordBatchIdx,
+        tableOffsets,
 
         id: `${this.props.id}-geoarrow-arc-${recordBatchIdx}`,
         data: {

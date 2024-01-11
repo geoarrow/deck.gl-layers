@@ -17,7 +17,11 @@ import {
   getGeometryVector,
   invertOffsets,
 } from "./utils.js";
-import { getPickingInfo } from "./picking.js";
+import {
+  GeoArrowExtraPickingProps,
+  computeChunkOffsets,
+  getPickingInfo,
+} from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { validateAccessors } from "./validate.js";
@@ -91,7 +95,11 @@ export class GeoArrowScatterplotLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowScatterplotLayer";
 
-  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+  getPickingInfo(
+    params: GetPickingInfoParams & {
+      sourceLayer: { props: GeoArrowExtraPickingProps };
+    },
+  ): GeoArrowPickingInfo {
     return getPickingInfo(params, this.props.data);
   }
 
@@ -137,6 +145,7 @@ export class GeoArrowScatterplotLayer<
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPosition",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: ScatterplotLayer[] = [];
     for (
@@ -156,6 +165,7 @@ export class GeoArrowScatterplotLayer<
 
         // @ts-expect-error used for picking purposes
         recordBatchIdx,
+        tableOffsets,
 
         id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,
         data: {
@@ -201,6 +211,7 @@ export class GeoArrowScatterplotLayer<
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPosition",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: ScatterplotLayer[] = [];
     for (
@@ -222,6 +233,7 @@ export class GeoArrowScatterplotLayer<
 
         // @ts-expect-error used for picking purposes
         recordBatchIdx,
+        tableOffsets,
         invertedGeomOffsets: invertOffsets(geomOffsets),
 
         id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,

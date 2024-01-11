@@ -22,6 +22,7 @@ import {
 import { validateAccessors } from "./validate.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { TripsLayerProps } from "@deck.gl/geo-layers/typed/trips-layer/trips-layer.js";
+import { computeChunkOffsets } from "./picking.js";
 
 /** All properties supported by GeoArrowTripsLayer */
 export type GeoArrowTripsLayerProps = Omit<
@@ -127,6 +128,7 @@ export class GeoArrowTripsLayer<
       "getPath",
       "getTimestamps",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: TripsLayer[] = [];
     for (
@@ -151,6 +153,7 @@ export class GeoArrowTripsLayer<
 
         // used for picking purposes
         recordBatchIdx,
+        tableOffsets,
 
         id: `${this.props.id}-geoarrow-trip-${recordBatchIdx}`,
         data: {
