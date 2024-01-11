@@ -50,6 +50,7 @@ export default [
       globals: {
         "@deck.gl/aggregation-layers/typed": "deck",
         "@deck.gl/core/typed": "deck",
+        "@deck.gl/geo-layers/typed": "deck",
         "@deck.gl/layers/typed": "deck",
         "apache-arrow": "arrow",
       },

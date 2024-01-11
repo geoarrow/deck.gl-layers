@@ -72,7 +72,7 @@ type _GeoArrowSolidPolygonLayerProps = {
    * By default this loads from the jsdelivr CDN, but end users may want to host
    * this on their own domain.
    */
-  earcutWorkerUrl?: string | URL;
+  earcutWorkerUrl?: string | URL | null;
 
   /**
    * The number of workers used for the earcut thread pool.
@@ -130,7 +130,7 @@ export class GeoArrowSolidPolygonLayer<
     tableOffsets: Uint16Array | null;
     triangles: Uint32Array[] | null;
     earcutWorkerPool: Pool<FunctionThread> | null;
-    earcutWorkerRequest: Promise<string>;
+    earcutWorkerRequest: Promise<string> | null;
   };
 
   initializeState(_context: LayerContext): void {
@@ -138,19 +138,25 @@ export class GeoArrowSolidPolygonLayer<
       table: null,
       tableOffsets: null,
       triangles: null,
-      earcutWorkerRequest: fetch(this.props.earcutWorkerUrl).then((resp) =>
-        resp.text(),
-      ),
+      earcutWorkerRequest:
+        this.props.earcutWorkerUrl === null ||
+        this.props.earcutWorkerUrl === undefined
+          ? null
+          : fetch(this.props.earcutWorkerUrl).then((resp) => resp.text()),
       earcutWorkerPool: null,
     };
   }
 
   // NOTE: I'm not 100% on the race condition implications of this; can we make
   // sure we never construct two pools?
-  async initEarcutPool(): Promise<Pool<FunctionThread>> {
+  async initEarcutPool(): Promise<Pool<FunctionThread> | null> {
     if (this.state.earcutWorkerPool) return this.state.earcutWorkerPool;
 
     const workerText = await this.state.earcutWorkerRequest;
+    if (!workerText) {
+      return null;
+    }
+
     const pool = Pool<FunctionThread>(
       () => spawn(BlobWorker.fromText(workerText)),
       8,
@@ -205,6 +211,10 @@ export class GeoArrowSolidPolygonLayer<
     geometryColumn: ga.vector.PolygonVector,
   ): Promise<Uint32Array[]> {
     const pool = await this.initEarcutPool();
+    // Fallback if pool couldn't be created
+    if (!pool) {
+      return this._earcutPolygonVectorMainThread(geometryColumn);
+    }
 
     const result: Uint32Array[] = new Array(geometryColumn.data.length);
     console.time("earcut");
@@ -233,10 +243,31 @@ export class GeoArrowSolidPolygonLayer<
     return result;
   }
 
+  _earcutPolygonVectorMainThread(
+    geometryColumn: ga.vector.PolygonVector,
+  ): Uint32Array[] {
+    const result: Uint32Array[] = new Array(geometryColumn.data.length);
+
+    for (
+      let recordBatchIdx = 0;
+      recordBatchIdx < geometryColumn.data.length;
+      recordBatchIdx++
+    ) {
+      const polygonData = geometryColumn.data[recordBatchIdx];
+      result[recordBatchIdx] = ga.algorithm.earcut(polygonData);
+    }
+
+    return result;
+  }
+
   async _earcutMultiPolygonVector(
     geometryColumn: ga.vector.MultiPolygonVector,
   ): Promise<Uint32Array[]> {
     const pool = await this.initEarcutPool();
+    // Fallback if pool couldn't be created
+    if (!pool) {
+      return this._earcutMultiPolygonVectorMainThread(geometryColumn);
+    }
 
     const result: Uint32Array[] = new Array(geometryColumn.data.length);
     console.time("earcut");
@@ -262,6 +293,24 @@ export class GeoArrowSolidPolygonLayer<
 
     await pool.completed();
     console.timeEnd("earcut");
+
+    return result;
+  }
+
+  _earcutMultiPolygonVectorMainThread(
+    geometryColumn: ga.vector.MultiPolygonVector,
+  ): Uint32Array[] {
+    const result: Uint32Array[] = new Array(geometryColumn.data.length);
+
+    for (
+      let recordBatchIdx = 0;
+      recordBatchIdx < geometryColumn.data.length;
+      recordBatchIdx++
+    ) {
+      const multiPolygonData = geometryColumn.data[recordBatchIdx];
+      const polygonData = ga.child.getMultiPolygonChild(multiPolygonData);
+      result[recordBatchIdx] = ga.algorithm.earcut(polygonData);
+    }
 
     return result;
   }
