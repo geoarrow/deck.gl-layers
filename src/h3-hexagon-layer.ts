@@ -61,7 +61,7 @@ const defaultProps: DefaultProps<GeoArrowH3HexagonLayerProps> = {
 
 export class GeoArrowH3HexagonLayer<
   ExtraProps extends {} = {},
-> extends CompositeLayer<Required<GeoArrowH3HexagonLayerProps> & ExtraProps> {
+> extends CompositeLayer<GeoArrowH3HexagonLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowH3HexagonLayer";
 

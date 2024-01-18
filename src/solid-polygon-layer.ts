@@ -119,9 +119,7 @@ const defaultProps: DefaultProps<GeoArrowSolidPolygonLayerProps> = {
 
 export class GeoArrowSolidPolygonLayer<
   ExtraProps extends {} = {},
-> extends CompositeLayer<
-  Required<GeoArrowSolidPolygonLayerProps> & ExtraProps
-> {
+> extends CompositeLayer<GeoArrowSolidPolygonLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowSolidPolygonLayer";
 
@@ -196,11 +194,17 @@ export class GeoArrowSolidPolygonLayer<
     }
 
     const geometryColumn = this.props.getPolygon;
-    if (ga.vector.isPolygonVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isPolygonVector(geometryColumn)
+    ) {
       return this._earcutPolygonVector(geometryColumn);
     }
 
-    if (ga.vector.isMultiPolygonVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isMultiPolygonVector(geometryColumn)
+    ) {
       return this._earcutMultiPolygonVector(geometryColumn);
     }
 
@@ -347,15 +351,21 @@ export class GeoArrowSolidPolygonLayer<
     }
 
     const geometryColumn = this.props.getPolygon;
-    if (ga.vector.isPolygonVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isPolygonVector(geometryColumn)
+    ) {
       return this._renderLayersPolygon(geometryColumn);
     }
 
-    if (ga.vector.isMultiPolygonVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isMultiPolygonVector(geometryColumn)
+    ) {
       return this._renderLayersMultiPolygon(geometryColumn);
     }
 
-    throw new Error("geometryColumn not Polygon or MultiPolygon");
+    throw new Error("getPolygon not GeoArrow Polygon or MultiPolygon");
   }
 
   _renderLayersPolygon(

@@ -143,7 +143,7 @@ const defaultProps: DefaultProps<GeoArrowTextLayerProps> = {
 
 export class GeoArrowTextLayer<
   ExtraProps extends {} = {},
-> extends CompositeLayer<Required<GeoArrowTextLayerProps> & ExtraProps> {
+> extends CompositeLayer<GeoArrowTextLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowTextLayer";
 
@@ -164,11 +164,14 @@ export class GeoArrowTextLayer<
     }
 
     const geometryColumn = this.props.getPosition;
-    if (ga.vector.isPointVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isPointVector(geometryColumn)
+    ) {
       return this._renderLayersPoint(geometryColumn);
     }
 
-    throw new Error("geometryColumn not point");
+    throw new Error("getPosition not GeoArrow point");
   }
 
   _renderLayersPoint(

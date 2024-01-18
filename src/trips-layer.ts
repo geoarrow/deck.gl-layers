@@ -89,7 +89,7 @@ const defaultProps: DefaultProps<GeoArrowTripsLayerProps> = {
 /** Render animated paths that represent vehicle trips. */
 export class GeoArrowTripsLayer<
   ExtraProps extends {} = {},
-> extends CompositeLayer<Required<GeoArrowTripsLayerProps> & ExtraProps> {
+> extends CompositeLayer<GeoArrowTripsLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowTripsLayer";
 
@@ -105,11 +105,14 @@ export class GeoArrowTripsLayer<
     }
 
     const geometryColumn = this.props.getPath;
-    if (ga.vector.isLineStringVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isLineStringVector(geometryColumn)
+    ) {
       return this._renderLayersLineString(geometryColumn);
     }
 
-    throw new Error("geometryColumn not LineString");
+    throw new Error("getPath not GeoArrow LineString");
   }
 
   _renderLayersLineString(

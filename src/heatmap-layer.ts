@@ -73,7 +73,7 @@ const defaultProps: DefaultProps<GeoArrowHeatmapLayerProps> = {
 
 export class GeoArrowHeatmapLayer<
   ExtraProps extends {} = {},
-> extends CompositeLayer<Required<GeoArrowHeatmapLayerProps> & ExtraProps> {
+> extends CompositeLayer<GeoArrowHeatmapLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowHeatmapLayer";
 
@@ -86,11 +86,14 @@ export class GeoArrowHeatmapLayer<
     }
 
     const geometryColumn = this.props.getPosition;
-    if (ga.vector.isPointVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isPointVector(geometryColumn)
+    ) {
       return this._renderLayersPoint(geometryColumn);
     }
 
-    throw new Error("geometryColumn not point");
+    throw new Error("getPosition not GeoArrow point");
   }
 
   _renderLayersPoint(
