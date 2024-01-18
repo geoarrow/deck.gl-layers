@@ -90,7 +90,7 @@ export const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
  */
 export class GeoArrowPathLayer<
   ExtraProps extends {} = {},
-> extends CompositeLayer<Required<GeoArrowPathLayerProps> & ExtraProps> {
+> extends CompositeLayer<GeoArrowPathLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowPathLayer";
 
@@ -122,15 +122,21 @@ export class GeoArrowPathLayer<
     }
 
     const geometryColumn = this.props.getPath;
-    if (ga.vector.isLineStringVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isLineStringVector(geometryColumn)
+    ) {
       return this._renderLayersLineString(geometryColumn);
     }
 
-    if (ga.vector.isMultiLineStringVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isMultiLineStringVector(geometryColumn)
+    ) {
       return this._renderLayersMultiLineString(geometryColumn);
     }
 
-    throw new Error("geometryColumn not LineString or MultiLineString");
+    throw new Error("getPath not GeoArrow LineString or MultiLineString");
   }
 
   _renderLayersLineString(

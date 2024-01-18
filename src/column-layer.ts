@@ -105,7 +105,7 @@ const defaultProps: DefaultProps<GeoArrowColumnLayerProps> = {
  */
 export class GeoArrowColumnLayer<
   ExtraProps extends {} = {},
-> extends CompositeLayer<Required<GeoArrowColumnLayerProps> & ExtraProps> {
+> extends CompositeLayer<GeoArrowColumnLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowColumnLayer";
 
@@ -126,11 +126,14 @@ export class GeoArrowColumnLayer<
     }
 
     const geometryColumn = this.props.getPosition;
-    if (ga.vector.isPointVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isPointVector(geometryColumn)
+    ) {
       return this._renderLayersPoint(geometryColumn);
     }
 
-    throw new Error("geometryColumn not point");
+    throw new Error("getPosition not GeoArrow point");
   }
 
   _renderLayersPoint(
