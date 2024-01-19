@@ -51,6 +51,7 @@ type _GeoArrowPointCloudLayerProps = {
      */
     _validate?: boolean;
     /**
+     * 
      * The units of the point size, one of `'meters'`, `'common'`, and `'pixels'`.
      * @default 'pixels'
      */
