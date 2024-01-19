@@ -137,6 +137,10 @@ export class GeoArrowScatterplotLayer<
     throw new Error("getPosition not GeoArrow point or multipoint");
   }
 
+  // TODO: can we wrap the function with the data object?
+  //
+  // But we're not getting any input...
+
   _renderLayersPoint(
     geometryColumn: ga.vector.PointVector,
   ): Layer<{}> | LayersList | null {
@@ -163,6 +167,7 @@ export class GeoArrowScatterplotLayer<
       const flatCoordsData = ga.child.getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
 
+      // console.log(otherProps);
       const props: ScatterplotLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
         // itself, we still have to pass in our defaultProps
@@ -194,7 +199,10 @@ export class GeoArrowScatterplotLayer<
         });
       }
 
-      const layer = new ScatterplotLayer(this.getSubLayerProps(props));
+      console.log("all ScatterplotLayer props");
+      const allProps = this.getSubLayerProps(props);
+      console.log(allProps);
+      const layer = new ScatterplotLayer(allProps);
       layers.push(layer);
     }
 

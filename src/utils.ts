@@ -321,12 +321,17 @@ export function extractAccessorsFromProps(
       continue;
     }
 
-    if (key.startsWith("get")) {
+    console.log(key);
+    console.log(value);
+    if (key.startsWith("get") && value instanceof arrow.Vector) {
       accessors[key] = value;
     } else {
       otherProps[key] = value;
     }
+
   }
+  console.log(accessors);
+  console.log(otherProps);
 
   return [accessors, otherProps];
 }
