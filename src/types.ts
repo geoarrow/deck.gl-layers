@@ -12,3 +12,4 @@ export type TimestampAccessor = arrow.Vector<arrow.List<arrow.Float>>;
 export type ColorAccessor =
   | arrow.Vector<arrow.FixedSizeList<arrow.Uint8>>
   | Accessor<arrow.Table, Color | Color[]>;
+export type NormalAccessor = arrow.Vector<arrow.FixedSizeList<arrow.Float32>>
