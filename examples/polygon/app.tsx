@@ -10,7 +10,7 @@ const GEOARROW_POLYGON_DATA = "http://localhost:8080/utah.feather";
 const INITIAL_VIEW_STATE = {
   latitude: 40.63403641639511,
   longitude: -111.91530172951025,
-  zoom: 11,
+  zoom: 9,
   bearing: 0,
   pitch: 0,
 };
@@ -60,9 +60,12 @@ function Root() {
         getFillColor: [0, 100, 60, 160],
         getLineColor: [255, 0, 0],
         lineWidthMinPixels: 0.2,
-        pickable: false,
+        pickable: true,
         autoHighlight: true,
-      })
+        earcutWorkerUrl: new URL(
+          "https://cdn.jsdelivr.net/npm/@geoarrow/geoarrow-js@0.3.0-beta.1/dist/earcut-worker.min.js",
+        ),
+      }),
     );
 
   return (

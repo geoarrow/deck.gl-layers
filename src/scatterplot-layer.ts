@@ -17,7 +17,11 @@ import {
   getGeometryVector,
   invertOffsets,
 } from "./utils.js";
-import { getPickingInfo } from "./picking.js";
+import {
+  GeoArrowExtraPickingProps,
+  computeChunkOffsets,
+  getPickingInfo,
+} from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { validateAccessors } from "./validate.js";
@@ -87,11 +91,15 @@ const defaultProps: DefaultProps<GeoArrowScatterplotLayerProps> = {
 
 export class GeoArrowScatterplotLayer<
   ExtraProps extends {} = {},
-> extends CompositeLayer<Required<GeoArrowScatterplotLayerProps> & ExtraProps> {
+> extends CompositeLayer<GeoArrowScatterplotLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowScatterplotLayer";
 
-  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+  getPickingInfo(
+    params: GetPickingInfoParams & {
+      sourceLayer: { props: GeoArrowExtraPickingProps };
+    },
+  ): GeoArrowPickingInfo {
     return getPickingInfo(params, this.props.data);
   }
 
@@ -112,15 +120,21 @@ export class GeoArrowScatterplotLayer<
     }
 
     const geometryColumn = this.props.getPosition;
-    if (ga.vector.isPointVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isPointVector(geometryColumn)
+    ) {
       return this._renderLayersPoint(geometryColumn);
     }
 
-    if (ga.vector.isMultiPointVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isMultiPointVector(geometryColumn)
+    ) {
       return this._renderLayersMultiPoint(geometryColumn);
     }
 
-    throw new Error("geometryColumn not point or multipoint");
+    throw new Error("getPosition not GeoArrow point or multipoint");
   }
 
   _renderLayersPoint(
@@ -137,6 +151,7 @@ export class GeoArrowScatterplotLayer<
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPosition",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: ScatterplotLayer[] = [];
     for (
@@ -154,11 +169,14 @@ export class GeoArrowScatterplotLayer<
         ...ourDefaultProps,
         ...otherProps,
 
-        // @ts-expect-error used for picking purposes
+        // used for picking purposes
         recordBatchIdx,
+        tableOffsets,
 
         id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
           length: geometryData.length,
           attributes: {
             getPosition: {
@@ -201,6 +219,7 @@ export class GeoArrowScatterplotLayer<
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPosition",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: ScatterplotLayer[] = [];
     for (
@@ -220,12 +239,17 @@ export class GeoArrowScatterplotLayer<
         ...ourDefaultProps,
         ...otherProps,
 
-        // @ts-expect-error used for picking purposes
+        // used for picking purposes
         recordBatchIdx,
-        invertedGeomOffsets: invertOffsets(geomOffsets),
+        tableOffsets,
 
         id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
+          // Map from expanded multi-geometry index to original index
+          // Used both in picking and for function callbacks
+          invertedGeomOffsets: invertOffsets(geomOffsets),
           // Note: this needs to be the length one level down.
           length: pointData.length,
           attributes: {

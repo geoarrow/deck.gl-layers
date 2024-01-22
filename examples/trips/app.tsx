@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
-import DeckGL, { Layer } from "deck.gl/typed";
-import { GeoArrowPathLayer } from "@geoarrow/deck.gl-layers";
+import DeckGL, { Layer, PickingInfo } from "deck.gl/typed";
+import { GeoArrowTripsLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 
-const GEOARROW_MULTILINESTRING_DATA =
-  "http://localhost:8080/ne_10m_roads_north_america.feather";
+const GEOARROW_POINT_DATA = "http://localhost:8080/trips.feather";
 
 const INITIAL_VIEW_STATE = {
-  latitude: 40,
-  longitude: -90,
-  zoom: 4,
+  longitude: -74,
+  latitude: 40.72,
+  zoom: 13,
+  pitch: 45,
   bearing: 0,
-  pitch: 0,
 };
 
 const MAP_STYLE =
@@ -24,29 +23,39 @@ const NAV_CONTROL_STYLE = {
   left: 10,
 };
 
-// https://colorbrewer2.org/#type=sequential&scheme=PuBuGn&n=9
-const COLORS_LOOKUP = {
-  "3": [255, 247, 251],
-  "4": [236, 226, 240],
-  "5": [208, 209, 230],
-  "6": [166, 189, 219],
-  "7": [103, 169, 207],
-  "8": [54, 144, 192],
-  "9": [2, 129, 138],
-  "10": [1, 108, 89],
-  "11": [1, 70, 54],
-};
-
 function Root() {
+  const trailLength = 180;
+  // unit corresponds to the timestamp in source data
+  const loopLength = 1800;
+  const animationSpeed = 1;
+
+  const [time, setTime] = useState(0);
+  const [animation] = useState<{ id: number }>({ id: 0 });
+
+  const animate = () => {
+    setTime((t) => (t + animationSpeed) % loopLength);
+    animation.id = window.requestAnimationFrame(animate);
+  };
+
+  useEffect(() => {
+    animation.id = window.requestAnimationFrame(animate);
+    return () => window.cancelAnimationFrame(animation.id);
+  }, [animation]);
+
+  const onClick = (info: PickingInfo) => {
+    if (info.object) {
+      console.log(JSON.stringify(info.object.toJSON()));
+    }
+  };
+
   const [table, setTable] = useState<arrow.Table | null>(null);
 
   useEffect(() => {
     // declare the data fetching function
     const fetchData = async () => {
-      const data = await fetch(GEOARROW_MULTILINESTRING_DATA);
+      const data = await fetch(GEOARROW_POINT_DATA);
       const buffer = await data.arrayBuffer();
       const table = arrow.tableFromIPC(buffer);
-      console.log(table);
       setTable(table);
     };
 
@@ -59,16 +68,16 @@ function Root() {
 
   table &&
     layers.push(
-      new GeoArrowPathLayer({
-        id: "geoarrow-path",
+      new GeoArrowTripsLayer({
+        id: "geoarrow-linestring",
         data: table,
-        getColor: ({ index, data }) => {
-          const recordBatch = data.data;
-          const row = recordBatch.get(index)!;
-          return COLORS_LOOKUP[row["scalerank"]];
-        },
-        widthMinPixels: 0.8,
+        getColor: [255, 0, 0],
+        getPath: table.getChild("geometry")!,
+        getTimestamps: table.getChild("timestamps")!,
+        widthMinPixels: 2,
         pickable: true,
+        trailLength,
+        currentTime: time,
       }),
     );
 
@@ -77,8 +86,11 @@ function Root() {
       initialViewState={INITIAL_VIEW_STATE}
       controller={true}
       layers={layers}
-      // @ts-expect-error
       ContextProvider={MapContext.Provider}
+      onClick={onClick}
+      glOptions={{
+        powerPreference: "high-performance",
+      }}
     >
       <StaticMap mapStyle={MAP_STYLE} />
       <NavigationControl style={NAV_CONTROL_STYLE} />

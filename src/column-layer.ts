@@ -18,7 +18,11 @@ import {
 import * as ga from "@geoarrow/geoarrow-js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
-import { getPickingInfo } from "./picking.js";
+import {
+  GeoArrowExtraPickingProps,
+  computeChunkOffsets,
+  getPickingInfo,
+} from "./picking.js";
 import { validateAccessors } from "./validate.js";
 
 /** All properties supported by GeoArrowColumnLayer */
@@ -101,11 +105,15 @@ const defaultProps: DefaultProps<GeoArrowColumnLayerProps> = {
  */
 export class GeoArrowColumnLayer<
   ExtraProps extends {} = {},
-> extends CompositeLayer<Required<GeoArrowColumnLayerProps> & ExtraProps> {
+> extends CompositeLayer<GeoArrowColumnLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowColumnLayer";
 
-  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+  getPickingInfo(
+    params: GetPickingInfoParams & {
+      sourceLayer: { props: GeoArrowExtraPickingProps };
+    },
+  ): GeoArrowPickingInfo {
     return getPickingInfo(params, this.props.data);
   }
 
@@ -118,11 +126,14 @@ export class GeoArrowColumnLayer<
     }
 
     const geometryColumn = this.props.getPosition;
-    if (ga.vector.isPointVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isPointVector(geometryColumn)
+    ) {
       return this._renderLayersPoint(geometryColumn);
     }
 
-    throw new Error("geometryColumn not point");
+    throw new Error("getPosition not GeoArrow point");
   }
 
   _renderLayersPoint(
@@ -139,6 +150,7 @@ export class GeoArrowColumnLayer<
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPosition",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: ColumnLayer[] = [];
     for (
@@ -156,11 +168,14 @@ export class GeoArrowColumnLayer<
         ...ourDefaultProps,
         ...otherProps,
 
-        // @ts-expect-error used for picking purposes
+        // used for picking purposes
         recordBatchIdx,
+        tableOffsets,
 
         id: `${this.props.id}-geoarrow-column-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
           length: geometryData.length,
           attributes: {
             getPosition: {

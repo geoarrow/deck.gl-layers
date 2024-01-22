@@ -18,6 +18,7 @@ import {
 import { FloatAccessor } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { validateAccessors } from "./validate.js";
+import { computeChunkOffsets } from "./picking.js";
 
 /** All properties supported by GeoArrowHeatmapLayer */
 export type GeoArrowHeatmapLayerProps = Omit<
@@ -72,7 +73,7 @@ const defaultProps: DefaultProps<GeoArrowHeatmapLayerProps> = {
 
 export class GeoArrowHeatmapLayer<
   ExtraProps extends {} = {},
-> extends CompositeLayer<Required<GeoArrowHeatmapLayerProps> & ExtraProps> {
+> extends CompositeLayer<GeoArrowHeatmapLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowHeatmapLayer";
 
@@ -85,11 +86,14 @@ export class GeoArrowHeatmapLayer<
     }
 
     const geometryColumn = this.props.getPosition;
-    if (ga.vector.isPointVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isPointVector(geometryColumn)
+    ) {
       return this._renderLayersPoint(geometryColumn);
     }
 
-    throw new Error("geometryColumn not point");
+    throw new Error("getPosition not GeoArrow point");
   }
 
   _renderLayersPoint(
@@ -106,6 +110,7 @@ export class GeoArrowHeatmapLayer<
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPosition",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: HeatmapLayer[] = [];
     for (
@@ -123,11 +128,14 @@ export class GeoArrowHeatmapLayer<
         ...ourDefaultProps,
         ...otherProps,
 
-        // @ts-expect-error used for picking purposes
+        // used for picking purposes
         recordBatchIdx,
+        tableOffsets,
 
         id: `${this.props.id}-geoarrow-heatmap-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
           length: geometryData.length,
           attributes: {
             getPosition: {

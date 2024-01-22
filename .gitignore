@@ -1,3 +1,4 @@
+docs_build/
 *.DS_Store
 *.arrow
 *.geojson

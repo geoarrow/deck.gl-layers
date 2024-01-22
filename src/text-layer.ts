@@ -17,7 +17,11 @@ import {
   extractAccessorsFromProps,
   getGeometryVector,
 } from "./utils.js";
-import { getPickingInfo } from "./picking.js";
+import {
+  GeoArrowExtraPickingProps,
+  computeChunkOffsets,
+  getPickingInfo,
+} from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { validateAccessors } from "./validate.js";
@@ -139,11 +143,15 @@ const defaultProps: DefaultProps<GeoArrowTextLayerProps> = {
 
 export class GeoArrowTextLayer<
   ExtraProps extends {} = {},
-> extends CompositeLayer<Required<GeoArrowTextLayerProps> & ExtraProps> {
+> extends CompositeLayer<GeoArrowTextLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowTextLayer";
 
-  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+  getPickingInfo(
+    params: GetPickingInfoParams & {
+      sourceLayer: { props: GeoArrowExtraPickingProps };
+    },
+  ): GeoArrowPickingInfo {
     return getPickingInfo(params, this.props.data);
   }
 
@@ -156,11 +164,14 @@ export class GeoArrowTextLayer<
     }
 
     const geometryColumn = this.props.getPosition;
-    if (ga.vector.isPointVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isPointVector(geometryColumn)
+    ) {
       return this._renderLayersPoint(geometryColumn);
     }
 
-    throw new Error("geometryColumn not point");
+    throw new Error("getPosition not GeoArrow point");
   }
 
   _renderLayersPoint(
@@ -178,6 +189,7 @@ export class GeoArrowTextLayer<
       "getPosition",
       "getText",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: TextLayer[] = [];
     for (
@@ -199,13 +211,15 @@ export class GeoArrowTextLayer<
         ...ourDefaultProps,
         ...otherProps,
 
-        // // @ts-expect-error used for picking purposes
+        // used for picking purposes
         recordBatchIdx,
+        tableOffsets,
 
         id: `${this.props.id}-geoarrow-heatmap-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
           length: geometryData.length,
-          // @ts-expect-error
           startIndices: characterOffsets,
           attributes: {
             // Positions need to be expanded to be one per character!

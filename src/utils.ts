@@ -1,6 +1,11 @@
 import { assert } from "@deck.gl/core/typed";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
+import {
+  AccessorContext,
+  AccessorFunction,
+  _InternalAccessorContext,
+} from "./types";
 
 export type TypedArray =
   | Uint8Array
@@ -108,6 +113,39 @@ type AssignAccessorProps = {
 };
 
 /**
+ * A wrapper around a user-provided accessor function
+ *
+ * For layers like Scatterplot, Path, and Polygon, we automatically handle
+ * "exploding" the table when multi-geometry input are provided. This means that
+ * the upstream `index` value passed to the user will be the correct row index
+ * _only_ for non-exploded data.
+ *
+ * With this function, we simplify the user usage by automatically converting
+ * back from "exploded" index back to the original row index.
+ */
+function wrapAccessorFunction<In, Out>(
+  objectInfo: _InternalAccessorContext<In>,
+  userAccessorFunction: AccessorFunction<In, Out>,
+): Out {
+  const { index, data } = objectInfo;
+  let newIndex = index;
+  if (data.invertedGeomOffsets !== undefined) {
+    newIndex = data.invertedGeomOffsets[index];
+  }
+  const newObjectData = {
+    data: data.data,
+    length: data.length,
+    attributes: data.attributes,
+  };
+  const newObjectInfo = {
+    index: newIndex,
+    data: newObjectData,
+    target: objectInfo.target,
+  };
+  return userAccessorFunction(newObjectInfo);
+}
+
+/**
  * Resolve accessor and assign to props object
  *
  * This is useful as a helper function because a scalar prop is set at the top
@@ -156,6 +194,9 @@ export function assignAccessor(args: AssignAccessorProps) {
         size: 1,
       };
     }
+  } else if (typeof propInput === "function") {
+    props[propName] = <In>(_object: null, objectInfo: AccessorContext<In>) =>
+      wrapAccessorFunction(objectInfo, propInput);
   } else {
     props[propName] = propInput;
   }

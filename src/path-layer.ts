@@ -19,7 +19,11 @@ import {
   getMultiLineStringResolvedOffsets,
   invertOffsets,
 } from "./utils.js";
-import { getPickingInfo } from "./picking.js";
+import {
+  GeoArrowExtraPickingProps,
+  computeChunkOffsets,
+  getPickingInfo,
+} from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { validateAccessors } from "./validate.js";
@@ -76,7 +80,7 @@ const ourDefaultProps: Pick<GeoArrowPathLayerProps, "_pathType" | "_validate"> =
   };
 
 // @ts-expect-error not sure why this is failing
-const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
+export const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
   ..._defaultProps,
   ...ourDefaultProps,
 };
@@ -86,11 +90,15 @@ const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
  */
 export class GeoArrowPathLayer<
   ExtraProps extends {} = {},
-> extends CompositeLayer<Required<GeoArrowPathLayerProps> & ExtraProps> {
+> extends CompositeLayer<GeoArrowPathLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowPathLayer";
 
-  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+  getPickingInfo(
+    params: GetPickingInfoParams & {
+      sourceLayer: { props: GeoArrowExtraPickingProps };
+    },
+  ): GeoArrowPickingInfo {
     return getPickingInfo(params, this.props.data);
   }
 
@@ -114,15 +122,21 @@ export class GeoArrowPathLayer<
     }
 
     const geometryColumn = this.props.getPath;
-    if (ga.vector.isLineStringVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isLineStringVector(geometryColumn)
+    ) {
       return this._renderLayersLineString(geometryColumn);
     }
 
-    if (ga.vector.isMultiLineStringVector(geometryColumn)) {
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isMultiLineStringVector(geometryColumn)
+    ) {
       return this._renderLayersMultiLineString(geometryColumn);
     }
 
-    throw new Error("geometryColumn not LineString or MultiLineString");
+    throw new Error("getPath not GeoArrow LineString or MultiLineString");
   }
 
   _renderLayersLineString(
@@ -142,6 +156,7 @@ export class GeoArrowPathLayer<
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPath",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: PathLayer[] = [];
     for (
@@ -164,11 +179,13 @@ export class GeoArrowPathLayer<
 
         // used for picking purposes
         recordBatchIdx,
+        tableOffsets,
 
         id: `${this.props.id}-geoarrow-path-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
           length: lineStringData.length,
-          // @ts-expect-error
           startIndices: geomOffsets,
           attributes: {
             getPath: { value: flatCoordinateArray, size: nDim },
@@ -209,6 +226,7 @@ export class GeoArrowPathLayer<
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPath",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: PathLayer[] = [];
     for (
@@ -238,10 +256,15 @@ export class GeoArrowPathLayer<
 
         // used for picking purposes
         recordBatchIdx,
-        invertedGeomOffsets: invertOffsets(geomOffsets),
+        tableOffsets,
 
         id: `${this.props.id}-geoarrow-path-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
+          // Map from expanded multi-geometry index to original index
+          // Used both in picking and for function callbacks
+          invertedGeomOffsets: invertOffsets(geomOffsets),
           // Note: this needs to be the length one level down.
           length: lineStringData.length,
           // Offsets into coordinateArray where each single-line string starts

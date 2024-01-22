@@ -13,7 +13,11 @@ import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
 import { assignAccessor, extractAccessorsFromProps } from "./utils.js";
 import { child } from "@geoarrow/geoarrow-js";
-import { getPickingInfo } from "./picking.js";
+import {
+  GeoArrowExtraPickingProps,
+  computeChunkOffsets,
+  getPickingInfo,
+} from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { validateAccessors } from "./validate.js";
 
@@ -104,11 +108,15 @@ const defaultProps: DefaultProps<GeoArrowArcLayerProps> = {
 
 export class GeoArrowArcLayer<
   ExtraProps extends {} = {},
-> extends CompositeLayer<Required<GeoArrowArcLayerProps> & ExtraProps> {
+> extends CompositeLayer<GeoArrowArcLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowArcLayer";
 
-  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+  getPickingInfo(
+    params: GetPickingInfoParams & {
+      sourceLayer: { props: GeoArrowExtraPickingProps };
+    },
+  ): GeoArrowPickingInfo {
     return getPickingInfo(params, this.props.data);
   }
 
@@ -137,6 +145,7 @@ export class GeoArrowArcLayer<
       "getSourcePosition",
       "getTargetPosition",
     ]);
+    const tableOffsets = computeChunkOffsets(table.data);
 
     const layers: ArcLayer[] = [];
     for (
@@ -155,11 +164,14 @@ export class GeoArrowArcLayer<
         ...ourDefaultProps,
         ...otherProps,
 
-        // @ts-expect-error used for picking purposes
+        // used for picking purposes
         recordBatchIdx,
+        tableOffsets,
 
         id: `${this.props.id}-geoarrow-arc-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
           length: sourceData.length,
           attributes: {
             getSourcePosition: {
