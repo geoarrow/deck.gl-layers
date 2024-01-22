@@ -19,7 +19,7 @@ import {
   getPolygonResolvedOffsets,
   invertOffsets,
 } from "./utils.js";
-import { getPickingInfo } from "./picking.js";
+import { GeoArrowExtraPickingProps, getPickingInfo } from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { validateAccessors } from "./validate.js";
@@ -111,7 +111,11 @@ export class GeoArrowPolygonLayer<
   static defaultProps = defaultProps;
   static layerName = "GeoArrowPolygonLayer";
 
-  getPickingInfo(params: GetPickingInfoParams): GeoArrowPickingInfo {
+  getPickingInfo(
+    params: GetPickingInfoParams & {
+      sourceLayer: { props: GeoArrowExtraPickingProps };
+    },
+  ): GeoArrowPickingInfo {
     return getPickingInfo(params, this.props.data);
   }
 
@@ -293,5 +297,7 @@ export class GeoArrowPolygonLayer<
 
   _renderLayersMultiPolygon(
     geometryColumn: ga.vector.MultiPolygonVector,
-  ): Layer<{}> | LayersList | null {}
+  ): Layer<{}> | LayersList | null {
+    return null;
+  }
 }
