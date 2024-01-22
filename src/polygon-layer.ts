@@ -11,14 +11,7 @@ import { PolygonLayer } from "@deck.gl/layers/typed";
 import type { PolygonLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
-import {
-  assignAccessor,
-  extractAccessorsFromProps,
-  getGeometryVector,
-  getMultiPolygonResolvedOffsets,
-  getPolygonResolvedOffsets,
-  invertOffsets,
-} from "./utils.js";
+import { getGeometryVector } from "./utils.js";
 import { GeoArrowExtraPickingProps, getPickingInfo } from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
