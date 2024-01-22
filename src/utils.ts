@@ -195,8 +195,14 @@ export function assignAccessor(args: AssignAccessorProps) {
       };
     }
   } else if (typeof propInput === "function") {
-    props[propName] = <In>(_object: null, objectInfo: AccessorContext<In>) =>
-      wrapAccessorFunction(objectInfo, propInput);
+    props[propName] = <In>(object: any, objectInfo: AccessorContext<In>) => {
+      // Special case that doesn't have the same parameters
+      if (propName === "getPolygonOffset") {
+        return propInput(object, objectInfo);
+      }
+
+      return wrapAccessorFunction(objectInfo, propInput);
+    };
   } else {
     props[propName] = propInput;
   }

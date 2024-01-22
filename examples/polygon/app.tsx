@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
 import DeckGL, { Layer, PickingInfo } from "deck.gl/typed";
-import { GeoArrowSolidPolygonLayer } from "@geoarrow/deck.gl-layers";
+import { GeoArrowPolygonLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 
-const GEOARROW_POLYGON_DATA = "http://localhost:8080/utah.feather";
+const GEOARROW_POLYGON_DATA = "http://localhost:8080/small.feather";
 
 const INITIAL_VIEW_STATE = {
   latitude: 40.63403641639511,
@@ -38,7 +38,9 @@ function Root() {
       const data = await fetch(GEOARROW_POLYGON_DATA);
       const buffer = await data.arrayBuffer();
       const table = arrow.tableFromIPC(buffer);
-      setTable(table);
+      const table2 = new arrow.Table(table.batches.slice(0, 10));
+      window.table = table2;
+      setTable(table2);
     };
 
     if (!table) {
@@ -50,11 +52,20 @@ function Root() {
 
   table &&
     layers.push(
-      new GeoArrowSolidPolygonLayer({
+      new GeoArrowPolygonLayer({
         id: "geoarrow-polygons",
+        stroked: true,
+        filled: true,
         data: table,
-        getFillColor: [0, 100, 60, 255],
-        pickable: true,
+        getFillColor: [0, 100, 60, 160],
+        getLineColor: [255, 0, 0],
+        lineWidthMinPixels: 0.1,
+        extruded: false,
+        wireframe: true,
+        // getElevation: 0,
+        pickable: false,
+        positionFormat: "XY",
+        _normalize: false,
         autoHighlight: true,
         earcutWorkerUrl: new URL(
           "https://cdn.jsdelivr.net/npm/@geoarrow/geoarrow-js@0.3.0-beta.1/dist/earcut-worker.min.js",
