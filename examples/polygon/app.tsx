@@ -60,7 +60,9 @@ function Root() {
         getFillColor: [0, 100, 60, 160],
         getLineColor: [255, 0, 0],
         lineWidthMinPixels: 0.2,
-        pickable: true,
+        pickable: false,
+        positionFormat: "XY",
+        _normalize: false,
         autoHighlight: true,
         earcutWorkerUrl: new URL(
           "https://cdn.jsdelivr.net/npm/@geoarrow/geoarrow-js@0.3.0-beta.1/dist/earcut-worker.min.js",

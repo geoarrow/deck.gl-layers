@@ -54,12 +54,12 @@ type _GeoArrowPolygonLayerProps = {
    */
   getLineColor?: ColorAccessor;
   /**
-   * Line width value or accessor.
+   * Line width value of accessor.
    * @default 1
    */
   getLineWidth?: FloatAccessor;
   /**
-   * Elevation valur or accessor.
+   * Elevation value of accessor.
    *
    * Only used if `extruded: true`.
    *
@@ -123,7 +123,7 @@ export class GeoArrowPolygonLayer<
 
     const polygonVector = getGeometryVector(table, EXTENSION_NAME.POLYGON);
     if (polygonVector !== null) {
-      return this._renderLayersPolygon(polygonVector);
+      return this._renderLayers(polygonVector);
     }
 
     const MultiPolygonVector = getGeometryVector(
@@ -131,23 +131,23 @@ export class GeoArrowPolygonLayer<
       EXTENSION_NAME.MULTIPOLYGON,
     );
     if (MultiPolygonVector !== null) {
-      return this._renderLayersMultiPolygon(MultiPolygonVector);
+      return this._renderLayers(MultiPolygonVector);
     }
 
     const geometryColumn = this.props.getPolygon;
     if (ga.vector.isPolygonVector(geometryColumn)) {
-      return this._renderLayersPolygon(geometryColumn);
+      return this._renderLayers(geometryColumn);
     }
 
     if (ga.vector.isMultiPolygonVector(geometryColumn)) {
-      return this._renderLayersMultiPolygon(geometryColumn);
+      return this._renderLayers(geometryColumn);
     }
 
     throw new Error("geometryColumn not Polygon or MultiPolygon");
   }
 
-  _renderLayersPolygon(
-    geometryColumn: ga.vector.PolygonVector,
+  _renderLayers(
+    geometryColumn: ga.vector.PolygonVector | ga.vector.MultiPolygonVector,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
@@ -156,7 +156,14 @@ export class GeoArrowPolygonLayer<
       validateAccessors(this.props, table);
     }
 
-    const getPath = ga.algorithm.getPolygonExterior(geometryColumn);
+    let getPath: ga.vector.LineStringVector | ga.vector.MultiLineStringVector;
+    if (ga.vector.isPolygonVector(geometryColumn)) {
+      getPath = ga.algorithm.getPolygonExterior(geometryColumn);
+    } else if (ga.vector.isMultiPolygonVector(geometryColumn)) {
+      getPath = ga.algorithm.getMultiPolygonExterior(geometryColumn);
+    } else {
+      assert(false);
+    }
 
     // Layer composition props
     const {
@@ -195,9 +202,6 @@ export class GeoArrowPolygonLayer<
       material,
     } = this.props;
 
-    console.log("hi");
-    console.log(this.shouldRenderSubLayer("fill", table));
-    // console.log(table.length);
     const FillLayer = this.getSubLayerClass("fill", GeoArrowSolidPolygonLayer);
     const StrokeLayer = this.getSubLayerClass("stroke", GeoArrowPathLayer);
 
@@ -226,9 +230,6 @@ export class GeoArrowPolygonLayer<
           getPolygon: updateTriggers.getPolygon,
           getElevation: updateTriggers.getElevation,
           getFillColor: updateTriggers.getFillColor,
-          // using a legacy API to invalid lineColor attributes
-          // if (extruded && wireframe) has changed
-          lineColors: extruded && wireframe,
           getLineColor: updateTriggers.getLineColor,
         },
       }),
@@ -256,7 +257,6 @@ export class GeoArrowPolygonLayer<
 
           // Already normalized, and since they had been polygons, we know that
           // the lines are a loop.
-          // _normalize: false,
           _pathType: "loop",
 
           transitions: transitions && {
@@ -290,13 +290,6 @@ export class GeoArrowPolygonLayer<
       // If extruded: draw fill layer last for correct blending behavior
       extruded && polygonLayer,
     ];
-    console.log(layers);
     return layers;
-  }
-
-  _renderLayersMultiPolygon(
-    geometryColumn: ga.vector.MultiPolygonVector,
-  ): Layer<{}> | LayersList | null {
-    return null;
   }
 }
