@@ -146,6 +146,9 @@ export class GeoArrowPolygonLayer<
     throw new Error("geometryColumn not Polygon or MultiPolygon");
   }
 
+  // NOTE: Here we shouldn't need a split for handling both multi- and single-
+  // geometries, because the underlying SolidPolygonLayer and PathLayer both
+  // support multi-* and single- geometries.
   _renderLayers(
     geometryColumn: ga.vector.PolygonVector | ga.vector.MultiPolygonVector,
   ): Layer<{}> | LayersList | null {
