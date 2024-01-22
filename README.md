@@ -21,6 +21,53 @@ Standalone examples exist in the [`examples/`](examples/) directory. Create an i
 
 More hosted examples on Observable are planned.
 
+## Providing accessors
+
+All deck.gl layers have two types of properties: ["Render Options"](https://deck.gl/docs/api-reference/layers/scatterplot-layer#render-options) — constant properties across a layer — and "Data Accessors" — properties that can vary across rows. An accessor is any property prefixed with `get`, like `GeoArrowScatterplotLayer`'s `getFillColor`.
+
+With `@geoarrow/deck.gl-layers` specifically, there are two ways to pass these data accessors, either as pre-computed columns or with function callbacks on Arrow data.
+
+### Pre-computed Arrow columns
+
+If you have an Arrow column ([`Vector`](https://arrow.apache.org/docs/js/classes/Arrow_dom.Vector.html) in Arrow JS terminology), you can pass that directly into a layer:
+
+```ts
+import { Table } from "apache-arrow";
+import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
+
+const table = new Table(...);
+const deckLayer = new GeoArrowScatterplotLayer({
+  id: "scatterplot",
+  data: table,
+  /// Geometry column
+  getPosition: table.getChild("geometry")!,
+  /// Column of type FixedSizeList[3] or FixedSizeList[4], with child type Uint8
+  getFillColor: table.getChild("colors")!,
+});
+```
+
+For example, [lonboard](https://github.com/developmentseed/lonboard) computes Arrow columns on the Python side for all attributes so that end users have available the full capabilities Python. Then those columns are serialized to Python and the resulting `arrow.Vector` is passed into the relevant layer.
+
+### Function accessors
+
+GeoArrow layers accept a callback that takes an object with `index` and `data`. `data` is an `arrow.RecordBatch` object (a vertical section of the input `Table`), and `index` is the positional index of the current row of that batch. In TypeScript, you should see accurate type checking.
+
+```ts
+const deckLayer = new GeoArrowPathLayer({
+  id: "geoarrow-path",
+  data: table,
+  getColor: ({ index, data, target }) => {
+    const recordBatch = data.data;
+    const row = recordBatch.get(index)!;
+    return COLORS_LOOKUP[row["scalerank"]];
+  },
+}),
+```
+
+The full example is in [`examples/multilinestring/app.tsx`](examples/multilinestring/app.tsx).
+
+You can also use assign to the `target` prop to reduce garbage collector overhead, as described in the [deck.gl performance guide](https://deck.gl/docs/developer-guide/performance#supply-binary-blobs-to-the-data-prop).
+
 ## Data Loading
 
 To create deck.gl layers using this library, you need to first get GeoArrow-formatted data into the browser, discussed below.
@@ -38,6 +85,7 @@ import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
 const resp = await fetch("url/to/file.arrow");
 const jsTable = await tableFromIPC(resp);
 const deckLayer = new GeoArrowScatterplotLayer({
+  id: "scatterplot",
   data: jsTable,
   /// Replace with the correct geometry column name
   getPosition: jsTable.getChild("geometry")!,
@@ -60,6 +108,7 @@ const arrayBuffer = await resp.arrayBuffer();
 const wasmTable = readParquet(new Uint8Array(arrayBuffer));
 const jsTable = tableFromIPC(wasmTable.intoIPCStream());
 const deckLayer = new GeoArrowScatterplotLayer({
+  id: "scatterplot",
   data: jsTable,
   /// Replace with the correct geometry column name
   getPosition: jsTable.getChild("geometry")!,
@@ -82,6 +131,7 @@ const arrayBuffer = await resp.arrayBuffer();
 const wasmTable = readGeoParquet(new Uint8Array(arrayBuffer));
 const jsTable = tableFromIPC(wasmTable.intoTable().intoIPCStream());
 const deckLayer = new GeoArrowScatterplotLayer({
+  id: "scatterplot",
   data: jsTable,
   /// Replace with the correct geometry column name
   getPosition: jsTable.getChild("geometry")!,
@@ -104,6 +154,7 @@ const arrayBuffer = await resp.arrayBuffer();
 const wasmTable = readFlatGeobuf(new Uint8Array(arrayBuffer));
 const jsTable = tableFromIPC(wasmTable.intoTable().intoIPCStream());
 const deckLayer = new GeoArrowScatterplotLayer({
+  id: "scatterplot",
   data: jsTable,
   /// Replace with the correct geometry column name
   getPosition: jsTable.getChild("geometry")!,
