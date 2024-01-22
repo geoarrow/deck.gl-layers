@@ -25,7 +25,6 @@ import { EXTENSION_NAME } from "./constants.js";
 import { validateAccessors } from "./validate.js";
 import { GeoArrowSolidPolygonLayer } from "./solid-polygon-layer.js";
 import { GeoArrowPathLayer } from "./path-layer.js";
-import { exteriorPolygon } from "./alg/exterior.js";
 
 /** All properties supported by GeoArrowPolygonLayer */
 export type GeoArrowPolygonLayerProps = Omit<
@@ -157,7 +156,7 @@ export class GeoArrowPolygonLayer<
       validateAccessors(this.props, table);
     }
 
-    const getPath = exteriorPolygon(geometryColumn);
+    const getPath = ga.algorithm.getPolygonExterior(geometryColumn);
 
     // Layer composition props
     const {
