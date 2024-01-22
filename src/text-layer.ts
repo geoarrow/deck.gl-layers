@@ -211,14 +211,15 @@ export class GeoArrowTextLayer<
         ...ourDefaultProps,
         ...otherProps,
 
-        // // @ts-expect-error used for picking purposes
+        // used for picking purposes
         recordBatchIdx,
         tableOffsets,
 
         id: `${this.props.id}-geoarrow-heatmap-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
           length: geometryData.length,
-          // @ts-expect-error
           startIndices: characterOffsets,
           attributes: {
             // Positions need to be expanded to be one per character!

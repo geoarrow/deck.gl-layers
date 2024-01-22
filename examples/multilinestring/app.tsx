@@ -9,9 +9,9 @@ const GEOARROW_MULTILINESTRING_DATA =
   "http://localhost:8080/ne_10m_roads_north_america.feather";
 
 const INITIAL_VIEW_STATE = {
-  latitude: 20,
-  longitude: 0,
-  zoom: 2,
+  latitude: 40,
+  longitude: -90,
+  zoom: 4,
   bearing: 0,
   pitch: 0,
 };
@@ -24,16 +24,20 @@ const NAV_CONTROL_STYLE = {
   left: 10,
 };
 
-function Root() {
-  const onClick = (info) => {
-    if (info.object) {
-      // eslint-disable-next-line
-      alert(
-        `${info.object.properties.name} (${info.object.properties.abbrev})`
-      );
-    }
-  };
+// https://colorbrewer2.org/#type=sequential&scheme=PuBuGn&n=9
+const COLORS_LOOKUP = {
+  "3": [255, 247, 251],
+  "4": [236, 226, 240],
+  "5": [208, 209, 230],
+  "6": [166, 189, 219],
+  "7": [103, 169, 207],
+  "8": [54, 144, 192],
+  "9": [2, 129, 138],
+  "10": [1, 108, 89],
+  "11": [1, 70, 54],
+};
 
+function Root() {
   const [table, setTable] = useState<arrow.Table | null>(null);
 
   useEffect(() => {
@@ -58,17 +62,14 @@ function Root() {
       new GeoArrowPathLayer({
         id: "geoarrow-path",
         data: table,
-        // getPath: table.getC
-        // getPosition: table.getChild("geometry")!,
-        getColor:[255, 0, 0],
-        widthMinPixels: 0.2,
-        // getFillColor: [255, 0, 0],
-        // getFillColor: table.getChild("colors")!,
-        // getLineColor: table.getChild("colors")!,
-        radiusMinPixels: 4,
-        getPointRadius: 10,
-        pointRadiusMinPixels: 0.8,
-      })
+        getColor: ({ index, data }) => {
+          const recordBatch = data.data;
+          const row = recordBatch.get(index)!;
+          return COLORS_LOOKUP[row["scalerank"]];
+        },
+        widthMinPixels: 0.8,
+        pickable: true,
+      }),
     );
 
   return (

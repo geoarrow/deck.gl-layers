@@ -160,6 +160,8 @@ export class GeoArrowTripsLayer<
 
         id: `${this.props.id}-geoarrow-trip-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
           length: lineStringData.length,
           // @ts-ignore
           startIndices: geomOffsets,

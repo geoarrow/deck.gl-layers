@@ -182,8 +182,9 @@ export class GeoArrowPathLayer<
 
         id: `${this.props.id}-geoarrow-path-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
           length: lineStringData.length,
-          // @ts-expect-error
           startIndices: geomOffsets,
           attributes: {
             getPath: { value: flatCoordinateArray, size: nDim },
@@ -255,10 +256,14 @@ export class GeoArrowPathLayer<
         // used for picking purposes
         recordBatchIdx,
         tableOffsets,
-        invertedGeomOffsets: invertOffsets(geomOffsets),
 
         id: `${this.props.id}-geoarrow-path-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
+          // Map from expanded multi-geometry index to original index
+          // Used both in picking and for function callbacks
+          invertedGeomOffsets: invertOffsets(geomOffsets),
           // Note: this needs to be the length one level down.
           length: lineStringData.length,
           // Offsets into coordinateArray where each single-line string starts
