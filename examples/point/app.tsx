@@ -54,12 +54,17 @@ function Root() {
       new GeoArrowScatterplotLayer({
         id: "geoarrow-points",
         data: table,
+        // Pre-computed colors in the original table
         getFillColor: table.getChild("colors")!,
-        radiusMinPixels: 1.5,
-        getPointRadius: 10,
-        pointRadiusMinPixels: 0.8,
+        opacity: 0.01,
+        getRadius: ({ index, data }) => {
+          const recordBatch = data.data;
+          const row = recordBatch.get(index)!;
+          return row["avg_d_kbps"] / 10;
+        },
+        radiusMinPixels: 0.1,
         pickable: true,
-      })
+      }),
     );
 
   return (

@@ -128,12 +128,14 @@ export class GeoArrowHeatmapLayer<
         ...ourDefaultProps,
         ...otherProps,
 
-        // @ts-expect-error used for picking purposes
+        // used for picking purposes
         recordBatchIdx,
         tableOffsets,
 
         id: `${this.props.id}-geoarrow-heatmap-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
           length: geometryData.length,
           attributes: {
             getPosition: {

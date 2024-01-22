@@ -419,6 +419,8 @@ export class GeoArrowSolidPolygonLayer<
 
         id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
           // Number of geometries
           length: polygonData.length,
           // Offsets into coordinateArray where each polygon starts
@@ -510,10 +512,14 @@ export class GeoArrowSolidPolygonLayer<
         // used for picking purposes
         recordBatchIdx,
         tableOffsets: this.state.tableOffsets,
-        invertedGeomOffsets: invertOffsets(geomOffsets),
 
         id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
+          // Map from expanded multi-geometry index to original index
+          // Used both in picking and for function callbacks
+          invertedGeomOffsets: invertOffsets(geomOffsets),
           // Number of polygons
           // Note: this needs to be the length one level down, because we're
           // rendering the polygons, not the multipolygons
@@ -522,7 +528,6 @@ export class GeoArrowSolidPolygonLayer<
           //
           // Note that this is polygonToCoordOffsets and not geomToCoordOffsets
           // because we're rendering each part of the MultiPolygon individually
-          // @ts-expect-error
           startIndices: resolvedPolygonToCoordOffsets,
           attributes: {
             getPolygon: { value: flatCoordinateArray, size: nDim },

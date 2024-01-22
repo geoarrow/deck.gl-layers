@@ -5,7 +5,9 @@ import { GeoArrowPickingInfo } from "./types";
 export interface GeoArrowExtraPickingProps {
   recordBatchIdx: number;
   tableOffsets: Uint32Array;
-  invertedGeomOffsets?: Uint8Array | Uint16Array | Uint32Array;
+  data: {
+    invertedGeomOffsets?: Uint8Array | Uint16Array | Uint32Array;
+  };
 }
 
 export function getPickingInfo(
@@ -22,8 +24,8 @@ export function getPickingInfo(
 
   // if a Multi- geometry dataset, map from the rendered index back to the
   // feature index
-  if (sourceLayer.props.invertedGeomOffsets) {
-    index = sourceLayer.props.invertedGeomOffsets[index];
+  if (sourceLayer.props.data.invertedGeomOffsets) {
+    index = sourceLayer.props.data.invertedGeomOffsets[index];
   }
 
   const recordBatchIdx = sourceLayer.props.recordBatchIdx;
