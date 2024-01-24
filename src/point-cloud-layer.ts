@@ -6,6 +6,8 @@ import {
     Layer,
     LayersList,
     assert,
+    Unit,
+    Material,
   } from "@deck.gl/core/typed";
 import { PointCloudLayer } from "@deck.gl/layers/typed";
 import type { PointCloudLayerProps } from "@deck.gl/layers/typed";
@@ -27,7 +29,8 @@ import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { validateAccessors } from "./validate.js";
 import { defaultPoolSize } from "threads/dist/master/implementation.browser.js";
-import { defaultProps } from "./path-layer.js";
+import { Point } from "@geoarrow/geoarrow-js/dist/type.js";
+import { getPointChild } from "@geoarrow/geoarrow-js/dist/child.js";
 
 /* All properties supported by GeoArrowPointCloudLayer */
 export type GeoArrowPointCloudLayerProps = Omit<
@@ -36,9 +39,6 @@ export type GeoArrowPointCloudLayerProps = Omit<
     > &
     _GeoArrowPointCloudLayerProps &
     CompositeLayerProps;
-    
-// TODO # see line of getSizeUnits
-export type Unit = 'meters' | 'common' | 'pixels';
 
 /* All properties added by GeoArrowPointCloudLayer */
 type _GeoArrowPointCloudLayerProps = {
@@ -50,12 +50,28 @@ type _GeoArrowPointCloudLayerProps = {
      * @default true
      */
     _validate?: boolean;
+
     /**
      * 
      * The units of the point size, one of `'meters'`, `'common'`, and `'pixels'`.
      * @default 'pixels'
      */
-    getSizeUnits?: Unit; // TODO do we need a unit type here?
+    sizeUnits?: Unit;
+
+    /**
+     * Global radius of all points, in units specified by `sizeUnits`
+     * @default 10
+     */
+    pointSize: number;
+
+    /**
+     * Material settings for lighting effect.
+     *
+     * @default true
+     * @see https://deck.gl/docs/developer-guide/using-lighting
+     */
+    material?: Material;
+
     /** 
     * Center position accessor.
     * If not provided, will be inferred by finding a column with extension type
@@ -63,34 +79,141 @@ type _GeoArrowPointCloudLayerProps = {
     */
     getPosition?: ga.vector.PointVector | ga.vector.MultiPointVector;
 
+    /**
+     * The normal of each object, in `[nx, ny, nz]`.
+     * @default [0,0,1]
+     */
+    getNormal?: 10 // TODO normalAccessor
+    
+    /**
+     * The rgba color is in the format of `[r, g, b, [a]]`
+     * @default [0,0,0,225] 
+     */
+    getColor?: [0,0,0,225] // TODO colorAccessor
+}
 
-    //getProperties here
+// Remove data nd get Position from the upstream default props
+const {
+    data: _data,
+    getPosition: _getPosition,
+    ..._upstreamDefaultProps
+} = PointCloudLayer.defaultProps;
+
+// Default props added by us
+const ourDefaultProps = {
+    _validate: true,
+};
+
+// @ts-expect-error Type error in merging default props with ours
+const defaultProps: DefaultProps<GeoArrowPointCloudLayerProps> = {
+    ..._upstreamDefaultProps,
+    ...ourDefaultProps,
 }
 
 export class GeoArrowPointCloudLayer<
     ExtraProps extends {} = {},
     > extends CompositeLayer<Required<GeoArrowPointCloudLayerProps> & ExtraProps>{
-        static defaultProps = defaultProps
-        static layerName = "GeoArrowPointCloudLayer"
+        static defaultProps = defaultProps;
+        static layerName = "GeoArrowPointCloudLayer";
 
-        // picking info method
+        getPickingInfo(
+            params: GetPickingInfoParams & {
+                sourceLayer: { props: GeoArrowExtraPickingProps }
+            },
+        ): GeoArrowPickingInfo { 
+            return getPickingInfo(params, this.props.data);
+        }
 
+        renderLayers(): Layer<{}> | LayersList | null {
+            const { data: table } = this.props;
+        
+            const pointVector = getGeometryVector(table, EXTENSION_NAME.POINT);
+            if (pointVector !== null) {
+              return this._renderLayersPoint(pointVector);
+            }
+        
+            const geometryColumn = this.props.getPosition;
+            if (ga.vector.isPointVector(geometryColumn)) {
+              return this._renderLayersPoint(geometryColumn);
+            }
+        
+            throw new Error("geometryColumn not point or multipoint");
+        }
 
-        // render layers methods, determine geometry types
+        _renderLayersPoint(
+            geometryColumn: ga.vector.PointVector,
+        ): Layer<{}> | LayersList | null {
+            const { data: table } = this.props;
+            
+            if (this.props._validate) {
+                assert(ga.vector.isPointVector(geometryColumn));
+                validateAccessors(this.props, table);
+            }
 
-        // renderlayerpoints method, determine point types
+            // Exclude manually-set accessors
+            const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
+                "getPosition",
+                "getNormal",
+                "getColors",
+            ]);
+            const tableOffsets = computeChunkOffsets(table.data);
 
-        // accessors logic
+            const layers: PointCloudLayer[] = [];
+            for (
+                let recordBatchIdx = 0;
+                recordBatchIdx < table.batches.length;
+                recordBatchIdx++
+            ) {
+                const geometryData = geometryColumn.data[recordBatchIdx];
+                // is this actually three d coordinates data?
+                const flatCoordsData = ga.child.getPointChild(geometryData);
+                const flatCoordinateArray = flatCoordsData.values;
 
+                const props: PointCloudLayerProps = {
+                // Note: because this is a composite layer and not doing the rendering
+                // itself, we still have to pass in our defaultProps
+                    ...ourDefaultProps,
+                    ...otherProps,
 
-        /// props
+                    // @ts-expect-error used for picking purposes
+                    recordBatchIdx,
+                    tableOffsets,
 
-        /// assign accessor(s)
-
-
-        // render multipoint layers
-
-        // final logic
-
-        // return
+                    id: `${this.props.id}-geoarrow-pointcloud-${recordBatchIdx}`,
+                    data: {
+                        length: geometryData.length,
+                        attributes: {
+                            getPosition: {
+                                value: flatCoordinateArray,
+                                size: geometryData.type.listSize,
+                            },
+                            getNormal: {
+                                value: flatCoordinateArray,
+                                size: geometryData.type.listSize,
+                            },
+                            getColors: {
+                                value: flatCoordinateArray,
+                                size: geometryData.type.listSize,
+                            },
+                        },
+                    },
+                };
+                for (const [propName,propInput] of Object.entries(accessors)) {
+                    assignAccessor({
+                        props,
+                        propName,
+                        propInput,
+                        chunkIdx: recordBatchIdx,
+                    });
+                }
+                const layer = new PointCloudLayer(this.getSubLayerProps(props));
+                layers.push(layer);
+            }
+            return layers;
+        }
     }
+
+        
+
+
+    
