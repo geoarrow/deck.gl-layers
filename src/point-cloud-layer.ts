@@ -75,9 +75,9 @@ type _GeoArrowPointCloudLayerProps = {
     /** 
     * Center position accessor.
     * If not provided, will be inferred by finding a column with extension type
-    * `"geoarrow.point"` or `"geoarrow.multipoint"`.
+    * `"geoarrow.point"`
     */
-    getPosition?: ga.vector.PointVector | ga.vector.MultiPointVector;
+    getPosition?: ga.vector.PointVector
 
     /**
      * The normal of each object, in `[nx, ny, nz]`.
@@ -89,7 +89,7 @@ type _GeoArrowPointCloudLayerProps = {
      * The rgba color is in the format of `[r, g, b, [a]]`
      * @default [0,0,0,225] 
      */
-    getColor?: [0,0,0,225] // TODO colorAccessor
+    getColor?: ColorAccessor
 }
 
 // Remove data nd get Position from the upstream default props
@@ -112,7 +112,7 @@ const defaultProps: DefaultProps<GeoArrowPointCloudLayerProps> = {
 
 export class GeoArrowPointCloudLayer<
     ExtraProps extends {} = {},
-    > extends CompositeLayer<Required<GeoArrowPointCloudLayerProps> & ExtraProps>{
+    > extends CompositeLayer<GeoArrowPointCloudLayerProps & ExtraProps>{
         static defaultProps = defaultProps;
         static layerName = "GeoArrowPointCloudLayer";
 
@@ -133,11 +133,14 @@ export class GeoArrowPointCloudLayer<
             }
         
             const geometryColumn = this.props.getPosition;
-            if (ga.vector.isPointVector(geometryColumn)) {
+            if (
+                geometryColumn !== undefined &&
+                ga.vector.isPointVector(geometryColumn)
+            ) {
               return this._renderLayersPoint(geometryColumn);
             }
         
-            throw new Error("geometryColumn not point or multipoint");
+            throw new Error("geometryColumn not GeoArrow point");
         }
 
         _renderLayersPoint(
@@ -146,15 +149,14 @@ export class GeoArrowPointCloudLayer<
             const { data: table } = this.props;
             
             if (this.props._validate) {
-                assert(ga.vector.isPointVector(geometryColumn));
+                assert(ga.vector.isPointVector(geometryColumn),"The geometry column is not a valid PointVector.");
+                assert(geometryColumn.type.listSize === 3,"Points of a PointCloudLayer in the geometry column must be three-dimensional.");
                 validateAccessors(this.props, table);
             }
 
             // Exclude manually-set accessors
             const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
-                "getPosition",
-                "getNormal",
-                "getColors",
+                "getPosition"
             ]);
             const tableOffsets = computeChunkOffsets(table.data);
 
@@ -165,7 +167,6 @@ export class GeoArrowPointCloudLayer<
                 recordBatchIdx++
             ) {
                 const geometryData = geometryColumn.data[recordBatchIdx];
-                // is this actually three d coordinates data?
                 const flatCoordsData = ga.child.getPointChild(geometryData);
                 const flatCoordinateArray = flatCoordsData.values;
 
@@ -186,15 +187,7 @@ export class GeoArrowPointCloudLayer<
                             getPosition: {
                                 value: flatCoordinateArray,
                                 size: geometryData.type.listSize,
-                            },
-                            getNormal: {
-                                value: flatCoordinateArray,
-                                size: geometryData.type.listSize,
-                            },
-                            getColors: {
-                                value: flatCoordinateArray,
-                                size: geometryData.type.listSize,
-                            },
+                            }
                         },
                     },
                 };
