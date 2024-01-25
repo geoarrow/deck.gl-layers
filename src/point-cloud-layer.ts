@@ -25,7 +25,7 @@ import {
     computeChunkOffsets,
     getPickingInfo,
 } from "./picking.js"
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
+import { ColorAccessor, GeoArrowPickingInfo, NormalAccessor } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { validateAccessors } from "./validate.js";
 import { defaultPoolSize } from "threads/dist/master/implementation.browser.js";
@@ -83,7 +83,7 @@ type _GeoArrowPointCloudLayerProps = {
      * The normal of each object, in `[nx, ny, nz]`.
      * @default [0,0,1]
      */
-    getNormal?: 10 // TODO normalAccessor
+    getNormal?: NormalAccessor
     
     /**
      * The rgba color is in the format of `[r, g, b, [a]]`
