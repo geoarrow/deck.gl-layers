@@ -17,7 +17,6 @@ import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
-  invertOffsets,
 } from "./utils.js";
 // TODO which accessors are actually needed for a pointcloud layer
 import {
@@ -28,9 +27,6 @@ import {
 import { ColorAccessor, GeoArrowPickingInfo, NormalAccessor } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
 import { validateAccessors } from "./validate.js";
-import { defaultPoolSize } from "threads/dist/master/implementation.browser.js";
-import { Point } from "@geoarrow/geoarrow-js/dist/type.js";
-import { getPointChild } from "@geoarrow/geoarrow-js/dist/child.js";
 
 /* All properties supported by GeoArrowPointCloudLayer */
 export type GeoArrowPointCloudLayerProps = Omit<
