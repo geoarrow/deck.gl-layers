@@ -169,12 +169,14 @@ export class GeoArrowScatterplotLayer<
         ...ourDefaultProps,
         ...otherProps,
 
-        // @ts-expect-error used for picking purposes
+        // used for picking purposes
         recordBatchIdx,
         tableOffsets,
 
         id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
           length: geometryData.length,
           attributes: {
             getPosition: {
@@ -237,13 +239,17 @@ export class GeoArrowScatterplotLayer<
         ...ourDefaultProps,
         ...otherProps,
 
-        // @ts-expect-error used for picking purposes
+        // used for picking purposes
         recordBatchIdx,
         tableOffsets,
-        invertedGeomOffsets: invertOffsets(geomOffsets),
 
         id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
+          // Map from expanded multi-geometry index to original index
+          // Used both in picking and for function callbacks
+          invertedGeomOffsets: invertOffsets(geomOffsets),
           // Note: this needs to be the length one level down.
           length: pointData.length,
           attributes: {

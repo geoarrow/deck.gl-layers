@@ -4,7 +4,7 @@
     "examples/*"
   ],
   "name": "@geoarrow/deck.gl-layers",
-  "version": "0.3.0-beta.10",
+  "version": "0.3.0-beta.11",
   "type": "module",
   "description": "",
   "source": "src/index.ts",
@@ -48,7 +48,7 @@
     "@deck.gl/geo-layers": "^8.9.23",
     "@deck.gl/layers": "^8.9.23",
     "@math.gl/polygon": "^3.6.2",
-    "apache-arrow": ">=14"
+    "apache-arrow": ">=15"
   },
   "devDependencies": {
     "@deck.gl/aggregation-layers": "^8.9.23",
@@ -58,7 +58,7 @@
     "@math.gl/polygon": "^3.6.2",
     "@rollup/plugin-terser": "^0.4.3",
     "@rollup/plugin-typescript": "^11.1.2",
-    "apache-arrow": ">=14",
+    "apache-arrow": ">=15",
     "gh-pages": "^6.1.0",
     "prettier": "^3.1.0",
     "rimraf": "^5.0.5",
@@ -79,7 +79,7 @@
     "npm": "10.2.0"
   },
   "dependencies": {
-    "@geoarrow/geoarrow-js": "^0.2.0",
+    "@geoarrow/geoarrow-js": "^0.3.0",
     "threads": "^1.7.0"
   }
 }
