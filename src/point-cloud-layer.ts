@@ -30,8 +30,8 @@ import { validateAccessors } from "./validate.js";
 
 /* All properties supported by GeoArrowPointCloudLayer */
 export type GeoArrowPointCloudLayerProps = Omit<
-  PointCloudLayerProps<arrow.Table>, // TODO is this still an Arrow Table or is it another datatype? An arrow table is a vector/array like value so is it the same?
-  "omitted properties here"
+  PointCloudLayerProps<arrow.Table>,
+  "data" | "getPosition" | "getNormal" | "getColor"
 > &
   _GeoArrowPointCloudLayerProps &
   CompositeLayerProps;
@@ -46,27 +46,6 @@ type _GeoArrowPointCloudLayerProps = {
    * @default true
    */
   _validate?: boolean;
-
-  /**
-   *
-   * The units of the point size, one of `'meters'`, `'common'`, and `'pixels'`.
-   * @default 'pixels'
-   */
-  sizeUnits?: Unit;
-
-  /**
-   * Global radius of all points, in units specified by `sizeUnits`
-   * @default 10
-   */
-  pointSize: number;
-
-  /**
-   * Material settings for lighting effect.
-   *
-   * @default true
-   * @see https://deck.gl/docs/developer-guide/using-lighting
-   */
-  material?: Material;
 
   /**
    * Center position accessor.
