@@ -2,6 +2,8 @@
 
 The easiest, most efficient way to render large geospatial datasets in [deck.gl](https://deck.gl), via [GeoArrow](https://geoarrow.org).
 
+This is just a _glue library_ to deck.gl. It generates the same layer objects as upstream deck.gl does, but uses a [low-level binary interface](https://deck.gl/docs/developer-guide/performance#use-binary-data) for best performance. This binary interface is really easy to mess up; `@geoarrow/deck.gl-layers` focuses on making the process simple and validated.
+
 ![](assets/hero.jpg)
 
 <p style="text-align:center">3.2 million points rendered with a <code>GeoArrowScatterplotLayer</code>.</p>
