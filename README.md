@@ -2,7 +2,7 @@
 
 The easiest, most efficient way to render large geospatial datasets in [deck.gl](https://deck.gl), via [GeoArrow](https://geoarrow.org).
 
-This is just a _glue library_ to deck.gl. It generates the same layer objects as upstream deck.gl does, but uses a [low-level binary interface](https://deck.gl/docs/developer-guide/performance#supply-attributes-directly) for best performance. Using the binary interface directly is really easy to mess up; `@geoarrow/deck.gl-layers` focuses on making the process easy to use and validating user input.
+This is just a _glue library_ to deck.gl. It generates the same layer objects as upstream deck.gl does, but uses a [low-level binary interface](https://deck.gl/docs/developer-guide/performance#supply-attributes-directly) for best performance. Using the binary interface directly is really easy to mess up. Instead, the layer classes exposed by `@geoarrow/deck.gl-layers` focus on making the process easy to use and validating user input, and under the hood pass buffers to deck.gl's binary interface.
 
 ![](assets/hero.jpg)
 
