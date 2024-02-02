@@ -18,7 +18,6 @@ import {
   extractAccessorsFromProps,
   getGeometryVector,
 } from "./utils.js";
-// TODO which accessors are actually needed for a pointcloud layer
 import {
   GeoArrowExtraPickingProps,
   computeChunkOffsets,
@@ -157,12 +156,14 @@ export class GeoArrowPointCloudLayer<
         ...ourDefaultProps,
         ...otherProps,
 
-        // @ts-expect-error used for picking purposes
+        // used for picking purposes
         recordBatchIdx,
         tableOffsets,
 
         id: `${this.props.id}-geoarrow-pointcloud-${recordBatchIdx}`,
         data: {
+          // @ts-expect-error passed through to enable use by function accessors
+          data: table.batches[recordBatchIdx],
           length: geometryData.length,
           attributes: {
             getPosition: {
