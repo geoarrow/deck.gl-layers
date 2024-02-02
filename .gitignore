@@ -5,6 +5,7 @@ docs_build/
 *.zip
 *.feather
 *.parquet
+*.code-workspace
 
 *.yarn
 
