@@ -15,9 +15,81 @@ import { getGeometryVector } from "./utils.js";
 import { GeoArrowExtraPickingProps, getPickingInfo } from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
-import { validateAccessors } from "./validate.js";
 import { GeoArrowSolidPolygonLayer } from "./solid-polygon-layer.js";
 import { GeoArrowPathLayer } from "./path-layer.js";
+
+/**
+ * Get the exterior of a PolygonVector or PolygonData as a MultiLineString
+ *
+ * Note that casting to a MultiLineString is a no-op of the underlying data
+ * structure. For the purposes of the PolygonLayer we don't want to cast to a
+ * LineString because that would change the number of rows in the table.
+ */
+export function getPolygonExterior(
+  input: ga.vector.PolygonVector,
+): ga.vector.MultiLineStringVector;
+export function getPolygonExterior(
+  input: ga.data.PolygonData,
+): ga.data.MultiLineStringData;
+
+export function getPolygonExterior(
+  input: ga.vector.PolygonVector | ga.data.PolygonData,
+): ga.vector.MultiLineStringVector | ga.data.MultiLineStringData {
+  if ("data" in input) {
+    return new arrow.Vector(input.data.map((data) => getPolygonExterior(data)));
+  }
+
+  return input;
+}
+
+/**
+ * Get the exterior of a MultiPolygonVector or MultiPolygonData
+ *
+ * Note that for the purposes of the PolygonLayer, we don't want to change the
+ * number of rows in the table. Instead, we convert each MultiPolygon to a
+ * single MultiLineString, combining all exteriors of each contained Polygon
+ * into a single united MultiLineString.
+ *
+ * This means that we need to condense both two offset buffers from the
+ * MultiPolygonVector/Data (geomOffsets and polygonOffsets) into a single
+ * `geomOffsets` for the new MultiLineStringVector/Data.
+ */
+export function getMultiPolygonExterior(
+  input: ga.vector.MultiPolygonVector,
+): ga.vector.MultiLineStringVector;
+export function getMultiPolygonExterior(
+  input: ga.data.MultiPolygonData,
+): ga.data.MultiLineStringData;
+
+export function getMultiPolygonExterior(
+  input: ga.vector.MultiPolygonVector | ga.data.MultiPolygonData,
+): ga.vector.MultiLineStringVector | ga.data.MultiLineStringData {
+  if ("data" in input) {
+    return new arrow.Vector(
+      input.data.map((data) => getMultiPolygonExterior(data)),
+    );
+  }
+
+  const geomOffsets: Int32Array = input.valueOffsets;
+  const polygonData = ga.child.getMultiPolygonChild(input);
+  const polygonOffsets: Int32Array = polygonData.valueOffsets;
+  const lineStringData = ga.child.getPolygonChild(polygonData);
+
+  const resolvedOffsets = new Int32Array(geomOffsets.length);
+  for (let i = 0; i < resolvedOffsets.length; ++i) {
+    // Perform the lookup
+    resolvedOffsets[i] = polygonOffsets[geomOffsets[i]];
+  }
+
+  return arrow.makeData({
+    type: new arrow.List(polygonData.type.children[0]),
+    length: input.length,
+    nullCount: input.nullCount,
+    nullBitmap: input.nullBitmap,
+    child: lineStringData,
+    valueOffsets: resolvedOffsets,
+  });
+}
 
 /** All properties supported by GeoArrowPolygonLayer */
 export type GeoArrowPolygonLayerProps = Omit<
@@ -97,6 +169,11 @@ const defaultProps: DefaultProps<GeoArrowPolygonLayerProps> = {
 const defaultLineColor: [number, number, number, number] = [0, 0, 0, 255];
 const defaultFillColor: [number, number, number, number] = [0, 0, 0, 255];
 
+/** The `GeoArrowPolygonLayer` renders filled, stroked and/or extruded polygons.
+ *
+ * GeoArrowPolygonLayer is a CompositeLayer that wraps the
+ * GeoArrowSolidPolygonLayer and the GeoArrowPathLayer.
+ */
 export class GeoArrowPolygonLayer<
   ExtraProps extends {} = {},
 > extends CompositeLayer<Required<GeoArrowPolygonLayerProps> & ExtraProps> {
@@ -119,12 +196,12 @@ export class GeoArrowPolygonLayer<
       return this._renderLayers(polygonVector);
     }
 
-    const MultiPolygonVector = getGeometryVector(
+    const multiPolygonVector = getGeometryVector(
       table,
       EXTENSION_NAME.MULTIPOLYGON,
     );
-    if (MultiPolygonVector !== null) {
-      return this._renderLayers(MultiPolygonVector);
+    if (multiPolygonVector !== null) {
+      return this._renderLayers(multiPolygonVector);
     }
 
     const geometryColumn = this.props.getPolygon;
@@ -147,16 +224,11 @@ export class GeoArrowPolygonLayer<
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
-    if (this.props._validate) {
-      assert(ga.vector.isPolygonVector(geometryColumn));
-      validateAccessors(this.props, table);
-    }
-
-    let getPath: ga.vector.LineStringVector | ga.vector.MultiLineStringVector;
+    let getPath: ga.vector.MultiLineStringVector;
     if (ga.vector.isPolygonVector(geometryColumn)) {
-      getPath = ga.algorithm.getPolygonExterior(geometryColumn);
+      getPath = getPolygonExterior(geometryColumn);
     } else if (ga.vector.isMultiPolygonVector(geometryColumn)) {
-      getPath = ga.algorithm.getMultiPolygonExterior(geometryColumn);
+      getPath = getMultiPolygonExterior(geometryColumn);
     } else {
       assert(false);
     }
