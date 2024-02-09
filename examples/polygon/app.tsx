@@ -5,11 +5,14 @@ import DeckGL, { Layer, PickingInfo } from "deck.gl/typed";
 import { GeoArrowPolygonLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 
-const GEOARROW_POLYGON_DATA = "http://localhost:8080/small.feather";
+// const GEOARROW_POLYGON_DATA = "http://localhost:8080/small.feather";
+
+const GEOARROW_POLYGON_DATA = "http://localhost:8080/nybb.feather";
 
 const INITIAL_VIEW_STATE = {
-  latitude: 40.63403641639511,
-  longitude: -111.91530172951025,
+  latitude: 40.71,
+  // longitude: -111.9,
+  longitude: -74.0,
   zoom: 9,
   bearing: 0,
   pitch: 0,
@@ -59,7 +62,7 @@ function Root() {
         data: table,
         getFillColor: [0, 100, 60, 160],
         getLineColor: [255, 0, 0],
-        lineWidthMinPixels: 0.1,
+        lineWidthMinPixels: 1,
         extruded: false,
         wireframe: true,
         // getElevation: 0,
