@@ -354,7 +354,6 @@ export class GeoArrowSolidPolygonLayer<
     const { table } = this.state;
     if (!table) return null;
 
-    console.log("renderLayers");
     const polygonVector = getGeometryVector(table, EXTENSION_NAME.POLYGON);
     if (polygonVector !== null) {
       return this._renderLayersPolygon(polygonVector);
@@ -571,11 +570,7 @@ export class GeoArrowSolidPolygonLayer<
         });
       }
 
-      console.log("solid props", props);
-      console.log("this", this);
       const finalProps = this.getSubLayerProps(props);
-      console.log("final props", finalProps);
-
       const layer = new SolidPolygonLayer(finalProps);
       layers.push(layer);
     }
