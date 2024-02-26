@@ -155,12 +155,29 @@ export class GeoArrowSolidPolygonLayer<
       return null;
     }
 
-    const pool = Pool<FunctionThread>(
-      () => spawn(BlobWorker.fromText(workerText)),
-      8,
-    );
-    this.state.earcutWorkerPool = pool;
-    return this.state.earcutWorkerPool;
+    // Some environments are not able to execute `importScripts`
+    // E.g. on a non-served HTML file (e.g. from lonboard export) you get
+    // Uncaught DOMException: Failed to execute 'importScripts' on
+    // 'WorkerGlobalScope': The script at
+    // 'blob:null/4ffb0b98-d1bd-4d9e-be52-998f50829723' failed to load.
+    //
+    // Additionally, it appears impossible to _catch_ this exception (at least
+    // on Chrome), so we'll hack around this by additionally checking if the
+    // current file is served from file://
+    if (window?.location?.href.startsWith("file://")) {
+      return null;
+    }
+
+    try {
+      const pool = Pool<FunctionThread>(
+        () => spawn(BlobWorker.fromText(workerText)),
+        8,
+      );
+      this.state.earcutWorkerPool = pool;
+      return this.state.earcutWorkerPool;
+    } catch (err) {
+      return null;
+    }
   }
 
   async finalizeState(context: LayerContext): Promise<void> {
@@ -513,7 +530,7 @@ export class GeoArrowSolidPolygonLayer<
         recordBatchIdx,
         tableOffsets: this.state.tableOffsets,
 
-        id: `${this.props.id}-geoarrow-point-${recordBatchIdx}`,
+        id: `${this.props.id}-geoarrow-solid-polygon-multi-${recordBatchIdx}`,
         data: {
           // @ts-expect-error passed through to enable use by function accessors
           data: table.batches[recordBatchIdx],
@@ -553,7 +570,8 @@ export class GeoArrowSolidPolygonLayer<
         });
       }
 
-      const layer = new SolidPolygonLayer(this.getSubLayerProps(props));
+      const finalProps = this.getSubLayerProps(props);
+      const layer = new SolidPolygonLayer(finalProps);
       layers.push(layer);
     }
 
