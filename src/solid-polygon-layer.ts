@@ -160,6 +160,14 @@ export class GeoArrowSolidPolygonLayer<
     // Uncaught DOMException: Failed to execute 'importScripts' on
     // 'WorkerGlobalScope': The script at
     // 'blob:null/4ffb0b98-d1bd-4d9e-be52-998f50829723' failed to load.
+    //
+    // Additionally, it appears impossible to _catch_ this exception (at least
+    // on Chrome), so we'll hack around this by additionally checking if the
+    // current file is served from file://
+    if (window?.location?.href.startsWith("file://")) {
+      return null;
+    }
+
     try {
       const pool = Pool<FunctionThread>(
         () => spawn(BlobWorker.fromText(workerText)),
