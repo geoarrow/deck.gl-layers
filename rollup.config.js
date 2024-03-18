@@ -4,11 +4,7 @@ import dts from "rollup-plugin-dts";
 
 const input = "./src/index.ts";
 const sourcemap = true;
-const external = [
-  "apache-arrow",
-  "@deck.gl/core/typed",
-  "@deck.gl/layers/typed",
-];
+const external = ["apache-arrow", "@deck.gl/core", "@deck.gl/layers"];
 
 export default [
   {
@@ -48,10 +44,10 @@ export default [
       name: "@geoarrow/deck.gl-layers",
       sourcemap,
       globals: {
-        "@deck.gl/aggregation-layers/typed": "deck",
-        "@deck.gl/core/typed": "deck",
-        "@deck.gl/geo-layers/typed": "deck",
-        "@deck.gl/layers/typed": "deck",
+        "@deck.gl/aggregation-layers": "deck",
+        "@deck.gl/core": "deck",
+        "@deck.gl/geo-layers": "deck",
+        "@deck.gl/layers": "deck",
         "apache-arrow": "arrow",
       },
     },

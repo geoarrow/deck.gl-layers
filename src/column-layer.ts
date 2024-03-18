@@ -6,9 +6,9 @@ import {
   Layer,
   LayersList,
   assert,
-} from "@deck.gl/core/typed";
-import { ColumnLayer } from "@deck.gl/layers/typed";
-import type { ColumnLayerProps } from "@deck.gl/layers/typed";
+} from "@deck.gl/core";
+import { ColumnLayer } from "@deck.gl/layers";
+import type { ColumnLayerProps } from "@deck.gl/layers";
 import * as arrow from "apache-arrow";
 import {
   assignAccessor,

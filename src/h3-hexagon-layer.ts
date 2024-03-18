@@ -5,9 +5,9 @@ import {
   GetPickingInfoParams,
   Layer,
   LayersList,
-} from "@deck.gl/core/typed";
-import { H3HexagonLayer } from "@deck.gl/geo-layers/typed";
-import type { H3HexagonLayerProps } from "@deck.gl/geo-layers/typed";
+} from "@deck.gl/core";
+import { H3HexagonLayer } from "@deck.gl/geo-layers";
+import type { H3HexagonLayerProps } from "@deck.gl/geo-layers";
 import * as arrow from "apache-arrow";
 import { assignAccessor, extractAccessorsFromProps } from "./utils.js";
 import { GeoArrowPickingInfo } from "./types.js";
