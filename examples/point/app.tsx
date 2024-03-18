@@ -56,11 +56,11 @@ function Root() {
         data: table,
         // Pre-computed colors in the original table
         getFillColor: table.getChild("colors")!,
-        opacity: 0.01,
+        opacity: 0.1,
         getRadius: ({ index, data }) => {
           const recordBatch = data.data;
           const row = recordBatch.get(index)!;
-          return row["avg_d_kbps"] / 10;
+          return row["avg_d_kbps"] / 50;
         },
         radiusMinPixels: 0.1,
         pickable: true,
