@@ -99,7 +99,10 @@ export class GeoArrowPathLayer<
       sourceLayer: { props: GeoArrowExtraPickingProps };
     },
   ): GeoArrowPickingInfo {
-    return getPickingInfo(params, this.props.data);
+    // Notes for handling
+
+    console.log(params);
+    const info = getPickingInfo(params, this.props.data);
   }
 
   renderLayers(): Layer<{}> | LayersList | null {
