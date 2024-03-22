@@ -29,7 +29,7 @@ const NAV_CONTROL_STYLE = {
 function Root() {
   const onClick = (info: PickingInfo) => {
     if (info.object) {
-      console.log(JSON.stringify(info.object.toJSON()));
+      console.log(info.object["BoroName"]);
     }
   };
 
@@ -66,10 +66,10 @@ function Root() {
         extruded: false,
         wireframe: true,
         // getElevation: 0,
-        pickable: false,
+        pickable: true,
         positionFormat: "XY",
         _normalize: false,
-        autoHighlight: true,
+        autoHighlight: false,
         earcutWorkerUrl: new URL(
           "https://cdn.jsdelivr.net/npm/@geoarrow/geoarrow-js@0.3.0-beta.1/dist/earcut-worker.min.js",
         ),
