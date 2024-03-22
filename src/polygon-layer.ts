@@ -185,7 +185,8 @@ export class GeoArrowPolygonLayer<
       sourceLayer: { props: GeoArrowExtraPickingProps };
     },
   ): GeoArrowPickingInfo {
-    return getPickingInfo(params, this.props.data);
+    // Propagate the picked info from the SolidPolygonLayer
+    return params.info;
   }
 
   renderLayers(): Layer<{}> | LayersList | null {
@@ -348,6 +349,8 @@ export class GeoArrowPolygonLayer<
           data: table,
           positionFormat,
           getPath,
+          // We only pick solid polygon layers, not the path layers
+          pickable: false,
         },
       );
 
