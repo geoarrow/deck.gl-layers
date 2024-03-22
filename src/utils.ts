@@ -356,6 +356,41 @@ export function invertOffsets(
   return invertedOffsets;
 }
 
+export function invertOffsetsSequence(
+  offsets: Int32Array[],
+): Uint8Array | Uint16Array | Uint32Array {
+  let largestOffset = offsets
+    .map((offsetBuffer) => offsetBuffer[offsetBuffer.length - 1])
+    .reduce((a, b) => a + b, 0);
+  let numOffsets = offsets.reduce((a, b) => a + b.length, 0);
+
+  const arrayConstructor =
+    numOffsets < Math.pow(2, 8)
+      ? Uint8Array
+      : numOffsets < Math.pow(2, 16)
+        ? Uint16Array
+        : Uint32Array;
+
+  const invertedOffsets = new arrayConstructor(largestOffset);
+  let chunkStart = 0;
+  for (const offsetBuffer of offsets) {
+    for (let arrayIdx = 0; arrayIdx < offsetBuffer.length - 1; arrayIdx++) {
+      const thisOffset = offsetBuffer[arrayIdx];
+      const nextOffset = offsetBuffer[arrayIdx + 1];
+      for (
+        let offset = chunkStart + thisOffset;
+        offset < chunkStart + nextOffset;
+        offset++
+      ) {
+        invertedOffsets[offset] = chunkStart + arrayIdx;
+      }
+    }
+    chunkStart += offsetBuffer[offsetBuffer.length - 1];
+  }
+
+  return invertedOffsets;
+}
+
 // TODO: better typing
 export function extractAccessorsFromProps(
   props: Record<string, any>,

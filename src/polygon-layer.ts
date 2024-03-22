@@ -11,7 +11,11 @@ import { PolygonLayer } from "@deck.gl/layers/typed";
 import type { PolygonLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
-import { getGeometryVector, invertOffsets } from "./utils.js";
+import {
+  getGeometryVector,
+  invertOffsets,
+  invertOffsetsSequence,
+} from "./utils.js";
 import { GeoArrowExtraPickingProps, getPickingInfo } from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
@@ -267,6 +271,10 @@ export class GeoArrowPolygonLayer<
       getPath = getPolygonExterior(geometryColumn);
     } else if (ga.vector.isMultiPolygonVector(geometryColumn)) {
       [invertedOffsets, getPath] = getMultiPolygonExterior(geometryColumn);
+      const test = invertOffsetsSequence(
+        getPath.data.map((data) => data.valueOffsets),
+      );
+      console.log(test);
     } else {
       assert(false);
     }
