@@ -11,7 +11,7 @@ import { PolygonLayer } from "@deck.gl/layers/typed";
 import type { PolygonLayerProps } from "@deck.gl/layers/typed";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
-import { getGeometryVector } from "./utils.js";
+import { getGeometryVector, invertOffsets } from "./utils.js";
 import { GeoArrowExtraPickingProps, getPickingInfo } from "./picking.js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
 import { EXTENSION_NAME } from "./constants.js";
@@ -39,6 +39,8 @@ export function getPolygonExterior(
     return new arrow.Vector(input.data.map((data) => getPolygonExterior(data)));
   }
 
+  // Polygon and MultiLineString arrays have the same representation, so this is
+  // a "physical no-op" which just changes the type on the array.
   return input;
 }
 
@@ -53,21 +55,42 @@ export function getPolygonExterior(
  * This means that we need to condense both two offset buffers from the
  * MultiPolygonVector/Data (geomOffsets and polygonOffsets) into a single
  * `geomOffsets` for the new MultiLineStringVector/Data.
+ *
+ * Note that this returns a second result for "invertedPathOffsets". When
+ * _rendering_ the path layer that's the stroke of the MultiPolygon, we render
+ * more individual geometries than we have original MultiPolygons. Therefore,
+ * for picking, we need to go "back" from the index of the path to the index of
+ * the original multi polygon. We create inverted offsets to help make that
+ * happen.
  */
 export function getMultiPolygonExterior(
   input: ga.vector.MultiPolygonVector,
-): ga.vector.MultiLineStringVector;
+): [
+  (Uint32Array | Uint8Array | Uint16Array)[],
+  ga.vector.MultiLineStringVector,
+];
 export function getMultiPolygonExterior(
   input: ga.data.MultiPolygonData,
-): ga.data.MultiLineStringData;
+): [Uint32Array | Uint8Array | Uint16Array, ga.data.MultiLineStringData];
 
 export function getMultiPolygonExterior(
   input: ga.vector.MultiPolygonVector | ga.data.MultiPolygonData,
-): ga.vector.MultiLineStringVector | ga.data.MultiLineStringData {
+):
+  | [
+      (Uint32Array | Uint8Array | Uint16Array)[],
+      ga.vector.MultiLineStringVector,
+    ]
+  | [Uint32Array | Uint8Array | Uint16Array, ga.data.MultiLineStringData] {
   if ("data" in input) {
-    return new arrow.Vector(
-      input.data.map((data) => getMultiPolygonExterior(data)),
-    );
+    const outputChunks: ga.data.MultiLineStringData[] = [];
+    const invertedOffsets: (Uint32Array | Uint8Array | Uint16Array)[] = [];
+    for (const dataChunk of input.data) {
+      const [invertedOffset, outputChunk] = getMultiPolygonExterior(dataChunk);
+      invertedOffsets.push(invertedOffset);
+      outputChunks.push(outputChunk);
+    }
+
+    return [invertedOffsets, new arrow.Vector(outputChunks)];
   }
 
   const geomOffsets: Int32Array = input.valueOffsets;
@@ -81,14 +104,20 @@ export function getMultiPolygonExterior(
     resolvedOffsets[i] = polygonOffsets[geomOffsets[i]];
   }
 
-  return arrow.makeData({
-    type: new arrow.List(polygonData.type.children[0]),
-    length: input.length,
-    nullCount: input.nullCount,
-    nullBitmap: input.nullBitmap,
-    child: lineStringData,
-    valueOffsets: resolvedOffsets,
-  });
+  // Pass in global row start into invertOffsets
+  const invertedOffsets = invertOffsets(resolvedOffsets);
+
+  return [
+    invertedOffsets,
+    arrow.makeData({
+      type: new arrow.List(polygonData.type.children[0]),
+      length: input.length,
+      nullCount: input.nullCount,
+      nullBitmap: input.nullBitmap,
+      child: lineStringData,
+      valueOffsets: resolvedOffsets,
+    }),
+  ];
 }
 
 /** All properties supported by GeoArrowPolygonLayer */
@@ -185,6 +214,12 @@ export class GeoArrowPolygonLayer<
       sourceLayer: { props: GeoArrowExtraPickingProps };
     },
   ): GeoArrowPickingInfo {
+    console.log(params.info);
+    if (params.info.sourceLayer?.props?.invertedOffsets?.length > 0) {
+      console.log("has inverted offsets");
+    }
+    params.info.layer?.id;
+
     // Propagate the picked info from the SolidPolygonLayer
     return params.info;
   }
@@ -226,10 +261,12 @@ export class GeoArrowPolygonLayer<
     const { data: table } = this.props;
 
     let getPath: ga.vector.MultiLineStringVector;
+    let invertedOffsets: null | (Uint32Array | Uint8Array | Uint16Array)[] =
+      null;
     if (ga.vector.isPolygonVector(geometryColumn)) {
       getPath = getPolygonExterior(geometryColumn);
     } else if (ga.vector.isMultiPolygonVector(geometryColumn)) {
-      getPath = getMultiPolygonExterior(geometryColumn);
+      [invertedOffsets, getPath] = getMultiPolygonExterior(geometryColumn);
     } else {
       assert(false);
     }
@@ -306,6 +343,7 @@ export class GeoArrowPolygonLayer<
         data,
         positionFormat,
         getPolygon,
+        pickable: false,
       },
     );
 
@@ -349,8 +387,7 @@ export class GeoArrowPolygonLayer<
           data: table,
           positionFormat,
           getPath,
-          // We only pick solid polygon layers, not the path layers
-          pickable: false,
+          invertedOffsets,
         },
       );
 

@@ -41,6 +41,12 @@ export function getPickingInfo(
 
   // Update index to be _global_ index, not within the specific record batch
   index += currentBatchOffset;
+
+  // if (sourceLayer.props?.invertedOffsets) {
+  //   sourceLayer.props?.invertedOffsets[recordBatchIdx][index]
+  // }
+  // // const recordBatchIdx = ;
+
   return {
     ...info,
     index,
