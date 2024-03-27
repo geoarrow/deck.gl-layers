@@ -6,9 +6,9 @@ import {
   LayersList,
   GetPickingInfoParams,
   assert,
-} from "@deck.gl/core/typed";
-import { PolygonLayer } from "@deck.gl/layers/typed";
-import type { PolygonLayerProps } from "@deck.gl/layers/typed";
+} from "@deck.gl/core";
+import { PolygonLayer } from "@deck.gl/layers";
+import type { PolygonLayerProps } from "@deck.gl/layers";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
 import { getGeometryVector } from "./utils.js";

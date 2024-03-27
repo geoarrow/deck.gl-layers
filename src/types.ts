@@ -1,5 +1,5 @@
-import type { BinaryAttribute, Color, PickingInfo } from "@deck.gl/core/typed";
-import { TypedArray } from "@deck.gl/core/typed/types/types";
+import type { BinaryAttribute, Color, PickingInfo } from "@deck.gl/core";
+import { TypedArray } from "@deck.gl/core/dist/types/types";
 import * as arrow from "apache-arrow";
 
 /**

@@ -7,9 +7,9 @@ import {
   Layer,
   LayersList,
   assert,
-} from "@deck.gl/core/typed";
-import { PathLayer } from "@deck.gl/layers/typed";
-import type { PathLayerProps } from "@deck.gl/layers/typed";
+} from "@deck.gl/core";
+import { PathLayer } from "@deck.gl/layers";
+import type { PathLayerProps } from "@deck.gl/layers";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
 import {

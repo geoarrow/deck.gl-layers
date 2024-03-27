@@ -8,9 +8,9 @@ import {
   assert,
   Unit,
   Material,
-} from "@deck.gl/core/typed";
-import { PointCloudLayer } from "@deck.gl/layers/typed";
-import type { PointCloudLayerProps } from "@deck.gl/layers/typed";
+} from "@deck.gl/core";
+import { PointCloudLayer } from "@deck.gl/layers";
+import type { PointCloudLayerProps } from "@deck.gl/layers";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
 import {

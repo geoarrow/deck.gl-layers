@@ -1,4 +1,4 @@
-import { assert } from "@deck.gl/core/typed";
+import { assert } from "@deck.gl/core";
 import * as arrow from "apache-arrow";
 
 export function validateAccessors(

@@ -6,9 +6,9 @@ import {
   Layer,
   LayersList,
   assert,
-} from "@deck.gl/core/typed";
-import { TextLayer } from "@deck.gl/layers/typed";
-import type { TextLayerProps } from "@deck.gl/layers/typed";
+} from "@deck.gl/core";
+import { TextLayer } from "@deck.gl/layers";
+import type { TextLayerProps } from "@deck.gl/layers";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
 import {

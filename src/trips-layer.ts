@@ -5,8 +5,8 @@ import {
   Layer,
   LayersList,
   assert,
-} from "@deck.gl/core/typed";
-import { TripsLayer } from "@deck.gl/geo-layers/typed";
+} from "@deck.gl/core";
+import { TripsLayer, TripsLayerProps } from "@deck.gl/geo-layers";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
 import {
@@ -21,7 +21,6 @@ import {
 } from "./path-layer.js";
 import { validateAccessors } from "./validate.js";
 import { EXTENSION_NAME } from "./constants.js";
-import { TripsLayerProps } from "@deck.gl/geo-layers/typed/trips-layer/trips-layer.js";
 import { computeChunkOffsets } from "./picking.js";
 
 /** All properties supported by GeoArrowTripsLayer */
