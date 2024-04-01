@@ -192,26 +192,32 @@ export class GeoArrowPolygonLayer<
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
-    const polygonVector = getGeometryVector(table, EXTENSION_NAME.POLYGON);
-    if (polygonVector !== null) {
-      return this._renderLayers(polygonVector);
-    }
+    if (this.props.getPolygon !== undefined) {
+      const geometryColumn = this.props.getPolygon;
+      if (ga.vector.isPolygonVector(geometryColumn)) {
+        return this._renderLayers(geometryColumn);
+      }
 
-    const multiPolygonVector = getGeometryVector(
-      table,
-      EXTENSION_NAME.MULTIPOLYGON,
-    );
-    if (multiPolygonVector !== null) {
-      return this._renderLayers(multiPolygonVector);
-    }
+      if (ga.vector.isMultiPolygonVector(geometryColumn)) {
+        return this._renderLayers(geometryColumn);
+      }
 
-    const geometryColumn = this.props.getPolygon;
-    if (ga.vector.isPolygonVector(geometryColumn)) {
-      return this._renderLayers(geometryColumn);
-    }
+      throw new Error(
+        "getPolygon should be an arrow Vector of Polygon or MultiPolygon type",
+      );
+    } else {
+      const polygonVector = getGeometryVector(table, EXTENSION_NAME.POLYGON);
+      if (polygonVector !== null) {
+        return this._renderLayers(polygonVector);
+      }
 
-    if (ga.vector.isMultiPolygonVector(geometryColumn)) {
-      return this._renderLayers(geometryColumn);
+      const multiPolygonVector = getGeometryVector(
+        table,
+        EXTENSION_NAME.MULTIPOLYGON,
+      );
+      if (multiPolygonVector !== null) {
+        return this._renderLayers(multiPolygonVector);
+      }
     }
 
     throw new Error("geometryColumn not Polygon or MultiPolygon");

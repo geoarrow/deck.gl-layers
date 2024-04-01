@@ -354,32 +354,38 @@ export class GeoArrowSolidPolygonLayer<
     const { table } = this.state;
     if (!table) return null;
 
-    const polygonVector = getGeometryVector(table, EXTENSION_NAME.POLYGON);
-    if (polygonVector !== null) {
-      return this._renderLayersPolygon(polygonVector);
-    }
+    if (this.props.getPolygon !== undefined) {
+      const geometryColumn = this.props.getPolygon;
+      if (
+        geometryColumn !== undefined &&
+        ga.vector.isPolygonVector(geometryColumn)
+      ) {
+        return this._renderLayersPolygon(geometryColumn);
+      }
 
-    const MultiPolygonVector = getGeometryVector(
-      table,
-      EXTENSION_NAME.MULTIPOLYGON,
-    );
-    if (MultiPolygonVector !== null) {
-      return this._renderLayersMultiPolygon(MultiPolygonVector);
-    }
+      if (
+        geometryColumn !== undefined &&
+        ga.vector.isMultiPolygonVector(geometryColumn)
+      ) {
+        return this._renderLayersMultiPolygon(geometryColumn);
+      }
 
-    const geometryColumn = this.props.getPolygon;
-    if (
-      geometryColumn !== undefined &&
-      ga.vector.isPolygonVector(geometryColumn)
-    ) {
-      return this._renderLayersPolygon(geometryColumn);
-    }
+      throw new Error(
+        "getPolygon should be an arrow Vector of Polygon or MultiPolygon type",
+      );
+    } else {
+      const polygonVector = getGeometryVector(table, EXTENSION_NAME.POLYGON);
+      if (polygonVector !== null) {
+        return this._renderLayersPolygon(polygonVector);
+      }
 
-    if (
-      geometryColumn !== undefined &&
-      ga.vector.isMultiPolygonVector(geometryColumn)
-    ) {
-      return this._renderLayersMultiPolygon(geometryColumn);
+      const MultiPolygonVector = getGeometryVector(
+        table,
+        EXTENSION_NAME.MULTIPOLYGON,
+      );
+      if (MultiPolygonVector !== null) {
+        return this._renderLayersMultiPolygon(MultiPolygonVector);
+      }
     }
 
     throw new Error("getPolygon not GeoArrow Polygon or MultiPolygon");

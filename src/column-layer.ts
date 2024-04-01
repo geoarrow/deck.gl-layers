@@ -44,7 +44,6 @@ type _GeoArrowColumnLayerProps = {
 
   /**
    * Method called to retrieve the position of each column.
-   * @default object => object.position
    */
   getPosition?: ga.vector.PointVector;
 
