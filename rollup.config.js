@@ -59,7 +59,7 @@ export default [
         "@deck.gl/geo-layers/typed": "deck",
         "@deck.gl/layers/typed": "deck",
         "@geoarrow/geoarrow-js": "geoarrow",
-        "apache-arrow": "arrow",
+        "apache-arrow": "Arrow",
       },
     },
     plugins: [typescript(), terser()],
