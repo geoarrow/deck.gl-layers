@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
 import DeckGL, { Layer, PickingInfo } from "deck.gl/typed";
-import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
+import {
+  GeoArrowScatterplotLayer,
+  GeoArrowPointCloudLayer,
+} from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 
 const GEOARROW_POINT_DATA =
@@ -51,19 +54,20 @@ function Root() {
 
   table &&
     layers.push(
-      new GeoArrowScatterplotLayer({
+      new GeoArrowPointCloudLayer({
         id: "geoarrow-points",
         data: table,
         // Pre-computed colors in the original table
-        getFillColor: table.getChild("colors")!,
+        getColor: table.getChild("colors")!,
+        getNormal: [0, 0, 1],
         opacity: 0.01,
-        getRadius: ({ index, data }) => {
-          const recordBatch = data.data;
-          const row = recordBatch.get(index)!;
-          return row["avg_d_kbps"] / 10;
-        },
-        radiusMinPixels: 0.1,
-        pickable: true,
+        // getRadius: ({ index, data }) => {
+        //   const recordBatch = data.data;
+        //   const row = recordBatch.get(index)!;
+        //   return row["avg_d_kbps"] / 10;
+        // },
+        // radiusMinPixels: 0.1,
+        // pickable: true,
       }),
     );
 

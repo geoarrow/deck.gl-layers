@@ -21,6 +21,7 @@ def main():
 
     df = pd.read_parquet(path)
     centroids = shapely.centroid(shapely.from_wkt(df["tile"]))
+    centroids = shapely.points(shapely.get_x(centroids), shapely.get_y(centroids), 0)
 
     # Save space by using a smaller data type
     df_cols = ["avg_d_kbps", "avg_u_kbps", "avg_lat_ms"]
