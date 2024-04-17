@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
-import DeckGL, { Layer } from "deck.gl/typed";
+import DeckGL, { Layer } from "deck.gl";
 import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 
@@ -29,7 +29,7 @@ function Root() {
     if (info.object) {
       // eslint-disable-next-line
       alert(
-        `${info.object.properties.name} (${info.object.properties.abbrev})`
+        `${info.object.properties.name} (${info.object.properties.abbrev})`,
       );
     }
   };
@@ -65,7 +65,7 @@ function Root() {
         radiusMinPixels: 4,
         getPointRadius: 10,
         pointRadiusMinPixels: 0.8,
-      })
+      }),
     );
 
   return (
