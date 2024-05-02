@@ -24,7 +24,7 @@ export default [
       format: "es",
       sourcemap,
     },
-    plugins: [nodeResolve(), commonjs()],
+    plugins: [nodeResolve(), commonjs(), typescript()],
     external,
   },
   {
@@ -43,7 +43,7 @@ export default [
       format: "cjs",
       sourcemap,
     },
-    plugins: [nodeResolve(), commonjs()],
+    plugins: [nodeResolve(), commonjs(), typescript()],
     external,
   },
   {
