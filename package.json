@@ -4,7 +4,7 @@
     "examples/*"
   ],
   "name": "@geoarrow/deck.gl-layers",
-  "version": "0.3.0-beta.14",
+  "version": "0.3.0-beta.16",
   "type": "module",
   "description": "",
   "source": "src/index.ts",
@@ -56,6 +56,8 @@
     "@deck.gl/geo-layers": "9.0.0-beta.9",
     "@deck.gl/layers": "9.0.0-beta.9",
     "@math.gl/polygon": "^3.6.2",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.3",
     "@rollup/plugin-typescript": "^11.1.2",
     "apache-arrow": ">=15",

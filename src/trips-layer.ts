@@ -95,20 +95,24 @@ export class GeoArrowTripsLayer<
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
-    const lineStringVector = getGeometryVector(
-      table,
-      EXTENSION_NAME.LINESTRING,
-    );
-    if (lineStringVector !== null) {
-      return this._renderLayersLineString(lineStringVector);
-    }
+    if (this.props.getPath !== undefined) {
+      const geometryColumn = this.props.getPath;
+      if (
+        geometryColumn !== undefined &&
+        ga.vector.isLineStringVector(geometryColumn)
+      ) {
+        return this._renderLayersLineString(geometryColumn);
+      }
 
-    const geometryColumn = this.props.getPath;
-    if (
-      geometryColumn !== undefined &&
-      ga.vector.isLineStringVector(geometryColumn)
-    ) {
-      return this._renderLayersLineString(geometryColumn);
+      throw new Error("getPath should be an arrow Vector of LineString type");
+    } else {
+      const lineStringVector = getGeometryVector(
+        table,
+        EXTENSION_NAME.LINESTRING,
+      );
+      if (lineStringVector !== null) {
+        return this._renderLayersLineString(lineStringVector);
+      }
     }
 
     throw new Error("getPath not GeoArrow LineString");

@@ -105,35 +105,41 @@ export class GeoArrowPathLayer<
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
-    const lineStringVector = getGeometryVector(
-      table,
-      EXTENSION_NAME.LINESTRING,
-    );
-    if (lineStringVector !== null) {
-      return this._renderLayersLineString(lineStringVector);
-    }
+    if (this.props.getPath !== undefined) {
+      const geometryColumn = this.props.getPath;
+      if (
+        geometryColumn !== undefined &&
+        ga.vector.isLineStringVector(geometryColumn)
+      ) {
+        return this._renderLayersLineString(geometryColumn);
+      }
 
-    const multiLineStringVector = getGeometryVector(
-      table,
-      EXTENSION_NAME.MULTILINESTRING,
-    );
-    if (multiLineStringVector !== null) {
-      return this._renderLayersMultiLineString(multiLineStringVector);
-    }
+      if (
+        geometryColumn !== undefined &&
+        ga.vector.isMultiLineStringVector(geometryColumn)
+      ) {
+        return this._renderLayersMultiLineString(geometryColumn);
+      }
 
-    const geometryColumn = this.props.getPath;
-    if (
-      geometryColumn !== undefined &&
-      ga.vector.isLineStringVector(geometryColumn)
-    ) {
-      return this._renderLayersLineString(geometryColumn);
-    }
+      throw new Error(
+        "getPath should be an arrow Vector of LineString or MultiLineString type",
+      );
+    } else {
+      const lineStringVector = getGeometryVector(
+        table,
+        EXTENSION_NAME.LINESTRING,
+      );
+      if (lineStringVector !== null) {
+        return this._renderLayersLineString(lineStringVector);
+      }
 
-    if (
-      geometryColumn !== undefined &&
-      ga.vector.isMultiLineStringVector(geometryColumn)
-    ) {
-      return this._renderLayersMultiLineString(geometryColumn);
+      const multiLineStringVector = getGeometryVector(
+        table,
+        EXTENSION_NAME.MULTILINESTRING,
+      );
+      if (multiLineStringVector !== null) {
+        return this._renderLayersMultiLineString(multiLineStringVector);
+      }
     }
 
     throw new Error("getPath not GeoArrow LineString or MultiLineString");

@@ -106,32 +106,38 @@ export class GeoArrowScatterplotLayer<
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
-    const pointVector = getGeometryVector(table, EXTENSION_NAME.POINT);
-    if (pointVector !== null) {
-      return this._renderLayersPoint(pointVector);
-    }
+    if (this.props.getPosition !== undefined) {
+      const geometryColumn = this.props.getPosition;
+      if (
+        geometryColumn !== undefined &&
+        ga.vector.isPointVector(geometryColumn)
+      ) {
+        return this._renderLayersPoint(geometryColumn);
+      }
 
-    const multiPointVector = getGeometryVector(
-      table,
-      EXTENSION_NAME.MULTIPOINT,
-    );
-    if (multiPointVector !== null) {
-      return this._renderLayersMultiPoint(multiPointVector);
-    }
+      if (
+        geometryColumn !== undefined &&
+        ga.vector.isMultiPointVector(geometryColumn)
+      ) {
+        return this._renderLayersMultiPoint(geometryColumn);
+      }
 
-    const geometryColumn = this.props.getPosition;
-    if (
-      geometryColumn !== undefined &&
-      ga.vector.isPointVector(geometryColumn)
-    ) {
-      return this._renderLayersPoint(geometryColumn);
-    }
+      throw new Error(
+        "getPosition should pass in an arrow Vector of Point or MultiPoint type",
+      );
+    } else {
+      const pointVector = getGeometryVector(table, EXTENSION_NAME.POINT);
+      if (pointVector !== null) {
+        return this._renderLayersPoint(pointVector);
+      }
 
-    if (
-      geometryColumn !== undefined &&
-      ga.vector.isMultiPointVector(geometryColumn)
-    ) {
-      return this._renderLayersMultiPoint(geometryColumn);
+      const multiPointVector = getGeometryVector(
+        table,
+        EXTENSION_NAME.MULTIPOINT,
+      );
+      if (multiPointVector !== null) {
+        return this._renderLayersMultiPoint(multiPointVector);
+      }
     }
 
     throw new Error("getPosition not GeoArrow point or multipoint");

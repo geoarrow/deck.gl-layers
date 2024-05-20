@@ -80,17 +80,23 @@ export class GeoArrowHeatmapLayer<
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
-    const pointVector = getGeometryVector(table, EXTENSION_NAME.POINT);
-    if (pointVector !== null) {
-      return this._renderLayersPoint(pointVector);
-    }
+    if (this.props.getPosition !== undefined) {
+      const geometryColumn = this.props.getPosition;
+      if (
+        geometryColumn !== undefined &&
+        ga.vector.isPointVector(geometryColumn)
+      ) {
+        return this._renderLayersPoint(geometryColumn);
+      }
 
-    const geometryColumn = this.props.getPosition;
-    if (
-      geometryColumn !== undefined &&
-      ga.vector.isPointVector(geometryColumn)
-    ) {
-      return this._renderLayersPoint(geometryColumn);
+      throw new Error(
+        "getPosition should pass in an arrow Vector of Point type",
+      );
+    } else {
+      const pointVector = getGeometryVector(table, EXTENSION_NAME.POINT);
+      if (pointVector !== null) {
+        return this._renderLayersPoint(pointVector);
+      }
     }
 
     throw new Error("getPosition not GeoArrow point");
