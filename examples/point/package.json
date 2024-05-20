@@ -8,8 +8,10 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@loaders.gl/compression": "^4.1.4",
+    "@loaders.gl/crypto": "^4.1.4",
     "apache-arrow": ">=14",
-    "deck.gl": "^8.9.23",
+    "deck.gl": "^9.0.12",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-map-gl": "^5.3.0"

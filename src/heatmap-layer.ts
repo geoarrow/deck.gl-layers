@@ -5,9 +5,9 @@ import {
   Layer,
   LayersList,
   assert,
-} from "@deck.gl/core/typed";
-import { HeatmapLayer } from "@deck.gl/aggregation-layers/typed";
-import type { HeatmapLayerProps } from "@deck.gl/aggregation-layers/typed";
+} from "@deck.gl/core";
+import { HeatmapLayer } from "@deck.gl/aggregation-layers";
+import type { HeatmapLayerProps } from "@deck.gl/aggregation-layers";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
 import {

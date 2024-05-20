@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
-import DeckGL, { Layer, PickingInfo } from "deck.gl/typed";
+import DeckGL, { Layer, PickingInfo } from "deck.gl";
 import { GeoArrowTripsLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 

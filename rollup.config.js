@@ -7,10 +7,10 @@ import commonjs from "@rollup/plugin-commonjs";
 const input = "./src/index.ts";
 const sourcemap = true;
 const external = [
-  "@deck.gl/aggregation-layers/typed",
-  "@deck.gl/core/typed",
-  "@deck.gl/geo-layers/typed",
-  "@deck.gl/layers/typed",
+  "@deck.gl/aggregation-layers",
+  "@deck.gl/core",
+  "@deck.gl/geo-layers",
+  "@deck.gl/layers",
   "@geoarrow/geoarrow-js",
   "apache-arrow",
   "threads",
@@ -24,7 +24,7 @@ export default [
       format: "es",
       sourcemap,
     },
-    plugins: [nodeResolve(), typescript()],
+    plugins: [nodeResolve(), commonjs(), typescript()],
     external,
   },
   {
@@ -43,7 +43,7 @@ export default [
       format: "cjs",
       sourcemap,
     },
-    plugins: [nodeResolve(), typescript()],
+    plugins: [nodeResolve(), commonjs(), typescript()],
     external,
   },
   {
@@ -54,10 +54,10 @@ export default [
       name: "@geoarrow/deck.gl-layers",
       sourcemap,
       globals: {
-        "@deck.gl/aggregation-layers/typed": "deck",
-        "@deck.gl/core/typed": "deck",
-        "@deck.gl/geo-layers/typed": "deck",
-        "@deck.gl/layers/typed": "deck",
+        "@deck.gl/aggregation-layers": "deck",
+        "@deck.gl/core": "deck",
+        "@deck.gl/geo-layers": "deck",
+        "@deck.gl/layers": "deck",
         "@geoarrow/geoarrow-js": "geoarrow",
         "apache-arrow": "Arrow",
       },
