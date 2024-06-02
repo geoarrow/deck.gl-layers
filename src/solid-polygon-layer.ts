@@ -590,7 +590,7 @@ function encodePickingColors(
   encodePickingColor: (id: number, result: number[]) => void,
 ): Uint8ClampedArray {
   const largestOffset = geomToCoordOffsets[geomToCoordOffsets.length - 1];
-  const pickingColors = new Uint8ClampedArray(largestOffset);
+  const pickingColors = new Uint8ClampedArray(largestOffset * 3);
 
   const pickingColor: number[] = [];
   for (let arrayIdx = 0; arrayIdx < geomToCoordOffsets.length - 1; arrayIdx++) {
