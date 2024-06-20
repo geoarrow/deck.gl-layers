@@ -190,7 +190,7 @@ export class GeoArrowIconLayer<
 
       
       // @ts-expect-error iconAtlas is an async prop
-      const iconAtlas=this.props.iconAtlasUrlConfig
+      const iconAtlas=this.props.iconAtlasConfig
       // @ts-expect-error iconMapping is an async prop
       const iconMapping=this.props.iconMapping
       const props_={...this.getSubLayerProps(props), iconAtlas, iconMapping }
