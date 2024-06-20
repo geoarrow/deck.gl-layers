@@ -29,7 +29,13 @@ import { validateAccessors } from "./validate.js";
 /** All properties supported by GeoArrowScatterplotLayer */
 export type GeoArrowIconLayerProps = Omit<
   IconLayerProps<arrow.Table>,
-  "data" | "getPosition" | "getRadius" | "getFillColor" | "getLineColor" | "iconAtlas" | "iconMapping"
+  | "data"
+  | "getPosition"
+  | "getRadius"
+  | "getFillColor"
+  | "getLineColor"
+  | "iconAtlas"
+  | "iconMapping"
 > &
   _GeoArrowIconLayerPropsProps &
   CompositeLayerProps;
@@ -115,10 +121,7 @@ export class GeoArrowIconLayer<
         return this._renderLayersPoint(geometryColumn);
       }
 
-      throw new Error(
-        "getPosition should pass in an arrow Vector of Point",
-      );
-
+      throw new Error("getPosition should pass in an arrow Vector of Point");
     } else {
       const pointVector = getGeometryVector(table, EXTENSION_NAME.POINT);
       if (pointVector !== null) {
@@ -188,12 +191,15 @@ export class GeoArrowIconLayer<
         });
       }
 
-      
       // @ts-expect-error iconAtlas is an async prop
-      const iconAtlas=this.props.iconAtlasConfig
+      const iconAtlas = this.props.iconAtlasConfig;
       // @ts-expect-error iconMapping is an async prop
-      const iconMapping=this.props.iconMapping
-      const props_={...this.getSubLayerProps(props), iconAtlas, iconMapping }
+      const iconMapping = this.props.iconMapping;
+      const props_ = {
+        ...this.getSubLayerProps(props),
+        iconAtlas,
+        iconMapping,
+      };
       const layer = new IconLayer(props_);
       layers.push(layer);
     }
