@@ -1,3 +1,7 @@
+// deck.gl-community
+// SPDX-License-Identifier: MIT
+// Copyright (c) vis.gl contributors
+
 import {
   CompositeLayer,
   CompositeLayerProps,
@@ -6,17 +10,18 @@ import {
   Layer,
   LayersList,
 } from "@deck.gl/core";
-import { H3HexagonLayer } from "@deck.gl/geo-layers";
 import type { H3HexagonLayerProps } from "@deck.gl/geo-layers";
+import { H3HexagonLayer } from "@deck.gl/geo-layers";
 import * as arrow from "apache-arrow";
-import { assignAccessor, extractAccessorsFromProps } from "../utils.js";
-import { GeoArrowPickingInfo } from "../types.js";
+
+import { GeoArrowPickingInfo } from "../types";
+import { assignAccessor, extractAccessorsFromProps } from "../utils/utils";
 import {
   GeoArrowExtraPickingProps,
   computeChunkOffsets,
   getPickingInfo,
-} from "../utils/picking.js";
-import { validateAccessors } from "../utils/validate.js";
+} from "../utils/picking";
+import { validateAccessors } from "../utils/validate";
 
 /** All properties supported by GeoArrowH3HexagonLayer */
 export type GeoArrowH3HexagonLayerProps = Omit<

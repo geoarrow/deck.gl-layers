@@ -1,3 +1,7 @@
+// deck.gl-community
+// SPDX-License-Identifier: MIT
+// Copyright (c) vis.gl contributors
+
 import {
   CompositeLayer,
   CompositeLayerProps,
@@ -14,11 +18,11 @@ import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
-} from "./utils.js";
-import { FloatAccessor } from "./types.js";
-import { EXTENSION_NAME } from "./constants.js";
-import { validateAccessors } from "./validate.js";
-import { computeChunkOffsets } from "./picking.js";
+} from "../utils/utils";
+import { FloatAccessor } from "../types";
+import { EXTENSION_NAME } from "../constants";
+import { validateAccessors } from "../utils/validate";
+import { computeChunkOffsets } from "../utils/picking";
 
 /** All properties supported by GeoArrowHeatmapLayer */
 export type GeoArrowHeatmapLayerProps = Omit<

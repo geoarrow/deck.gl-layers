@@ -1,3 +1,7 @@
+// deck.gl-community
+// SPDX-License-Identifier: MIT
+// Copyright (c) vis.gl contributors
+
 import { assert } from "@deck.gl/core";
 import * as arrow from "apache-arrow";
 

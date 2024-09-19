@@ -1,3 +1,7 @@
+// deck.gl-community
+// SPDX-License-Identifier: MIT
+// Copyright (c) vis.gl contributors
+
 import type { BinaryAttribute, Color, PickingInfo } from "@deck.gl/core";
 import { TypedArray } from "@deck.gl/core/dist/types/types";
 import * as arrow from "apache-arrow";

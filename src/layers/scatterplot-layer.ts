@@ -1,3 +1,7 @@
+// deck.gl-community
+// SPDX-License-Identifier: MIT
+// Copyright (c) vis.gl contributors
+
 import {
   CompositeLayer,
   CompositeLayerProps,
@@ -16,15 +20,15 @@ import {
   extractAccessorsFromProps,
   getGeometryVector,
   invertOffsets,
-} from "../utils.js";
+} from "../utils/utils";
 import {
   GeoArrowExtraPickingProps,
   computeChunkOffsets,
   getPickingInfo,
-} from "../utils/picking.js";
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types.js";
-import { EXTENSION_NAME } from "../constants.js";
-import { validateAccessors } from "../utils/validate.js";
+} from "../utils/picking";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
+import { EXTENSION_NAME } from "../constants";
+import { validateAccessors } from "../utils/validate";
 
 /** All properties supported by GeoArrowScatterplotLayer */
 export type GeoArrowScatterplotLayerProps = Omit<

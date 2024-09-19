@@ -1,3 +1,7 @@
+// deck.gl-community
+// SPDX-License-Identifier: MIT
+// Copyright (c) vis.gl contributors
+
 import {
   CompositeLayer,
   CompositeLayerProps,
@@ -6,22 +10,23 @@ import {
   LayersList,
   assert,
 } from "@deck.gl/core";
-import { TripsLayer, TripsLayerProps } from "@deck.gl/geo-layers";
+import { TripsLayer } from "@deck.gl/geo-layers";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
-} from "../utils.js";
-import { TimestampAccessor, ColorAccessor, FloatAccessor } from "../types.js";
+} from "../utils/utils";
+import { TimestampAccessor, ColorAccessor, FloatAccessor } from "../types";
 import {
   GeoArrowPathLayerProps,
   defaultProps as pathLayerDefaultProps,
-} from "./path-layer.js";
-import { validateAccessors } from "../utils/validate.js";
-import { EXTENSION_NAME } from "../constants.js";
-import { computeChunkOffsets } from "../utils/picking.js";
+} from "./path-layer";
+import { validateAccessors } from "../utils/validate";
+import { EXTENSION_NAME } from "../constants";
+import { TripsLayerProps } from "@deck.gl/geo-layers";
+import { computeChunkOffsets } from "../utils/picking";
 
 /** All properties supported by GeoArrowTripsLayer */
 export type GeoArrowTripsLayerProps = Omit<
@@ -166,7 +171,6 @@ export class GeoArrowTripsLayer<
           // @ts-expect-error passed through to enable use by function accessors
           data: table.batches[recordBatchIdx],
           length: lineStringData.length,
-          // @ts-ignore
           startIndices: geomOffsets,
           attributes: {
             getPath: { value: flatCoordinateArray, size: nDim },

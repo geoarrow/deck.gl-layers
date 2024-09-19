@@ -1,3 +1,7 @@
+// deck.gl-community
+// SPDX-License-Identifier: MIT
+// Copyright (c) vis.gl contributors
+
 import {
   CompositeLayer,
   CompositeLayerProps,
@@ -17,15 +21,15 @@ import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
-} from "./utils.js";
+} from "../utils/utils";
 import {
   GeoArrowExtraPickingProps,
   computeChunkOffsets,
   getPickingInfo,
-} from "./picking.js";
-import { ColorAccessor, GeoArrowPickingInfo, NormalAccessor } from "./types.js";
-import { EXTENSION_NAME } from "./constants.js";
-import { validateAccessors } from "./validate.js";
+} from "../utils/picking";
+import { ColorAccessor, GeoArrowPickingInfo, NormalAccessor } from "../types";
+import { EXTENSION_NAME } from "../constants";
+import { validateAccessors } from "../utils/validate";
 
 /* All properties supported by GeoArrowPointCloudLayer */
 export type GeoArrowPointCloudLayerProps = Omit<
