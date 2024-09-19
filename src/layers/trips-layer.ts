@@ -10,7 +10,7 @@ import {
   LayersList,
   assert,
 } from "@deck.gl/core";
-import { TripsLayer } from "@deck.gl/geo-layers";
+import { TripsLayer, TripsLayerProps } from "@deck.gl/geo-layers";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
 import {
@@ -25,7 +25,6 @@ import {
 } from "./path-layer";
 import { validateAccessors } from "../utils/validate";
 import { EXTENSION_NAME } from "../constants";
-import { TripsLayerProps } from "@deck.gl/geo-layers";
 import { computeChunkOffsets } from "../utils/picking";
 
 /** All properties supported by GeoArrowTripsLayer */
