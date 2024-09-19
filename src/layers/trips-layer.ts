@@ -13,15 +13,15 @@ import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
-} from "./utils.js";
-import { TimestampAccessor, ColorAccessor, FloatAccessor } from "./types.js";
+} from "../utils.js";
+import { TimestampAccessor, ColorAccessor, FloatAccessor } from "../types.js";
 import {
   GeoArrowPathLayerProps,
   defaultProps as pathLayerDefaultProps,
 } from "./path-layer.js";
-import { validateAccessors } from "./validate.js";
-import { EXTENSION_NAME } from "./constants.js";
-import { computeChunkOffsets } from "./picking.js";
+import { validateAccessors } from "../utils/validate.js";
+import { EXTENSION_NAME } from "../constants.js";
+import { computeChunkOffsets } from "../utils/picking.js";
 
 /** All properties supported by GeoArrowTripsLayer */
 export type GeoArrowTripsLayerProps = Omit<

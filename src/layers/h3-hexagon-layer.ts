@@ -9,14 +9,14 @@ import {
 import { H3HexagonLayer } from "@deck.gl/geo-layers";
 import type { H3HexagonLayerProps } from "@deck.gl/geo-layers";
 import * as arrow from "apache-arrow";
-import { assignAccessor, extractAccessorsFromProps } from "./utils.js";
-import { GeoArrowPickingInfo } from "./types.js";
+import { assignAccessor, extractAccessorsFromProps } from "../utils.js";
+import { GeoArrowPickingInfo } from "../types.js";
 import {
   GeoArrowExtraPickingProps,
   computeChunkOffsets,
   getPickingInfo,
-} from "./picking.js";
-import { validateAccessors } from "./validate.js";
+} from "../utils/picking.js";
+import { validateAccessors } from "../utils/validate.js";
 
 /** All properties supported by GeoArrowH3HexagonLayer */
 export type GeoArrowH3HexagonLayerProps = Omit<

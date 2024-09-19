@@ -1,6 +1,6 @@
 import * as arrow from "apache-arrow";
 import { GetPickingInfoParams } from "@deck.gl/core";
-import { GeoArrowPickingInfo } from "./types";
+import { GeoArrowPickingInfo } from "../types";
 
 export interface GeoArrowExtraPickingProps {
   recordBatchIdx: number;

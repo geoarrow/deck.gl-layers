@@ -11,15 +11,15 @@ import { ArcLayer } from "@deck.gl/layers";
 import type { ArcLayerProps } from "@deck.gl/layers";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
-import { assignAccessor, extractAccessorsFromProps } from "./utils.js";
+import { assignAccessor, extractAccessorsFromProps } from "../utils.js";
 import { child } from "@geoarrow/geoarrow-js";
 import {
   GeoArrowExtraPickingProps,
   computeChunkOffsets,
   getPickingInfo,
-} from "./picking.js";
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
-import { validateAccessors } from "./validate.js";
+} from "../utils/picking.js";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types.js";
+import { validateAccessors } from "../utils/validate.js";
 
 /** All properties supported by GeoArrowArcLayer */
 export type GeoArrowArcLayerProps = Omit<

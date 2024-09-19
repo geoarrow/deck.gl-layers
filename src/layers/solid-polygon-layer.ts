@@ -20,15 +20,15 @@ import {
   getMultiPolygonResolvedOffsets,
   getPolygonResolvedOffsets,
   invertOffsets,
-} from "./utils.js";
+} from "../utils.js";
 import {
   GeoArrowExtraPickingProps,
   computeChunkOffsets,
   getPickingInfo,
-} from "./picking.js";
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
-import { EXTENSION_NAME } from "./constants.js";
-import { validateAccessors } from "./validate.js";
+} from "../utils/picking.js";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types.js";
+import { EXTENSION_NAME } from "../constants.js";
+import { validateAccessors } from "../utils/validate.js";
 import { spawn, Transfer, BlobWorker, Pool } from "threads";
 import type { FunctionThread } from "threads";
 

@@ -16,15 +16,15 @@ import {
   extractAccessorsFromProps,
   getGeometryVector,
   invertOffsets,
-} from "./utils.js";
+} from "../utils.js";
 import {
   GeoArrowExtraPickingProps,
   computeChunkOffsets,
   getPickingInfo,
-} from "./picking.js";
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
-import { EXTENSION_NAME } from "./constants.js";
-import { validateAccessors } from "./validate.js";
+} from "../utils/picking.js";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types.js";
+import { EXTENSION_NAME } from "../constants.js";
+import { validateAccessors } from "../utils/validate.js";
 
 /** All properties supported by GeoArrowScatterplotLayer */
 export type GeoArrowScatterplotLayerProps = Omit<

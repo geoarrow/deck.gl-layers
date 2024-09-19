@@ -11,10 +11,10 @@ import { PolygonLayer } from "@deck.gl/layers";
 import type { PolygonLayerProps } from "@deck.gl/layers";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
-import { getGeometryVector } from "./utils.js";
-import { GeoArrowExtraPickingProps, getPickingInfo } from "./picking.js";
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
-import { EXTENSION_NAME } from "./constants.js";
+import { getGeometryVector } from "../utils.js";
+import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking.js";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types.js";
+import { EXTENSION_NAME } from "../constants.js";
 import { GeoArrowSolidPolygonLayer } from "./solid-polygon-layer.js";
 import { GeoArrowPathLayer } from "./path-layer.js";
 
