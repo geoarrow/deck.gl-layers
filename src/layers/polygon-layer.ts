@@ -1,3 +1,7 @@
+// deck.gl-community
+// SPDX-License-Identifier: MIT
+// Copyright (c) vis.gl contributors
+
 import {
   CompositeLayer,
   CompositeLayerProps,
@@ -11,12 +15,12 @@ import { PolygonLayer } from "@deck.gl/layers";
 import type { PolygonLayerProps } from "@deck.gl/layers";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
-import { getGeometryVector } from "./utils.js";
-import { GeoArrowExtraPickingProps, getPickingInfo } from "./picking.js";
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
-import { EXTENSION_NAME } from "./constants.js";
-import { GeoArrowSolidPolygonLayer } from "./solid-polygon-layer.js";
-import { GeoArrowPathLayer } from "./path-layer.js";
+import { getGeometryVector } from "../utils/utils";
+import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
+import { EXTENSION_NAME } from "../constants";
+import { GeoArrowSolidPolygonLayer } from "./solid-polygon-layer";
+import { GeoArrowPathLayer } from "./path-layer";
 
 /**
  * Get the exterior of a PolygonVector or PolygonData as a MultiLineString

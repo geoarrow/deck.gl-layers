@@ -1,5 +1,8 @@
+// deck.gl-community
+// SPDX-License-Identifier: MIT
+// Copyright (c) vis.gl contributors
+
 import {
-  Accessor,
   CompositeLayer,
   CompositeLayerProps,
   DefaultProps,
@@ -18,15 +21,15 @@ import {
   getGeometryVector,
   getMultiLineStringResolvedOffsets,
   invertOffsets,
-} from "./utils.js";
+} from "../utils/utils";
 import {
   GeoArrowExtraPickingProps,
   computeChunkOffsets,
   getPickingInfo,
-} from "./picking.js";
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "./types.js";
-import { EXTENSION_NAME } from "./constants.js";
-import { validateAccessors } from "./validate.js";
+} from "../utils/picking";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
+import { EXTENSION_NAME } from "../constants";
+import { validateAccessors } from "../utils/validate";
 
 /** All properties supported by GeoArrowPathLayer */
 export type GeoArrowPathLayerProps = Omit<
@@ -276,7 +279,6 @@ export class GeoArrowPathLayer<
           //
           // Note: this is ringOffsets, not geomOffsets because we're rendering
           // the individual paths on the map.
-          // @ts-ignore
           startIndices: ringOffsets,
           attributes: {
             getPath: { value: flatCoordinateArray, size: nDim },

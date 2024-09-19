@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { expandArrayToCoords } from "../src/utils.js";
+import { expandArrayToCoords } from "../src/utils/utils.js";
 import { arraysEqual } from "./utils.js";
 
 describe("linestring vertex expansion", (t) => {
@@ -11,7 +11,7 @@ describe("linestring vertex expansion", (t) => {
     const expected = new Uint8Array([1, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3]);
     expect(
       arraysEqual(expanded, expected),
-      "Expected arrays to be equal"
+      "Expected arrays to be equal",
     ).toBeTruthy();
   });
 
@@ -26,7 +26,7 @@ describe("linestring vertex expansion", (t) => {
     ]);
     expect(
       arraysEqual(expanded, expected),
-      "Expected arrays to be equal"
+      "Expected arrays to be equal",
     ).toBeTruthy();
   });
 });

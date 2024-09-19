@@ -1,3 +1,7 @@
+// deck.gl-community
+// SPDX-License-Identifier: MIT
+// Copyright (c) vis.gl contributors
+
 import {
   CompositeLayer,
   CompositeLayerProps,
@@ -6,72 +10,86 @@ import {
   Layer,
   LayersList,
   assert,
-  Unit,
-  Material,
 } from "@deck.gl/core";
-import { PointCloudLayer } from "@deck.gl/layers";
-import type { PointCloudLayerProps } from "@deck.gl/layers";
+import { ColumnLayer } from "@deck.gl/layers";
+import type { ColumnLayerProps } from "@deck.gl/layers";
 import * as arrow from "apache-arrow";
-import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
-} from "./utils.js";
+} from "../utils/utils";
+import * as ga from "@geoarrow/geoarrow-js";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
+import { EXTENSION_NAME } from "../constants";
 import {
   GeoArrowExtraPickingProps,
   computeChunkOffsets,
   getPickingInfo,
-} from "./picking.js";
-import { ColorAccessor, GeoArrowPickingInfo, NormalAccessor } from "./types.js";
-import { EXTENSION_NAME } from "./constants.js";
-import { validateAccessors } from "./validate.js";
+} from "../utils/picking";
+import { validateAccessors } from "../utils/validate";
 
-/* All properties supported by GeoArrowPointCloudLayer */
-export type GeoArrowPointCloudLayerProps = Omit<
-  PointCloudLayerProps<arrow.Table>,
-  "data" | "getPosition" | "getNormal" | "getColor"
+/** All properties supported by GeoArrowColumnLayer */
+export type GeoArrowColumnLayerProps = Omit<
+  ColumnLayerProps<arrow.Table>,
+  | "data"
+  | "getPosition"
+  | "getFillColor"
+  | "getLineColor"
+  | "getElevation"
+  | "getLineWidth"
 > &
-  _GeoArrowPointCloudLayerProps &
+  _GeoArrowColumnLayerProps &
   CompositeLayerProps;
 
-/* All properties added by GeoArrowPointCloudLayer */
-type _GeoArrowPointCloudLayerProps = {
-  // data
+/** Properties added by GeoArrowColumnLayer */
+type _GeoArrowColumnLayerProps = {
   data: arrow.Table;
+
+  /**
+   * Method called to retrieve the position of each column.
+   */
+  getPosition?: ga.vector.PointVector;
+
+  /**
+   * Fill color value or accessor.
+   * @default [0, 0, 0, 255]
+   */
+  getFillColor?: ColorAccessor;
+
+  /**
+   * Line color value or accessor.
+   *
+   * @default [0, 0, 0, 255]
+   */
+  getLineColor?: ColorAccessor;
+
+  /**
+   * The elevation of each cell in meters.
+   * @default 1000
+   */
+  getElevation?: FloatAccessor;
+
+  /**
+   * The width of the outline of the column, in units specified by `lineWidthUnits`.
+   *
+   * @default 1
+   */
+  getLineWidth?: FloatAccessor;
 
   /**
    * If `true`, validate the arrays provided (e.g. chunk lengths)
    * @default true
    */
   _validate?: boolean;
-
-  /**
-   * Center position accessor.
-   * If not provided, will be inferred by finding a column with extension type
-   * `"geoarrow.point"`
-   */
-  getPosition?: ga.vector.PointVector;
-
-  /**
-   * The normal of each object, in `[nx, ny, nz]`.
-   * @default [0,0,1]
-   */
-  getNormal?: NormalAccessor;
-
-  /**
-   * The rgba color is in the format of `[r, g, b, [a]]`
-   * @default [0,0,0,225]
-   */
-  getColor?: ColorAccessor;
 };
 
-// Remove data nd get Position from the upstream default props
+// Remove data and getPosition from the upstream default props
 const {
   data: _data,
   getPosition: _getPosition,
-  ..._upstreamDefaultProps
-} = PointCloudLayer.defaultProps;
+  ..._defaultProps
+} = ColumnLayer.defaultProps;
 
 // Default props added by us
 const ourDefaultProps = {
@@ -79,16 +97,20 @@ const ourDefaultProps = {
 };
 
 // @ts-expect-error Type error in merging default props with ours
-const defaultProps: DefaultProps<GeoArrowPointCloudLayerProps> = {
-  ..._upstreamDefaultProps,
+const defaultProps: DefaultProps<GeoArrowColumnLayerProps> = {
+  ..._defaultProps,
   ...ourDefaultProps,
 };
 
-export class GeoArrowPointCloudLayer<
+/**
+ * Render extruded cylinders (tessellated regular polygons) at given
+ * coordinates.
+ */
+export class GeoArrowColumnLayer<
   ExtraProps extends {} = {},
-> extends CompositeLayer<GeoArrowPointCloudLayerProps & ExtraProps> {
+> extends CompositeLayer<GeoArrowColumnLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
-  static layerName = "GeoArrowPointCloudLayer";
+  static layerName = "GeoArrowColumnLayer";
 
   getPickingInfo(
     params: GetPickingInfoParams & {
@@ -101,23 +123,17 @@ export class GeoArrowPointCloudLayer<
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
-    if (this.props.getPosition !== undefined) {
-      const geometryColumn = this.props.getPosition;
-      if (
-        geometryColumn !== undefined &&
-        ga.vector.isPointVector(geometryColumn)
-      ) {
-        return this._renderLayersPoint(geometryColumn);
-      }
+    const pointVector = getGeometryVector(table, EXTENSION_NAME.POINT);
+    if (pointVector !== null) {
+      return this._renderLayersPoint(pointVector);
+    }
 
-      throw new Error(
-        "getPosition should pass in an arrow Vector of Point type",
-      );
-    } else {
-      const pointVector = getGeometryVector(table, EXTENSION_NAME.POINT);
-      if (pointVector !== null) {
-        return this._renderLayersPoint(pointVector);
-      }
+    const geometryColumn = this.props.getPosition;
+    if (
+      geometryColumn !== undefined &&
+      ga.vector.isPointVector(geometryColumn)
+    ) {
+      return this._renderLayersPoint(geometryColumn);
     }
 
     throw new Error("getPosition not GeoArrow point");
@@ -129,14 +145,7 @@ export class GeoArrowPointCloudLayer<
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      assert(
-        ga.vector.isPointVector(geometryColumn),
-        "The geometry column is not a valid PointVector.",
-      );
-      assert(
-        geometryColumn.type.listSize === 3,
-        "Points of a PointCloudLayer in the geometry column must be three-dimensional.",
-      );
+      assert(ga.vector.isPointVector(geometryColumn));
       validateAccessors(this.props, table);
     }
 
@@ -146,7 +155,7 @@ export class GeoArrowPointCloudLayer<
     ]);
     const tableOffsets = computeChunkOffsets(table.data);
 
-    const layers: PointCloudLayer[] = [];
+    const layers: ColumnLayer[] = [];
     for (
       let recordBatchIdx = 0;
       recordBatchIdx < table.batches.length;
@@ -156,7 +165,7 @@ export class GeoArrowPointCloudLayer<
       const flatCoordsData = ga.child.getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
 
-      const props: PointCloudLayerProps = {
+      const props: ColumnLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
         // itself, we still have to pass in our defaultProps
         ...ourDefaultProps,
@@ -166,7 +175,7 @@ export class GeoArrowPointCloudLayer<
         recordBatchIdx,
         tableOffsets,
 
-        id: `${this.props.id}-geoarrow-pointcloud-${recordBatchIdx}`,
+        id: `${this.props.id}-geoarrow-column-${recordBatchIdx}`,
         data: {
           // @ts-expect-error passed through to enable use by function accessors
           data: table.batches[recordBatchIdx],
@@ -179,6 +188,7 @@ export class GeoArrowPointCloudLayer<
           },
         },
       };
+
       for (const [propName, propInput] of Object.entries(accessors)) {
         assignAccessor({
           props,
@@ -187,9 +197,11 @@ export class GeoArrowPointCloudLayer<
           chunkIdx: recordBatchIdx,
         });
       }
-      const layer = new PointCloudLayer(this.getSubLayerProps(props));
+
+      const layer = new ColumnLayer(this.getSubLayerProps(props));
       layers.push(layer);
     }
+
     return layers;
   }
 }

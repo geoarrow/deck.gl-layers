@@ -1,25 +1,38 @@
-export { GeoArrowArcLayer } from "./arc-layer.js";
-export { GeoArrowColumnLayer } from "./column-layer.js";
-export { GeoArrowH3HexagonLayer as _GeoArrowH3HexagonLayer } from "./h3-hexagon-layer.js";
-export { GeoArrowHeatmapLayer } from "./heatmap-layer.js";
-export { GeoArrowPathLayer } from "./path-layer.js";
-export { GeoArrowPointCloudLayer } from "./point-cloud-layer.js";
-export { GeoArrowPolygonLayer } from "./polygon-layer.js";
-export { GeoArrowScatterplotLayer } from "./scatterplot-layer.js";
-export { GeoArrowSolidPolygonLayer } from "./solid-polygon-layer.js";
-export { GeoArrowTextLayer as _GeoArrowTextLayer } from "./text-layer.js";
-export { GeoArrowTripsLayer } from "./trips-layer.js";
+// deck.gl-community
+// SPDX-License-Identifier: MIT
+// Copyright (c) vis.gl contributors
 
-export type { GeoArrowArcLayerProps } from "./arc-layer.js";
-export type { GeoArrowColumnLayerProps } from "./column-layer.js";
-export type { GeoArrowH3HexagonLayerProps as _GeoArrowH3HexagonLayerProps } from "./h3-hexagon-layer.js";
-export type { GeoArrowHeatmapLayerProps } from "./heatmap-layer.js";
-export type { GeoArrowPathLayerProps } from "./path-layer.js";
-export type { GeoArrowPointCloudLayerProps } from "./point-cloud-layer.js";
-export type { GeoArrowPolygonLayerProps } from "./polygon-layer.js";
-export type { GeoArrowScatterplotLayerProps } from "./scatterplot-layer.js";
-export type { GeoArrowSolidPolygonLayerProps } from "./solid-polygon-layer.js";
-export type { GeoArrowTextLayerProps as _GeoArrowTextLayerProps } from "./text-layer.js";
-export type { GeoArrowTripsLayerProps } from "./trips-layer.js";
+export type { GeoArrowArcLayerProps } from "./layers/arc-layer";
+export { GeoArrowArcLayer } from "./layers/arc-layer";
+
+export type { GeoArrowColumnLayerProps } from "./layers/column-layer";
+export { GeoArrowColumnLayer } from "./layers/column-layer";
+
+export type { GeoArrowH3HexagonLayerProps as _GeoArrowH3HexagonLayerProps } from "./layers/h3-hexagon-layer";
+export { GeoArrowH3HexagonLayer as _GeoArrowH3HexagonLayer } from "./layers/h3-hexagon-layer";
+
+export type { GeoArrowHeatmapLayerProps } from "./layers/heatmap-layer";
+export { GeoArrowHeatmapLayer } from "./layers/heatmap-layer";
+
+export type { GeoArrowPathLayerProps } from "./layers/path-layer";
+export { GeoArrowPathLayer } from "./layers/path-layer";
+
+export type { GeoArrowPointCloudLayerProps } from "./layers/point-cloud-layer";
+export { GeoArrowPointCloudLayer } from "./layers/point-cloud-layer";
+
+export type { GeoArrowPolygonLayerProps } from "./layers/polygon-layer";
+export { GeoArrowPolygonLayer } from "./layers/polygon-layer";
+
+export type { GeoArrowScatterplotLayerProps } from "./layers/scatterplot-layer";
+export { GeoArrowScatterplotLayer } from "./layers/scatterplot-layer";
+
+export type { GeoArrowSolidPolygonLayerProps } from "./layers/solid-polygon-layer";
+export { GeoArrowSolidPolygonLayer } from "./layers/solid-polygon-layer";
+
+export type { GeoArrowTextLayerProps as _GeoArrowTextLayerProps } from "./layers/text-layer";
+export { GeoArrowTextLayer as _GeoArrowTextLayer } from "./layers/text-layer";
+
+export type { GeoArrowTripsLayerProps } from "./layers/trips-layer";
+export { GeoArrowTripsLayer } from "./layers/trips-layer";
 
 export type { GeoArrowPickingInfo } from "./types.js";

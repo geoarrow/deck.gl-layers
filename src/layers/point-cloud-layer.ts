@@ -1,64 +1,81 @@
+// deck.gl-community
+// SPDX-License-Identifier: MIT
+// Copyright (c) vis.gl contributors
+
 import {
   CompositeLayer,
   CompositeLayerProps,
   DefaultProps,
+  GetPickingInfoParams,
   Layer,
   LayersList,
   assert,
+  Unit,
+  Material,
 } from "@deck.gl/core";
-import { HeatmapLayer } from "@deck.gl/aggregation-layers";
-import type { HeatmapLayerProps } from "@deck.gl/aggregation-layers";
+import { PointCloudLayer } from "@deck.gl/layers";
+import type { PointCloudLayerProps } from "@deck.gl/layers";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
-} from "./utils.js";
-import { FloatAccessor } from "./types.js";
-import { EXTENSION_NAME } from "./constants.js";
-import { validateAccessors } from "./validate.js";
-import { computeChunkOffsets } from "./picking.js";
+} from "../utils/utils";
+import {
+  GeoArrowExtraPickingProps,
+  computeChunkOffsets,
+  getPickingInfo,
+} from "../utils/picking";
+import { ColorAccessor, GeoArrowPickingInfo, NormalAccessor } from "../types";
+import { EXTENSION_NAME } from "../constants";
+import { validateAccessors } from "../utils/validate";
 
-/** All properties supported by GeoArrowHeatmapLayer */
-export type GeoArrowHeatmapLayerProps = Omit<
-  HeatmapLayerProps,
-  "data" | "getPosition" | "getWeight"
+/* All properties supported by GeoArrowPointCloudLayer */
+export type GeoArrowPointCloudLayerProps = Omit<
+  PointCloudLayerProps<arrow.Table>,
+  "data" | "getPosition" | "getNormal" | "getColor"
 > &
-  _GeoArrowHeatmapLayerProps &
+  _GeoArrowPointCloudLayerProps &
   CompositeLayerProps;
 
-/** Properties added by GeoArrowHeatmapLayer */
-type _GeoArrowHeatmapLayerProps = {
+/* All properties added by GeoArrowPointCloudLayer */
+type _GeoArrowPointCloudLayerProps = {
+  // data
   data: arrow.Table;
-
-  /**
-   * Method called to retrieve the position of each object.
-   *
-   * @default d => d.position
-   */
-  getPosition?: ga.vector.PointVector;
-
-  /**
-   * The weight of each object.
-   *
-   * @default 1
-   */
-  getWeight?: FloatAccessor;
 
   /**
    * If `true`, validate the arrays provided (e.g. chunk lengths)
    * @default true
    */
   _validate?: boolean;
+
+  /**
+   * Center position accessor.
+   * If not provided, will be inferred by finding a column with extension type
+   * `"geoarrow.point"`
+   */
+  getPosition?: ga.vector.PointVector;
+
+  /**
+   * The normal of each object, in `[nx, ny, nz]`.
+   * @default [0,0,1]
+   */
+  getNormal?: NormalAccessor;
+
+  /**
+   * The rgba color is in the format of `[r, g, b, [a]]`
+   * @default [0,0,0,225]
+   */
+  getColor?: ColorAccessor;
 };
 
-// Remove data from the upstream default props
+// Remove data nd get Position from the upstream default props
 const {
   data: _data,
   getPosition: _getPosition,
-  ..._defaultProps
-} = HeatmapLayer.defaultProps;
+  ..._upstreamDefaultProps
+} = PointCloudLayer.defaultProps;
 
 // Default props added by us
 const ourDefaultProps = {
@@ -66,16 +83,24 @@ const ourDefaultProps = {
 };
 
 // @ts-expect-error Type error in merging default props with ours
-const defaultProps: DefaultProps<GeoArrowHeatmapLayerProps> = {
-  ..._defaultProps,
+const defaultProps: DefaultProps<GeoArrowPointCloudLayerProps> = {
+  ..._upstreamDefaultProps,
   ...ourDefaultProps,
 };
 
-export class GeoArrowHeatmapLayer<
+export class GeoArrowPointCloudLayer<
   ExtraProps extends {} = {},
-> extends CompositeLayer<GeoArrowHeatmapLayerProps & ExtraProps> {
+> extends CompositeLayer<GeoArrowPointCloudLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
-  static layerName = "GeoArrowHeatmapLayer";
+  static layerName = "GeoArrowPointCloudLayer";
+
+  getPickingInfo(
+    params: GetPickingInfoParams & {
+      sourceLayer: { props: GeoArrowExtraPickingProps };
+    },
+  ): GeoArrowPickingInfo {
+    return getPickingInfo(params, this.props.data);
+  }
 
   renderLayers(): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
@@ -108,7 +133,14 @@ export class GeoArrowHeatmapLayer<
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      assert(ga.vector.isPointVector(geometryColumn));
+      assert(
+        ga.vector.isPointVector(geometryColumn),
+        "The geometry column is not a valid PointVector.",
+      );
+      assert(
+        geometryColumn.type.listSize === 3,
+        "Points of a PointCloudLayer in the geometry column must be three-dimensional.",
+      );
       validateAccessors(this.props, table);
     }
 
@@ -118,7 +150,7 @@ export class GeoArrowHeatmapLayer<
     ]);
     const tableOffsets = computeChunkOffsets(table.data);
 
-    const layers: HeatmapLayer[] = [];
+    const layers: PointCloudLayer[] = [];
     for (
       let recordBatchIdx = 0;
       recordBatchIdx < table.batches.length;
@@ -128,7 +160,7 @@ export class GeoArrowHeatmapLayer<
       const flatCoordsData = ga.child.getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
 
-      const props: HeatmapLayerProps = {
+      const props: PointCloudLayerProps = {
         // Note: because this is a composite layer and not doing the rendering
         // itself, we still have to pass in our defaultProps
         ...ourDefaultProps,
@@ -138,7 +170,7 @@ export class GeoArrowHeatmapLayer<
         recordBatchIdx,
         tableOffsets,
 
-        id: `${this.props.id}-geoarrow-heatmap-${recordBatchIdx}`,
+        id: `${this.props.id}-geoarrow-pointcloud-${recordBatchIdx}`,
         data: {
           // @ts-expect-error passed through to enable use by function accessors
           data: table.batches[recordBatchIdx],
@@ -151,7 +183,6 @@ export class GeoArrowHeatmapLayer<
           },
         },
       };
-
       for (const [propName, propInput] of Object.entries(accessors)) {
         assignAccessor({
           props,
@@ -160,11 +191,9 @@ export class GeoArrowHeatmapLayer<
           chunkIdx: recordBatchIdx,
         });
       }
-
-      const layer = new HeatmapLayer(this.getSubLayerProps(props));
+      const layer = new PointCloudLayer(this.getSubLayerProps(props));
       layers.push(layer);
     }
-
     return layers;
   }
 }

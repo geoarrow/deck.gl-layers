@@ -1,6 +1,10 @@
+// deck.gl-community
+// SPDX-License-Identifier: MIT
+// Copyright (c) vis.gl contributors
+
 import * as arrow from "apache-arrow";
 import { GetPickingInfoParams } from "@deck.gl/core";
-import { GeoArrowPickingInfo } from "./types";
+import { GeoArrowPickingInfo } from "../types";
 
 export interface GeoArrowExtraPickingProps {
   recordBatchIdx: number;
