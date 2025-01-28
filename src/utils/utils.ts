@@ -96,10 +96,10 @@ export function isGeomSeparate(
   data: arrow.Data,
 ): boolean {
   if (arrow.DataType.isList(data.type)) {
-    return isGeomInterleaved(data.children[0]);
-  } else if (arrow.DataType.isFixedSizeList(data.type)) {
-    return true;
+    return isGeomSeparate(data.children[0]);
   } else if (arrow.DataType.isStruct(data.type)) {
+    return true;
+  } else if (arrow.DataType.isFixedSizeList(data.type)) {
     return false;
   }
 
