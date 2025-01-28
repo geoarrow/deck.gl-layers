@@ -59,17 +59,15 @@ function isDataSeparatedCoords(
 /**
  * Check if the coordinates in a geometry are interleaved
  * Returns true if the coordinates are interleaved, false if separated.
- * 
+ *
  * The geometry can be point, line, polygon, etc.
  * The function recursively checks for the underlying
  * coordinate data type when it's of type List.
- * 
+ *
  * If the coordinate type is neither a FixedSizeList nor a Struct,
  * throw an error.
  */
-export function isGeomInterleaved(
-  data: arrow.Data,
-): boolean {
+export function isGeomInterleaved(data: arrow.Data): boolean {
   if (arrow.DataType.isList(data.type)) {
     return isGeomInterleaved(data.children[0]);
   } else if (arrow.DataType.isFixedSizeList(data.type)) {
@@ -84,17 +82,15 @@ export function isGeomInterleaved(
 /**
  * Check if the coordinates in a geometry are separate
  * Returns true if the coordinates are separate, false if they are interleaved.
- * 
+ *
  * The geometry can be point, line, polygon, etc.
  * The function recursively checks for the underlying
  * coordinate data type when it's of type List.
- * 
+ *
  * If the coordinate type is neither a FixedSizeList nor a Struct,
  * throw an error.
  */
-export function isGeomSeparate(
-  data: arrow.Data,
-): boolean {
+export function isGeomSeparate(data: arrow.Data): boolean {
   if (arrow.DataType.isList(data.type)) {
     return isGeomSeparate(data.children[0]);
   } else if (arrow.DataType.isStruct(data.type)) {
@@ -123,7 +119,7 @@ function convertStructToFixedSizeList(
   } else if (isDataSeparatedCoords(coords)) {
     const nDim = coords.children.length;
     const interleavedCoords = new Float64Array(coords.length * nDim);
-    
+
     for (let i = 0; i < coords.length; i++) {
       for (let j = 0; j < nDim; j++) {
         interleavedCoords[i * nDim + j] = coords.children[j].values[i];
@@ -142,7 +138,7 @@ function convertStructToFixedSizeList(
       data: interleavedCoords,
     });
 
-    const data  = arrow.makeData({
+    const data = arrow.makeData({
       type: dataType,
       length: coords.length,
       nullCount: coords.nullCount,
@@ -156,7 +152,6 @@ function convertStructToFixedSizeList(
   throw new Error(`Unsupported coordinate data type: ${coords.type}`);
 }
 
-
 /**
  * Get LineString Data with interleaved coordinates
  * from the given LineString Data with separated (struct) coordinates.
@@ -169,13 +164,13 @@ export function getInterleavedLineString(
   const interleavedPoints = convertStructToFixedSizeList(points);
 
   return arrow.makeData({
-    type: new arrow.List(new arrow.Field('element', interleavedPoints.type)),
+    type: new arrow.List(new arrow.Field("element", interleavedPoints.type)),
     length: lineStringData.length,
     nullCount: lineStringData.nullCount,
     nullBitmap: lineStringData.nullBitmap,
     valueOffsets: lineStringData.valueOffsets,
     offset: lineStringData.offset,
-    child: interleavedPoints
+    child: interleavedPoints,
   });
 }
 
@@ -190,13 +185,15 @@ export function getInterleavedPolygon(
   const interleavedLineString = getInterleavedLineString(lineString);
 
   return arrow.makeData({
-    type: new arrow.List(new arrow.Field('element', interleavedLineString.type)),
+    type: new arrow.List(
+      new arrow.Field("element", interleavedLineString.type),
+    ),
     length: polygonData.length,
     nullCount: polygonData.nullCount,
     nullBitmap: polygonData.nullBitmap,
     valueOffsets: polygonData.valueOffsets,
     offset: polygonData.offset,
-    child: interleavedLineString
+    child: interleavedLineString,
   });
 }
 
