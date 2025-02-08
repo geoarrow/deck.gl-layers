@@ -15,7 +15,12 @@ import { ArcLayer } from "@deck.gl/layers";
 import type { ArcLayerProps } from "@deck.gl/layers";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
-import { assignAccessor, convertStructToFixedSizeList, extractAccessorsFromProps, isGeomSeparate } from "../utils/utils";
+import {
+  assignAccessor,
+  convertStructToFixedSizeList,
+  extractAccessorsFromProps,
+  isGeomSeparate,
+} from "../utils/utils";
 import { child } from "@geoarrow/geoarrow-js";
 import {
   GeoArrowExtraPickingProps,
