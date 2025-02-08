@@ -108,7 +108,7 @@ export function isGeomSeparate(data: arrow.Data): boolean {
  * The GeoArrow spec allows for either separated or interleaved coords, but at
  * this time deck.gl only supports interleaved.
  */
-function convertStructToFixedSizeList(
+export function convertStructToFixedSizeList(
   coords:
     | ga.data.PointData
     | arrow.Data<arrow.FixedSizeList<arrow.Float64>>

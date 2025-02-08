@@ -15,7 +15,7 @@ import { ArcLayer } from "@deck.gl/layers";
 import type { ArcLayerProps } from "@deck.gl/layers";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
-import { assignAccessor, extractAccessorsFromProps } from "../utils/utils";
+import { assignAccessor, convertStructToFixedSizeList, extractAccessorsFromProps, isGeomSeparate } from "../utils/utils";
 import { child } from "@geoarrow/geoarrow-js";
 import {
   GeoArrowExtraPickingProps,
@@ -157,9 +157,15 @@ export class GeoArrowArcLayer<
       recordBatchIdx < table.batches.length;
       recordBatchIdx++
     ) {
-      const sourceData = sourcePosition.data[recordBatchIdx];
+      let sourceData = sourcePosition.data[recordBatchIdx];
+      if (isGeomSeparate(sourceData)) {
+        sourceData = convertStructToFixedSizeList(sourceData);
+      }
       const sourceValues = child.getPointChild(sourceData).values;
-      const targetData = targetPosition.data[recordBatchIdx];
+      let targetData = targetPosition.data[recordBatchIdx];
+      if (isGeomSeparate(targetData)) {
+        targetData = convertStructToFixedSizeList(targetData);
+      }
       const targetValues = child.getPointChild(targetData).values;
 
       const props: ArcLayerProps = {
