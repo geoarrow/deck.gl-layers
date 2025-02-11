@@ -8,7 +8,6 @@ This version includes major improvements over 0.2.
 
 - Run `earcut` on a web worker to improve rendering performance of the `SolidPolygonLayer`  by @kylebarron in https://github.com/geoarrow/deck.gl-layers/pull/85
   - Earcut main thread fallback by @kylebarron in https://github.com/geoarrow/deck.gl-layers/pull/92
--
 - New layer types:
   - Add Arc layer by @kylebarron in https://github.com/geoarrow/deck.gl-layers/pull/63
   - Add heatmap layer by @kylebarron in https://github.com/geoarrow/deck.gl-layers/pull/64
