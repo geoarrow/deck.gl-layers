@@ -70,8 +70,9 @@ function Root() {
         positionFormat: "XY",
         _normalize: false,
         autoHighlight: false,
+        // Note: change this version string if needed
         earcutWorkerUrl: new URL(
-          "https://cdn.jsdelivr.net/npm/@geoarrow/geoarrow-js@0.3.0-beta.1/dist/earcut-worker.min.js",
+          "https://cdn.jsdelivr.net/npm/@geoarrow/geoarrow-js@0.3.0/dist/earcut-worker.min.js",
         ),
       }),
     );

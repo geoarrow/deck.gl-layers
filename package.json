@@ -4,7 +4,7 @@
     "examples/*"
   ],
   "name": "@geoarrow/deck.gl-layers",
-  "version": "0.3.0-beta.17",
+  "version": "0.3.0",
   "type": "module",
   "description": "",
   "source": "src/index.ts",
