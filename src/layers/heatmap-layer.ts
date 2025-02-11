@@ -16,8 +16,10 @@ import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
+  convertStructToFixedSizeList,
   extractAccessorsFromProps,
   getGeometryVector,
+  isGeomSeparate,
 } from "../utils/utils";
 import { FloatAccessor } from "../types";
 import { EXTENSION_NAME } from "../constants";
@@ -128,7 +130,10 @@ export class GeoArrowHeatmapLayer<
       recordBatchIdx < table.batches.length;
       recordBatchIdx++
     ) {
-      const geometryData = geometryColumn.data[recordBatchIdx];
+      let geometryData = geometryColumn.data[recordBatchIdx];
+      if (isGeomSeparate(geometryData)) {
+        geometryData = convertStructToFixedSizeList(geometryData);
+      }
       const flatCoordsData = ga.child.getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
 

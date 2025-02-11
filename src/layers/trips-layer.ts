@@ -17,6 +17,8 @@ import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
+  getInterleavedLineString,
+  isGeomSeparate,
 } from "../utils/utils";
 import { TimestampAccessor, ColorAccessor, FloatAccessor } from "../types";
 import {
@@ -146,7 +148,10 @@ export class GeoArrowTripsLayer<
       recordBatchIdx < table.batches.length;
       recordBatchIdx++
     ) {
-      const lineStringData = geometryColumn.data[recordBatchIdx];
+      let lineStringData = geometryColumn.data[recordBatchIdx];
+      if (isGeomSeparate(lineStringData)) {
+        lineStringData = getInterleavedLineString(lineStringData);
+      }
       const geomOffsets = lineStringData.valueOffsets;
       const pointData = ga.child.getLineStringChild(lineStringData);
       const nDim = pointData.type.listSize;

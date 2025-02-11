@@ -19,8 +19,10 @@ import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
+  getInterleavedLineString,
   getMultiLineStringResolvedOffsets,
   invertOffsets,
+  isGeomSeparate,
 } from "../utils/utils";
 import {
   GeoArrowExtraPickingProps,
@@ -172,7 +174,10 @@ export class GeoArrowPathLayer<
       recordBatchIdx < table.batches.length;
       recordBatchIdx++
     ) {
-      const lineStringData = geometryColumn.data[recordBatchIdx];
+      let lineStringData = geometryColumn.data[recordBatchIdx];
+      if (isGeomSeparate(lineStringData)) {
+        lineStringData = getInterleavedLineString(lineStringData);
+      }
       const geomOffsets = lineStringData.valueOffsets;
       const pointData = ga.child.getLineStringChild(lineStringData);
       const nDim = pointData.type.listSize;
@@ -243,8 +248,11 @@ export class GeoArrowPathLayer<
       recordBatchIdx++
     ) {
       const multiLineStringData = geometryColumn.data[recordBatchIdx];
-      const lineStringData =
+      let lineStringData =
         ga.child.getMultiLineStringChild(multiLineStringData);
+      if (isGeomSeparate(lineStringData)) {
+        lineStringData = getInterleavedLineString(lineStringData);
+      }
       const pointData = ga.child.getLineStringChild(lineStringData);
       const coordData = ga.child.getPointChild(pointData);
 

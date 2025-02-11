@@ -21,9 +21,11 @@ import {
   assignAccessor,
   extractAccessorsFromProps,
   getGeometryVector,
+  getInterleavedPolygon,
   getMultiPolygonResolvedOffsets,
   getPolygonResolvedOffsets,
   invertOffsets,
+  isGeomSeparate,
 } from "../utils/utils";
 import {
   GeoArrowExtraPickingProps,
@@ -249,7 +251,12 @@ export class GeoArrowSolidPolygonLayer<
       recordBatchIdx < geometryColumn.data.length;
       recordBatchIdx++
     ) {
-      const polygonData = geometryColumn.data[recordBatchIdx];
+      let polygonData = geometryColumn.data[recordBatchIdx];
+      // TODO: Note here that [when applicable] we do this conversion twice -
+      // one for triangulation (earcut) here and the other for rendering later.
+      if (isGeomSeparate(polygonData)) {
+        polygonData = getInterleavedPolygon(polygonData);
+      }
       const [preparedPolygonData, arrayBuffers] = ga.worker.preparePostMessage(
         polygonData,
         true,
@@ -278,7 +285,12 @@ export class GeoArrowSolidPolygonLayer<
       recordBatchIdx < geometryColumn.data.length;
       recordBatchIdx++
     ) {
-      const polygonData = geometryColumn.data[recordBatchIdx];
+      let polygonData = geometryColumn.data[recordBatchIdx];
+      // TODO: Note here that [when applicable] we do this conversion twice -
+      // one for triangulation (earcut) here and the other for rendering later.
+      if (isGeomSeparate(polygonData)) {
+        polygonData = getInterleavedPolygon(polygonData);
+      }
       result[recordBatchIdx] = ga.algorithm.earcut(polygonData);
     }
 
@@ -303,7 +315,12 @@ export class GeoArrowSolidPolygonLayer<
       recordBatchIdx++
     ) {
       const multiPolygonData = geometryColumn.data[recordBatchIdx];
-      const polygonData = ga.child.getMultiPolygonChild(multiPolygonData);
+      let polygonData = ga.child.getMultiPolygonChild(multiPolygonData);
+      // TODO: Note here that [when applicable] we do this conversion twice -
+      // one for triangulation (earcut) here and the other for rendering later.
+      if (isGeomSeparate(polygonData)) {
+        polygonData = getInterleavedPolygon(polygonData);
+      }
       const [preparedPolygonData, arrayBuffers] = ga.worker.preparePostMessage(
         polygonData,
         true,
@@ -333,7 +350,12 @@ export class GeoArrowSolidPolygonLayer<
       recordBatchIdx++
     ) {
       const multiPolygonData = geometryColumn.data[recordBatchIdx];
-      const polygonData = ga.child.getMultiPolygonChild(multiPolygonData);
+      let polygonData = ga.child.getMultiPolygonChild(multiPolygonData);
+      // TODO: Note here that [when applicable] we do this conversion twice -
+      // one for triangulation (earcut) here and the other for rendering later.
+      if (isGeomSeparate(polygonData)) {
+        polygonData = getInterleavedPolygon(polygonData);
+      }
       result[recordBatchIdx] = ga.algorithm.earcut(polygonData);
     }
 
@@ -417,7 +439,10 @@ export class GeoArrowSolidPolygonLayer<
       recordBatchIdx < table.batches.length;
       recordBatchIdx++
     ) {
-      const polygonData = geometryColumn.data[recordBatchIdx];
+      let polygonData = geometryColumn.data[recordBatchIdx];
+      if (isGeomSeparate(polygonData)) {
+        polygonData = getInterleavedPolygon(polygonData);
+      }
       const ringData = ga.child.getPolygonChild(polygonData);
       const pointData = ga.child.getLineStringChild(ringData);
       const coordData = ga.child.getPointChild(pointData);
@@ -499,7 +524,10 @@ export class GeoArrowSolidPolygonLayer<
       recordBatchIdx++
     ) {
       const multiPolygonData = geometryColumn.data[recordBatchIdx];
-      const polygonData = ga.child.getMultiPolygonChild(multiPolygonData);
+      let polygonData = ga.child.getMultiPolygonChild(multiPolygonData);
+      if (isGeomSeparate(polygonData)) {
+        polygonData = getInterleavedPolygon(polygonData);
+      }
       const ringData = ga.child.getPolygonChild(polygonData);
       const pointData = ga.child.getLineStringChild(ringData);
       const coordData = ga.child.getPointChild(pointData);

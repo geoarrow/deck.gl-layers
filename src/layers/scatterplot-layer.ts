@@ -17,9 +17,11 @@ import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
+  convertStructToFixedSizeList,
   extractAccessorsFromProps,
   getGeometryVector,
   invertOffsets,
+  isGeomSeparate,
 } from "../utils/utils";
 import {
   GeoArrowExtraPickingProps,
@@ -169,7 +171,10 @@ export class GeoArrowScatterplotLayer<
       recordBatchIdx < table.batches.length;
       recordBatchIdx++
     ) {
-      const geometryData = geometryColumn.data[recordBatchIdx];
+      let geometryData = geometryColumn.data[recordBatchIdx];
+      if (isGeomSeparate(geometryData)) {
+        geometryData = convertStructToFixedSizeList(geometryData);
+      }
       const flatCoordsData = ga.child.getPointChild(geometryData);
       const flatCoordinateArray = flatCoordsData.values;
 
@@ -238,7 +243,10 @@ export class GeoArrowScatterplotLayer<
       recordBatchIdx++
     ) {
       const multiPointData = geometryColumn.data[recordBatchIdx];
-      const pointData = ga.child.getMultiPointChild(multiPointData);
+      let pointData = ga.child.getMultiPointChild(multiPointData);
+      if (isGeomSeparate(pointData)) {
+        pointData = convertStructToFixedSizeList(pointData);
+      }
       const geomOffsets = multiPointData.valueOffsets;
       const flatCoordsData = ga.child.getPointChild(pointData);
       const flatCoordinateArray = flatCoordsData.values;
