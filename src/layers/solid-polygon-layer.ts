@@ -252,6 +252,8 @@ export class GeoArrowSolidPolygonLayer<
       recordBatchIdx++
     ) {
       let polygonData = geometryColumn.data[recordBatchIdx];
+      // TODO: Note here that [when applicable] we do this conversion twice -
+      // one for triangulation (earcut) here and the other for rendering later.
       if (isGeomSeparate(polygonData)) {
         polygonData = getInterleavedPolygon(polygonData);
       }
@@ -284,6 +286,8 @@ export class GeoArrowSolidPolygonLayer<
       recordBatchIdx++
     ) {
       let polygonData = geometryColumn.data[recordBatchIdx];
+      // TODO: Note here that [when applicable] we do this conversion twice -
+      // one for triangulation (earcut) here and the other for rendering later.
       if (isGeomSeparate(polygonData)) {
         polygonData = getInterleavedPolygon(polygonData);
       }
@@ -312,6 +316,8 @@ export class GeoArrowSolidPolygonLayer<
     ) {
       const multiPolygonData = geometryColumn.data[recordBatchIdx];
       let polygonData = ga.child.getMultiPolygonChild(multiPolygonData);
+      // TODO: Note here that [when applicable] we do this conversion twice -
+      // one for triangulation (earcut) here and the other for rendering later.
       if (isGeomSeparate(polygonData)) {
         polygonData = getInterleavedPolygon(polygonData);
       }
@@ -345,6 +351,8 @@ export class GeoArrowSolidPolygonLayer<
     ) {
       const multiPolygonData = geometryColumn.data[recordBatchIdx];
       let polygonData = ga.child.getMultiPolygonChild(multiPolygonData);
+      // TODO: Note here that [when applicable] we do this conversion twice -
+      // one for triangulation (earcut) here and the other for rendering later.
       if (isGeomSeparate(polygonData)) {
         polygonData = getInterleavedPolygon(polygonData);
       }
