@@ -110,9 +110,9 @@ const ourDefaultProps: Pick<
 
   _validate: true,
 
-  // TODO: set this to current version
+  // Note: set this to current version
   earcutWorkerUrl:
-    "https://cdn.jsdelivr.net/npm/@geoarrow/geoarrow-js@0.3.0-beta.1/dist/earcut-worker.min.js",
+    "https://cdn.jsdelivr.net/npm/@geoarrow/geoarrow-js@0.3.0/dist/earcut-worker.min.js",
 
   earcutWorkerPoolSize: 8,
 };
