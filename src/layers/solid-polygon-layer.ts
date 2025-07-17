@@ -72,6 +72,13 @@ type _GeoArrowSolidPolygonLayerProps = {
    */
   _validate?: boolean;
 
+  /** If `true`, print metrics via `console.time`.
+   *
+   * This is primarily used for logging the time required for earcut
+   * triangulation.
+   */
+  metrics?: boolean;
+
   /**
    * URL to worker that performs earcut triangulation.
    *
@@ -99,6 +106,7 @@ const ourDefaultProps: Pick<
   | "_normalize"
   | "_windingOrder"
   | "_validate"
+  | "metrics"
   | "earcutWorkerUrl"
   | "earcutWorkerPoolSize"
 > = {
@@ -109,6 +117,7 @@ const ourDefaultProps: Pick<
   _windingOrder: "CCW",
 
   _validate: true,
+  metrics: false,
 
   // Note: set this to current version
   earcutWorkerUrl:
@@ -244,7 +253,10 @@ export class GeoArrowSolidPolygonLayer<
     }
 
     const result: Uint32Array[] = new Array(geometryColumn.data.length);
-    console.time("earcut");
+    const metricId = (Date.now() + Math.floor(Math.random() * 1000)).toString();
+    if (this.props.metrics) {
+      console.time(metricId);
+    }
 
     for (
       let recordBatchIdx = 0;
@@ -270,7 +282,9 @@ export class GeoArrowSolidPolygonLayer<
     }
 
     await pool.completed();
-    console.timeEnd("earcut");
+    if (this.props.metrics) {
+      console.timeEnd(metricId);
+    }
 
     return result;
   }
@@ -307,7 +321,10 @@ export class GeoArrowSolidPolygonLayer<
     }
 
     const result: Uint32Array[] = new Array(geometryColumn.data.length);
-    console.time("earcut");
+    const metricId = (Date.now() + Math.floor(Math.random() * 1000)).toString();
+    if (this.props.metrics) {
+      console.time(metricId);
+    }
 
     for (
       let recordBatchIdx = 0;
@@ -334,7 +351,9 @@ export class GeoArrowSolidPolygonLayer<
     }
 
     await pool.completed();
-    console.timeEnd("earcut");
+    if (this.props.metrics) {
+      console.timeEnd(metricId);
+    }
 
     return result;
   }
