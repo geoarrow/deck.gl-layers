@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.1] - 2025-07-17
+
+- fix: Only log metrics if desired, opt-in by @kylebarron in https://github.com/geoarrow/deck.gl-layers/pull/146
+
+**Full Changelog**: https://github.com/geoarrow/deck.gl-layers/compare/v0.3.0...v0.3.1
+
 ## [0.3.0] - 2025-02-11
 
 This version includes major improvements over 0.2.
