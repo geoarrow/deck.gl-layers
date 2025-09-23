@@ -1,9 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { createRoot } from "react-dom/client";
-import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
-import DeckGL, { Layer, PickingInfo } from "deck.gl";
-import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
+import { useState, useEffect } from "react";
+import "maplibre-gl/dist/maplibre-gl.css";
+import { Map, useControl } from "react-map-gl/maplibre";
 import * as arrow from "apache-arrow";
+import {
+  MapboxOverlay as DeckOverlay,
+  MapboxOverlayProps,
+} from "@deck.gl/mapbox";
+import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
+
+import { createRoot } from "react-dom/client";
+import { Layer, PickingInfo } from "@deck.gl/core";
 
 const GEOARROW_POINT_DATA =
   "http://localhost:8080/2019-01-01_performance_mobile_tiles.feather";
@@ -23,6 +29,13 @@ const NAV_CONTROL_STYLE = {
   top: 10,
   left: 10,
 };
+
+function DeckGLOverlay(props: MapboxOverlayProps) {
+  const overlay = useControl(() => new DeckOverlay(props));
+
+  overlay.setProps(props);
+  return null;
+}
 
 function Root() {
   const onClick = (info: PickingInfo) => {
@@ -47,6 +60,8 @@ function Root() {
     }
   });
 
+  console.log("table", table);
+
   const layers: Layer[] = [];
 
   table &&
@@ -67,17 +82,41 @@ function Root() {
       }),
     );
 
+  console.log("layers", layers);
+
   return (
-    <DeckGL
-      initialViewState={INITIAL_VIEW_STATE}
-      controller={true}
-      layers={layers}
-      ContextProvider={MapContext.Provider}
-      onClick={onClick}
+    <div
+      style={{
+        position: "absolute",
+        height: "100%",
+        width: "100%",
+        top: 0,
+        left: 0,
+        background: "linear-gradient(0, #000, #223)",
+      }}
     >
-      <StaticMap mapStyle={MAP_STYLE} />
-      <NavigationControl style={NAV_CONTROL_STYLE} />
-    </DeckGL>
+      <Map
+        reuseMaps
+        id="map"
+        initialViewState={INITIAL_VIEW_STATE}
+        mapStyle={MAP_STYLE}
+        dragRotate={false}
+        maxPitch={0}
+      >
+        <DeckGLOverlay layers={[layers[0]]} />
+      </Map>
+    </div>
+
+    // <DeckGL
+    //   initialViewState={INITIAL_VIEW_STATE}
+    //   controller={true}
+    //   layers={layers}
+    //   ContextProvider={MapContext.Provider}
+    //   onClick={onClick}
+    // >
+    //   <StaticMap mapStyle={MAP_STYLE} />
+    //   <NavigationControl style={NAV_CONTROL_STYLE} />
+    // </DeckGL>
   );
 }
 
