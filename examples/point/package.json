@@ -8,10 +8,11 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@geoarrow/deck.gl-layers": "file:../..",
     "@loaders.gl/compression": "^4.1.4",
     "@loaders.gl/crypto": "^4.1.4",
     "apache-arrow": ">=21",
-    "deck.gl": "^9.1",
+    "deck.gl": "^9.0.12",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-map-gl": "^8.0.0"

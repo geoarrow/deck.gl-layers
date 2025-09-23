@@ -1,8 +1,4 @@
 {
-  "workspaces": [
-    ".",
-    "examples/*"
-  ],
   "name": "@geoarrow/deck.gl-layers",
   "version": "0.3.1",
   "type": "module",
