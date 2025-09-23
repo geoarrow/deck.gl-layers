@@ -106,7 +106,7 @@ export class GeoArrowTripsLayer<
         return this._renderLineStringLayer(geometryColumn, getTimestamps);
       }
 
-      throw new Error("getPath should be an arrow Vector of LineString type");
+      throw new Error("getPath should be an arrow Data of LineString type");
     } else {
       const lineStringData = getGeometryData(batch, EXTENSION_NAME.LINESTRING);
       if (lineStringData !== null && ga.data.isLineStringData(lineStringData)) {

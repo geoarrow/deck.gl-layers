@@ -376,7 +376,7 @@ export class GeoArrowSolidPolygonLayer<
       }
 
       throw new Error(
-        "getPolygon should be an arrow Vector of Polygon or MultiPolygon type",
+        "getPolygon should be an arrow Data of Polygon or MultiPolygon type",
       );
     } else {
       const polygonData = getGeometryData(batch, EXTENSION_NAME.POLYGON);

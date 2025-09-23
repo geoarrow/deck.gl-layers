@@ -166,9 +166,7 @@ export class GeoArrowTextLayer<
         return this._renderTextLayer(geometryData, this.props.getText);
       }
 
-      throw new Error(
-        "getPosition should pass in an arrow Vector of Point type",
-      );
+      throw new Error("getPosition should pass in an arrow Data of Point type");
     } else {
       const pointData = getGeometryData(batch, EXTENSION_NAME.POINT);
       if (pointData !== null && ga.data.isPointData(pointData)) {

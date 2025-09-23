@@ -122,7 +122,7 @@ export class GeoArrowScatterplotLayer<
       }
 
       throw new Error(
-        "getPosition should pass in an arrow Vector of Point or MultiPoint type",
+        "getPosition should pass in an arrow Data of Point or MultiPoint type",
       );
     } else {
       const pointData = getGeometryData(batch, EXTENSION_NAME.POINT);

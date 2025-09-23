@@ -123,7 +123,7 @@ export class GeoArrowPathLayer<
       }
 
       throw new Error(
-        "getPath should be an arrow Vector of LineString or MultiLineString type",
+        "getPath should be an arrow Data of LineString or MultiLineString type",
       );
     } else {
       const lineStringData = getGeometryData(table, EXTENSION_NAME.LINESTRING);

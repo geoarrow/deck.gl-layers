@@ -91,9 +91,7 @@ export class GeoArrowHeatmapLayer<
         return this._renderPointLayer(geometryData);
       }
 
-      throw new Error(
-        "getPosition should pass in an arrow Vector of Point type",
-      );
+      throw new Error("getPosition should pass in an arrow Data of Point type");
     } else {
       const pointData = getGeometryData(table, EXTENSION_NAME.POINT);
       if (pointData !== null && ga.data.isPointData(pointData)) {

@@ -51,16 +51,3 @@ export function getPickingInfo(
     object: row,
   };
 }
-
-// This is vendored from Arrow JS because it's a private API
-function computeChunkOffsets<T extends DataType>(
-  chunks: ReadonlyArray<Data<T>>,
-) {
-  return chunks.reduce(
-    (offsets, chunk, index) => {
-      offsets[index + 1] = offsets[index] + chunk.length;
-      return offsets;
-    },
-    new Uint32Array(chunks.length + 1),
-  );
-}
