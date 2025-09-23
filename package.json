@@ -77,8 +77,8 @@
     "@luma.gl/webgl": "^9.0.11"
   },
   "volta": {
-    "node": "20.8.0",
-    "npm": "10.2.0"
+    "node": "24.8.0",
+    "npm": "11.6.0"
   },
   "dependencies": {
     "@geoarrow/geoarrow-js": "^0.3.0",
