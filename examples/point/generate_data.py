@@ -40,8 +40,11 @@ def main():
         "colors", pa.FixedSizeListArray.from_arrays(colors.flatten("C"), 3)
     )
 
+    small_table = table.slice(0, 65000)
     feather.write_feather(
-        table, "2019-01-01_performance_mobile_tiles.feather", compression="uncompressed"
+        small_table,
+        "2019-01-01_performance_mobile_tiles.feather",
+        compression="uncompressed",
     )
 
 
