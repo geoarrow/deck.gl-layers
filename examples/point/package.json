@@ -13,6 +13,7 @@
     "@loaders.gl/crypto": "^4.1.4",
     "apache-arrow": ">=21",
     "deck.gl": "^9.0.12",
+    "maplibre-gl": "^5.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-map-gl": "^8.0.0"
