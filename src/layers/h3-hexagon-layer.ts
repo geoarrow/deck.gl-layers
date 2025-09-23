@@ -79,10 +79,10 @@ export class GeoArrowH3HexagonLayer<
   }
 
   _renderLayersPoint(): Layer<{}> | LayersList | null {
-    const { data: table, getHexagon: hexData } = this.props;
+    const { data: batch, getHexagon: hexData } = this.props;
 
     if (this.props._validate) {
-      validateAccessors(this.props, table);
+      validateAccessors(this.props, batch);
     }
 
     // Exclude manually-set accessors
@@ -102,7 +102,7 @@ export class GeoArrowH3HexagonLayer<
 
       data: {
         // @ts-expect-error passed through to enable use by function accessors
-        data: table.batches[recordBatchIdx],
+        data: batch,
         length: hexData.length,
         attributes: {
           getHexagon: {

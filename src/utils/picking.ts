@@ -7,8 +7,6 @@ import { GetPickingInfoParams } from "@deck.gl/core";
 import { GeoArrowPickingInfo } from "../types";
 
 export interface GeoArrowExtraPickingProps {
-  recordBatchIdx: number;
-  tableOffsets: Uint32Array;
   data: {
     invertedGeomOffsets?: Uint8Array | Uint16Array | Uint32Array;
   };
@@ -32,19 +30,11 @@ export function getPickingInfo(
     index = sourceLayer.props.data.invertedGeomOffsets[index];
   }
 
-  // const recordBatchIdx = sourceLayer.props.recordBatchIdx;
-  // const tableOffsets = sourceLayer.props.tableOffsets;
-
-  // const batch = table.batches[recordBatchIdx];
   const row = batch.get(index);
   if (row === null) {
     return info;
   }
 
-  // const currentBatchOffset = tableOffsets[recordBatchIdx];
-
-  // Update index to be _global_ index, not within the specific record batch
-  // index += currentBatchOffset;
   return {
     ...info,
     index,

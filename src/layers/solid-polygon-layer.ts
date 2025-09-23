@@ -198,19 +198,19 @@ export class GeoArrowSolidPolygonLayer<
     const { data: batch } = this.props;
     const earcutTriangles = await this._updateEarcut(batch);
     this.setState({
-      table: this.props.data,
+      batch: this.props.data,
       triangles: earcutTriangles,
     });
   }
 
-  async _updateEarcut(table: arrow.RecordBatch): Promise<Uint32Array> {
-    const polygonData = getGeometryData(table, EXTENSION_NAME.POLYGON);
+  async _updateEarcut(batch: arrow.RecordBatch): Promise<Uint32Array> {
+    const polygonData = getGeometryData(batch, EXTENSION_NAME.POLYGON);
     if (polygonData !== null && ga.data.isPolygonData(polygonData)) {
       return this._earcutPolygonData(polygonData);
     }
 
     const multiPolygonData = getGeometryData(
-      table,
+      batch,
       EXTENSION_NAME.MULTIPOLYGON,
     );
     if (
@@ -443,7 +443,7 @@ export class GeoArrowSolidPolygonLayer<
       id: `${this.props.id}-geoarrow-point`,
       data: {
         // @ts-expect-error passed through to enable use by function accessors
-        data: table.batches[recordBatchIdx],
+        data: batch,
         // Number of geometries
         length: polygonData.length,
         // Offsets into coordinateArray where each polygon starts
@@ -525,7 +525,7 @@ export class GeoArrowSolidPolygonLayer<
       id: `${this.props.id}-geoarrow-solid-polygon-multi`,
       data: {
         // @ts-expect-error passed through to enable use by function accessors
-        data: table.batches[recordBatchIdx],
+        data: batch,
         // Map from expanded multi-geometry index to original index
         // Used both in picking and for function callbacks
         invertedGeomOffsets: invertOffsets(geomOffsets),

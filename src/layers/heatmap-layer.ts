@@ -83,7 +83,7 @@ export class GeoArrowHeatmapLayer<
   static layerName = "GeoArrowHeatmapLayer";
 
   renderLayers(): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
 
     if (this.props.getPosition !== undefined) {
       const geometryData = this.props.getPosition;
@@ -93,7 +93,7 @@ export class GeoArrowHeatmapLayer<
 
       throw new Error("getPosition should pass in an arrow Data of Point type");
     } else {
-      const pointData = getGeometryData(table, EXTENSION_NAME.POINT);
+      const pointData = getGeometryData(batch, EXTENSION_NAME.POINT);
       if (pointData !== null && ga.data.isPointData(pointData)) {
         return this._renderPointLayer(pointData);
       }
@@ -132,7 +132,7 @@ export class GeoArrowHeatmapLayer<
       id: `${this.props.id}-geoarrow-heatmap`,
       data: {
         // @ts-expect-error passed through to enable use by function accessors
-        data: table.batches[recordBatchIdx],
+        data: batch,
         length: geometryData.length,
         attributes: {
           getPosition: {

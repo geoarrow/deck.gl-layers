@@ -194,7 +194,7 @@ export class GeoArrowPolygonLayer<
   }
 
   renderLayers(): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
 
     if (this.props.getPolygon !== undefined) {
       const geometryColumn = this.props.getPolygon;
@@ -210,13 +210,13 @@ export class GeoArrowPolygonLayer<
         "getPolygon should be an arrow Data of Polygon or MultiPolygon type",
       );
     } else {
-      const polygonData = getGeometryData(table, EXTENSION_NAME.POLYGON);
+      const polygonData = getGeometryData(batch, EXTENSION_NAME.POLYGON);
       if (polygonData !== null && ga.data.isPolygonData(polygonData)) {
         return this._renderLayers(polygonData);
       }
 
       const multiPolygonData = getGeometryData(
-        table,
+        batch,
         EXTENSION_NAME.MULTIPOLYGON,
       );
       if (
@@ -236,7 +236,7 @@ export class GeoArrowPolygonLayer<
   _renderLayers(
     geometryColumn: ga.data.PolygonData | ga.data.MultiPolygonData,
   ): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
 
     let getPath: ga.data.MultiLineStringData;
     if (ga.data.isPolygonData(geometryColumn)) {
@@ -359,7 +359,7 @@ export class GeoArrowPolygonLayer<
           },
         }),
         {
-          data: table,
+          data: batch,
           positionFormat,
           getPath,
           // We only pick solid polygon layers, not the path layers

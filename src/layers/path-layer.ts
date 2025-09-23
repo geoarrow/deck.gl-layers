@@ -104,7 +104,7 @@ export class GeoArrowPathLayer<
   }
 
   renderLayers(): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
 
     if (this.props.getPath !== undefined) {
       const geometryData = this.props.getPath;
@@ -126,13 +126,13 @@ export class GeoArrowPathLayer<
         "getPath should be an arrow Data of LineString or MultiLineString type",
       );
     } else {
-      const lineStringData = getGeometryData(table, EXTENSION_NAME.LINESTRING);
+      const lineStringData = getGeometryData(batch, EXTENSION_NAME.LINESTRING);
       if (lineStringData !== null && ga.data.isLineStringData(lineStringData)) {
         return this._renderLineStringLayer(lineStringData);
       }
 
       const multiLineStringData = getGeometryData(
-        table,
+        batch,
         EXTENSION_NAME.MULTILINESTRING,
       );
       if (
@@ -181,7 +181,7 @@ export class GeoArrowPathLayer<
       id: `${this.props.id}-geoarrow-path`,
       data: {
         // @ts-expect-error passed through to enable use by function accessors
-        data: table.batches[recordBatchIdx],
+        data: batch,
         length: lineStringData.length,
         startIndices: geomOffsets,
         attributes: {
@@ -243,7 +243,7 @@ export class GeoArrowPathLayer<
       id: `${this.props.id}-geoarrow-path`,
       data: {
         // @ts-expect-error passed through to enable use by function accessors
-        data: table.batches[recordBatchIdx],
+        data: batch,
         // Map from expanded multi-geometry index to original index
         // Used both in picking and for function callbacks
         invertedGeomOffsets: invertOffsets(geomOffsets),

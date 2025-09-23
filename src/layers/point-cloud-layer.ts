@@ -121,7 +121,7 @@ export class GeoArrowPointCloudLayer<
   _renderPointLayer(
     geometryData: ga.data.PointData,
   ): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
 
     if (this.props._validate) {
       assert(
@@ -132,7 +132,7 @@ export class GeoArrowPointCloudLayer<
         geometryData.type.listSize === 3,
         "Points of a PointCloudLayer in the geometry column must be three-dimensional.",
       );
-      validateAccessors(this.props, table);
+      validateAccessors(this.props, batch);
     }
 
     // Exclude manually-set accessors
@@ -155,7 +155,7 @@ export class GeoArrowPointCloudLayer<
       id: `${this.props.id}-geoarrow-pointcloud`,
       data: {
         // @ts-expect-error passed through to enable use by function accessors
-        data: table.batches[recordBatchIdx],
+        data: batch,
         length: geometryData.length,
         attributes: {
           getPosition: {

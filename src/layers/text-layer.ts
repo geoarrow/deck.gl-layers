@@ -181,11 +181,11 @@ export class GeoArrowTextLayer<
     geometryData: ga.data.PointData,
     textData: arrow.Data<arrow.Utf8>,
   ): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
 
     if (this.props._validate) {
       assert(ga.data.isPointData(geometryData));
-      validateAccessors(this.props, table);
+      validateAccessors(this.props, batch);
     }
 
     // Exclude manually-set accessors
@@ -213,7 +213,7 @@ export class GeoArrowTextLayer<
       id: `${this.props.id}-geoarrow-heatmap`,
       data: {
         // @ts-expect-error passed through to enable use by function accessors
-        data: table.batches[recordBatchIdx],
+        data: batch,
         length: geometryData.length,
         startIndices: characterOffsets,
         attributes: {

@@ -130,12 +130,12 @@ export class GeoArrowArcLayer<
   }
 
   _renderLayersPoint(): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
     let { getSourcePosition: sourceData, getTargetPosition: targetData } =
       this.props;
 
     if (this.props._validate) {
-      validateAccessors(this.props, table);
+      validateAccessors(this.props, batch);
 
       // Note: below we iterate over table batches anyways, so this layer won't
       // work as-is if data/table is null
@@ -168,7 +168,7 @@ export class GeoArrowArcLayer<
       id: `${this.props.id}-geoarrow-arc`,
       data: {
         // @ts-expect-error passed through to enable use by function accessors
-        data: table.batches[recordBatchIdx],
+        data: batch,
         length: sourceData.length,
         attributes: {
           getSourcePosition: {

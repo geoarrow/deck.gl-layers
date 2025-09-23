@@ -120,9 +120,9 @@ export class GeoArrowColumnLayer<
   }
 
   renderLayers(): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
 
-    const geometryData = getGeometryData(table, EXTENSION_NAME.POINT);
+    const geometryData = getGeometryData(batch, EXTENSION_NAME.POINT);
     if (geometryData !== null && ga.data.isPointData(geometryData)) {
       return this._renderPointLayer(geometryData);
     }
@@ -165,7 +165,7 @@ export class GeoArrowColumnLayer<
       id: `${this.props.id}-geoarrow-column`,
       data: {
         // @ts-expect-error passed through to enable use by function accessors
-        data: table.batches[recordBatchIdx],
+        data: batch,
         length: geometryData.length,
         attributes: {
           getPosition: {
