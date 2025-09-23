@@ -15,7 +15,7 @@ import { PolygonLayer } from "@deck.gl/layers";
 import type { PolygonLayerProps } from "@deck.gl/layers";
 import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
-import { getGeometryVector } from "../utils/utils";
+import { getGeometryData } from "../utils/utils";
 import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
 import { EXTENSION_NAME } from "../constants";
@@ -110,10 +110,10 @@ export type GeoArrowPolygonLayerProps = Omit<
 
 /** Properties added by GeoArrowPolygonLayer */
 type _GeoArrowPolygonLayerProps = {
-  data: arrow.Table;
+  data: arrow.RecordBatch;
 
   /** Polygon geometry accessor. */
-  getPolygon?: ga.vector.PolygonVector | ga.vector.MultiPolygonVector;
+  getPolygon?: ga.data.PolygonData | ga.data.MultiPolygonData;
   /** Fill color accessor.
    * @default [0, 0, 0, 255]
    */
@@ -198,29 +198,32 @@ export class GeoArrowPolygonLayer<
 
     if (this.props.getPolygon !== undefined) {
       const geometryColumn = this.props.getPolygon;
-      if (ga.vector.isPolygonVector(geometryColumn)) {
+      if (ga.data.isPolygonData(geometryColumn)) {
         return this._renderLayers(geometryColumn);
       }
 
-      if (ga.vector.isMultiPolygonVector(geometryColumn)) {
+      if (ga.data.isMultiPolygonData(geometryColumn)) {
         return this._renderLayers(geometryColumn);
       }
 
       throw new Error(
-        "getPolygon should be an arrow Vector of Polygon or MultiPolygon type",
+        "getPolygon should be an arrow Data of Polygon or MultiPolygon type",
       );
     } else {
-      const polygonVector = getGeometryVector(table, EXTENSION_NAME.POLYGON);
-      if (polygonVector !== null) {
-        return this._renderLayers(polygonVector);
+      const polygonData = getGeometryData(table, EXTENSION_NAME.POLYGON);
+      if (polygonData !== null && ga.data.isPolygonData(polygonData)) {
+        return this._renderLayers(polygonData);
       }
 
-      const multiPolygonVector = getGeometryVector(
+      const multiPolygonData = getGeometryData(
         table,
         EXTENSION_NAME.MULTIPOLYGON,
       );
-      if (multiPolygonVector !== null) {
-        return this._renderLayers(multiPolygonVector);
+      if (
+        multiPolygonData !== null &&
+        ga.data.isMultiPolygonData(multiPolygonData)
+      ) {
+        return this._renderLayers(multiPolygonData);
       }
     }
 
@@ -231,14 +234,14 @@ export class GeoArrowPolygonLayer<
   // geometries, because the underlying SolidPolygonLayer and PathLayer both
   // support multi-* and single- geometries.
   _renderLayers(
-    geometryColumn: ga.vector.PolygonVector | ga.vector.MultiPolygonVector,
+    geometryColumn: ga.data.PolygonData | ga.data.MultiPolygonData,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
-    let getPath: ga.vector.MultiLineStringVector;
-    if (ga.vector.isPolygonVector(geometryColumn)) {
+    let getPath: ga.data.MultiLineStringData;
+    if (ga.data.isPolygonData(geometryColumn)) {
       getPath = getPolygonExterior(geometryColumn);
-    } else if (ga.vector.isMultiPolygonVector(geometryColumn)) {
+    } else if (ga.data.isMultiPolygonData(geometryColumn)) {
       getPath = getMultiPolygonExterior(geometryColumn);
     } else {
       assert(false);

@@ -16,11 +16,7 @@ import * as arrow from "apache-arrow";
 
 import { GeoArrowPickingInfo } from "../types";
 import { assignAccessor, extractAccessorsFromProps } from "../utils/utils";
-import {
-  GeoArrowExtraPickingProps,
-  computeChunkOffsets,
-  getPickingInfo,
-} from "../utils/picking";
+import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
 import { validateAccessors } from "../utils/validate";
 
 /** All properties supported by GeoArrowH3HexagonLayer */
@@ -33,12 +29,12 @@ export type GeoArrowH3HexagonLayerProps = Omit<
 
 /** Props added by the GeoArrowH3HexagonLayer */
 type _GeoArrowH3HexagonLayerProps = {
-  data: arrow.Table;
+  data: arrow.RecordBatch;
 
   /**
    * Called for each data object to retrieve the quadkey string identifier.
    */
-  getHexagon: arrow.Vector<arrow.Utf8>;
+  getHexagon: arrow.Data<arrow.Utf8>;
 
   /**
    * If `true`, validate the arrays provided (e.g. chunk lengths)
@@ -83,7 +79,7 @@ export class GeoArrowH3HexagonLayer<
   }
 
   _renderLayersPoint(): Layer<{}> | LayersList | null {
-    const { data: table, getHexagon: hexagonColumn } = this.props;
+    const { data: table, getHexagon: hexData } = this.props;
 
     if (this.props._validate) {
       validateAccessors(this.props, table);
@@ -93,56 +89,39 @@ export class GeoArrowH3HexagonLayer<
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getHexagon",
     ]);
-    const tableOffsets = computeChunkOffsets(table.data);
 
-    const layers: H3HexagonLayer[] = [];
-    for (
-      let recordBatchIdx = 0;
-      recordBatchIdx < table.batches.length;
-      recordBatchIdx++
-    ) {
-      const hexData = hexagonColumn.data[recordBatchIdx];
-      const hexValues = hexData.values;
+    const hexValues = hexData.values;
 
-      const props: H3HexagonLayerProps = {
-        // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in our defaultProps
-        ...ourDefaultProps,
-        ...otherProps,
+    const props: H3HexagonLayerProps = {
+      // Note: because this is a composite layer and not doing the rendering
+      // itself, we still have to pass in our defaultProps
+      ...ourDefaultProps,
+      ...otherProps,
 
-        // used for picking purposes
-        recordBatchIdx,
-        tableOffsets,
+      id: `${this.props.id}-geoarrow-arc`,
 
-        id: `${this.props.id}-geoarrow-arc-${recordBatchIdx}`,
-
-        data: {
-          // @ts-expect-error passed through to enable use by function accessors
-          data: table.batches[recordBatchIdx],
-          length: hexData.length,
-          attributes: {
-            getHexagon: {
-              value: hexValues,
-              // h3 cells should always be 15 characters...?
-              size: 15,
-            },
+      data: {
+        // @ts-expect-error passed through to enable use by function accessors
+        data: table.batches[recordBatchIdx],
+        length: hexData.length,
+        attributes: {
+          getHexagon: {
+            value: hexValues,
+            // h3 cells should always be 15 characters...?
+            size: 15,
           },
         },
-      };
+      },
+    };
 
-      for (const [propName, propInput] of Object.entries(accessors)) {
-        assignAccessor({
-          props,
-          propName,
-          propInput,
-          chunkIdx: recordBatchIdx,
-        });
-      }
-
-      const layer = new H3HexagonLayer(this.getSubLayerProps(props));
-      layers.push(layer);
+    for (const [propName, propInput] of Object.entries(accessors)) {
+      assignAccessor({
+        props,
+        propName,
+        propInput,
+      });
     }
 
-    return layers;
+    return new H3HexagonLayer(this.getSubLayerProps(props));
   }
 }

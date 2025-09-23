@@ -20,21 +20,17 @@ import {
   convertStructToFixedSizeList,
   expandArrayToCoords,
   extractAccessorsFromProps,
-  getGeometryVector,
+  getGeometryData,
   isGeomSeparate,
 } from "../utils/utils";
-import {
-  GeoArrowExtraPickingProps,
-  computeChunkOffsets,
-  getPickingInfo,
-} from "../utils/picking";
+import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
 import { EXTENSION_NAME } from "../constants";
 import { validateAccessors } from "../utils/validate";
 
 /** All properties supported by GeoArrowTextLayer */
 export type GeoArrowTextLayerProps = Omit<
-  TextLayerProps<arrow.Table>,
+  TextLayerProps<arrow.RecordBatch>,
   // We remove background for now because there are special requirements for
   // using binary attributes with background
   // https://deck.gl/docs/api-reference/layers/text-layer#use-binary-attributes-with-background
@@ -57,7 +53,7 @@ export type GeoArrowTextLayerProps = Omit<
 
 /** Properties added by GeoArrowTextLayer */
 type _GeoArrowTextLayerProps = {
-  data: arrow.Table;
+  data: arrow.RecordBatch;
 
   /** Background color accessor.
    * @default [255, 255, 255, 255]
@@ -74,11 +70,11 @@ type _GeoArrowTextLayerProps = {
   /**
    * Label text accessor
    */
-  getText: arrow.Vector<arrow.Utf8>;
+  getText: arrow.Data<arrow.Utf8>;
   /**
    * Anchor position accessor
    */
-  getPosition?: ga.vector.PointVector;
+  getPosition?: ga.data.PointData;
   /**
    * Label color accessor
    * @default [0, 0, 0, 255]
@@ -98,18 +94,18 @@ type _GeoArrowTextLayerProps = {
    * Horizontal alignment accessor
    * @default 'middle'
    */
-  getTextAnchor?: arrow.Vector<arrow.Utf8> | "start" | "middle" | "end";
+  getTextAnchor?: arrow.Data<arrow.Utf8> | "start" | "middle" | "end";
   /**
    * Vertical alignment accessor
    * @default 'center'
    */
-  getAlignmentBaseline?: arrow.Vector<arrow.Utf8> | "top" | "center" | "bottom";
+  getAlignmentBaseline?: arrow.Data<arrow.Utf8> | "top" | "center" | "bottom";
   /**
    * Label offset from the anchor position, [x, y] in pixels
    * @default [0, 0]
    */
   getPixelOffset?:
-    | arrow.Vector<arrow.FixedSizeList<arrow.Int>>
+    | arrow.Data<arrow.FixedSizeList<arrow.Int>>
     | [number, number];
 
   /**
@@ -162,37 +158,35 @@ export class GeoArrowTextLayer<
   }
 
   renderLayers(): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
 
     if (this.props.getPosition !== undefined) {
-      const geometryColumn = this.props.getPosition;
-      if (
-        geometryColumn !== undefined &&
-        ga.vector.isPointVector(geometryColumn)
-      ) {
-        return this._renderLayersPoint(geometryColumn);
+      const geometryData = this.props.getPosition;
+      if (geometryData !== undefined && ga.data.isPointData(geometryData)) {
+        return this._renderTextLayer(geometryData, this.props.getText);
       }
 
       throw new Error(
         "getPosition should pass in an arrow Vector of Point type",
       );
     } else {
-      const pointVector = getGeometryVector(table, EXTENSION_NAME.POINT);
-      if (pointVector !== null) {
-        return this._renderLayersPoint(pointVector);
+      const pointData = getGeometryData(batch, EXTENSION_NAME.POINT);
+      if (pointData !== null && ga.data.isPointData(pointData)) {
+        return this._renderTextLayer(pointData, this.props.getText);
       }
     }
 
     throw new Error("getPosition not GeoArrow point");
   }
 
-  _renderLayersPoint(
-    geometryColumn: ga.vector.PointVector,
+  _renderTextLayer(
+    geometryData: ga.data.PointData,
+    textData: arrow.Data<arrow.Utf8>,
   ): Layer<{}> | LayersList | null {
     const { data: table } = this.props;
 
     if (this.props._validate) {
-      assert(ga.vector.isPointVector(geometryColumn));
+      assert(ga.data.isPointData(geometryData));
       validateAccessors(this.props, table);
     }
 
@@ -201,74 +195,57 @@ export class GeoArrowTextLayer<
       "getPosition",
       "getText",
     ]);
-    const tableOffsets = computeChunkOffsets(table.data);
 
-    const layers: TextLayer[] = [];
-    for (
-      let recordBatchIdx = 0;
-      recordBatchIdx < table.batches.length;
-      recordBatchIdx++
-    ) {
-      let geometryData = geometryColumn.data[recordBatchIdx];
-      if (isGeomSeparate(geometryData)) {
-        geometryData = convertStructToFixedSizeList(geometryData);
-      }
-      const flatCoordsData = ga.child.getPointChild(geometryData);
-      const flatCoordinateArray = flatCoordsData.values;
-      const textData = this.props.getText.data[recordBatchIdx];
-      // console.log(textData);
-      const textValues = textData.values;
-      const characterOffsets = textData.valueOffsets;
+    if (isGeomSeparate(geometryData)) {
+      geometryData = convertStructToFixedSizeList(geometryData);
+    }
+    const flatCoordsData = ga.child.getPointChild(geometryData);
+    const flatCoordinateArray = flatCoordsData.values;
 
-      const props: TextLayerProps = {
-        // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in our defaultProps
-        ...ourDefaultProps,
-        ...otherProps,
+    // console.log(textData);
+    const textValues = textData.values;
+    const characterOffsets = textData.valueOffsets;
 
-        // used for picking purposes
-        recordBatchIdx,
-        tableOffsets,
+    const props: TextLayerProps = {
+      // Note: because this is a composite layer and not doing the rendering
+      // itself, we still have to pass in our defaultProps
+      ...ourDefaultProps,
+      ...otherProps,
 
-        id: `${this.props.id}-geoarrow-heatmap-${recordBatchIdx}`,
-        data: {
-          // @ts-expect-error passed through to enable use by function accessors
-          data: table.batches[recordBatchIdx],
-          length: geometryData.length,
-          startIndices: characterOffsets,
-          attributes: {
-            // Positions need to be expanded to be one per character!
-            getPosition: {
-              value: expandArrayToCoords(
-                flatCoordinateArray,
-                geometryData.type.listSize,
-                characterOffsets,
-              ),
-              size: geometryData.type.listSize,
-            },
-            // TODO: support non-ascii characters
-            getText: {
-              value: textValues,
-              // size: 1,
-            },
+      id: `${this.props.id}-geoarrow-heatmap`,
+      data: {
+        // @ts-expect-error passed through to enable use by function accessors
+        data: table.batches[recordBatchIdx],
+        length: geometryData.length,
+        startIndices: characterOffsets,
+        attributes: {
+          // Positions need to be expanded to be one per character!
+          getPosition: {
+            value: expandArrayToCoords(
+              flatCoordinateArray,
+              geometryData.type.listSize,
+              characterOffsets,
+            ),
+            size: geometryData.type.listSize,
+          },
+          // TODO: support non-ascii characters
+          getText: {
+            value: textValues,
+            // size: 1,
           },
         },
-      };
+      },
+    };
 
-      for (const [propName, propInput] of Object.entries(accessors)) {
-        assignAccessor({
-          props,
-          propName,
-          propInput,
-          chunkIdx: recordBatchIdx,
-          geomCoordOffsets: characterOffsets,
-        });
-      }
-
-      const layer = new TextLayer(this.getSubLayerProps(props));
-      layers.push(layer);
+    for (const [propName, propInput] of Object.entries(accessors)) {
+      assignAccessor({
+        props,
+        propName,
+        propInput,
+        geomCoordOffsets: characterOffsets,
+      });
     }
 
-    return layers;
+    return new TextLayer(this.getSubLayerProps(props));
   }
 }

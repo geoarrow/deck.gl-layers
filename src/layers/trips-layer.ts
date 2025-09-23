@@ -16,22 +16,18 @@ import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
   extractAccessorsFromProps,
-  getGeometryVector,
+  getGeometryData,
   getInterleavedLineString,
   isGeomSeparate,
 } from "../utils/utils";
 import { TimestampAccessor, ColorAccessor, FloatAccessor } from "../types";
-import {
-  GeoArrowPathLayerProps,
-  defaultProps as pathLayerDefaultProps,
-} from "./path-layer";
+import { defaultProps as pathLayerDefaultProps } from "./path-layer";
 import { validateAccessors } from "../utils/validate";
 import { EXTENSION_NAME } from "../constants";
-import { computeChunkOffsets } from "../utils/picking";
 
 /** All properties supported by GeoArrowTripsLayer */
 export type GeoArrowTripsLayerProps = Omit<
-  TripsLayerProps<arrow.Table>,
+  TripsLayerProps<arrow.RecordBatch>,
   "data" | "getPath" | "getColor" | "getWidth" | "getTimestamps"
 > &
   _GeoArrowTripsLayerProps &
@@ -39,7 +35,7 @@ export type GeoArrowTripsLayerProps = Omit<
 
 /** Properties added by GeoArrowTripsLayer */
 type _GeoArrowTripsLayerProps = {
-  data: arrow.Table;
+  data: arrow.RecordBatch;
 
   /**
    * If `true`, validate the arrays provided (e.g. chunk lengths)
@@ -49,7 +45,7 @@ type _GeoArrowTripsLayerProps = {
   /**
    * Path geometry accessor.
    */
-  getPath?: ga.vector.LineStringVector;
+  getPath?: ga.data.LineStringData;
   /**
    * Path color accessor.
    * @default [0, 0, 0, 255]
@@ -99,40 +95,37 @@ export class GeoArrowTripsLayer<
   static layerName = "GeoArrowTripsLayer";
 
   renderLayers(): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch, getTimestamps } = this.props;
 
     if (this.props.getPath !== undefined) {
       const geometryColumn = this.props.getPath;
       if (
         geometryColumn !== undefined &&
-        ga.vector.isLineStringVector(geometryColumn)
+        ga.data.isLineStringData(geometryColumn)
       ) {
-        return this._renderLayersLineString(geometryColumn);
+        return this._renderLineStringLayer(geometryColumn, getTimestamps);
       }
 
       throw new Error("getPath should be an arrow Vector of LineString type");
     } else {
-      const lineStringVector = getGeometryVector(
-        table,
-        EXTENSION_NAME.LINESTRING,
-      );
-      if (lineStringVector !== null) {
-        return this._renderLayersLineString(lineStringVector);
+      const lineStringData = getGeometryData(batch, EXTENSION_NAME.LINESTRING);
+      if (lineStringData !== null && ga.data.isLineStringData(lineStringData)) {
+        return this._renderLineStringLayer(lineStringData, getTimestamps);
       }
     }
 
     throw new Error("getPath not GeoArrow LineString");
   }
 
-  _renderLayersLineString(
-    geometryColumn: ga.vector.LineStringVector,
+  _renderLineStringLayer(
+    lineStringData: ga.data.LineStringData,
+    timestampData: TimestampAccessor,
   ): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
 
-    const timestampColumn = this.props.getTimestamps;
     if (this.props._validate) {
-      assert(ga.vector.isLineStringVector(geometryColumn));
-      validateAccessors(this.props, table);
+      assert(ga.data.isLineStringData(lineStringData));
+      validateAccessors(this.props, batch);
     }
 
     // Exclude manually-set accessors
@@ -140,63 +133,46 @@ export class GeoArrowTripsLayer<
       "getPath",
       "getTimestamps",
     ]);
-    const tableOffsets = computeChunkOffsets(table.data);
 
-    const layers: TripsLayer[] = [];
-    for (
-      let recordBatchIdx = 0;
-      recordBatchIdx < table.batches.length;
-      recordBatchIdx++
-    ) {
-      let lineStringData = geometryColumn.data[recordBatchIdx];
-      if (isGeomSeparate(lineStringData)) {
-        lineStringData = getInterleavedLineString(lineStringData);
-      }
-      const geomOffsets = lineStringData.valueOffsets;
-      const pointData = ga.child.getLineStringChild(lineStringData);
-      const nDim = pointData.type.listSize;
-      const coordData = ga.child.getPointChild(pointData);
-      const flatCoordinateArray = coordData.values;
-      const timestampData = timestampColumn.data[recordBatchIdx];
-      const timestampValues = timestampData.children[0].values;
+    if (isGeomSeparate(lineStringData)) {
+      lineStringData = getInterleavedLineString(lineStringData);
+    }
+    const geomOffsets = lineStringData.valueOffsets;
+    const pointData = ga.child.getLineStringChild(lineStringData);
+    const nDim = pointData.type.listSize;
+    const coordData = ga.child.getPointChild(pointData);
+    const flatCoordinateArray = coordData.values;
 
-      const props: TripsLayerProps = {
-        // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in our defaultProps
-        ...ourDefaultProps,
-        ...otherProps,
+    const timestampValues = timestampData.children[0].values;
 
-        // used for picking purposes
-        recordBatchIdx,
-        tableOffsets,
+    const props: TripsLayerProps = {
+      // Note: because this is a composite layer and not doing the rendering
+      // itself, we still have to pass in our defaultProps
+      ...ourDefaultProps,
+      ...otherProps,
 
-        id: `${this.props.id}-geoarrow-trip-${recordBatchIdx}`,
-        data: {
-          // @ts-expect-error passed through to enable use by function accessors
-          data: table.batches[recordBatchIdx],
-          length: lineStringData.length,
-          startIndices: geomOffsets,
-          attributes: {
-            getPath: { value: flatCoordinateArray, size: nDim },
-            getTimestamps: { value: timestampValues, size: 1 },
-          },
+      id: `${this.props.id}-geoarrow-trip`,
+      data: {
+        // @ts-expect-error passed through to enable use by function accessors
+        data: table.batches[recordBatchIdx],
+        length: lineStringData.length,
+        startIndices: geomOffsets,
+        attributes: {
+          getPath: { value: flatCoordinateArray, size: nDim },
+          getTimestamps: { value: timestampValues, size: 1 },
         },
-      };
+      },
+    };
 
-      for (const [propName, propInput] of Object.entries(accessors)) {
-        assignAccessor({
-          props,
-          propName,
-          propInput,
-          chunkIdx: recordBatchIdx,
-          geomCoordOffsets: geomOffsets,
-        });
-      }
-
-      const layer = new TripsLayer(props);
-      layers.push(layer);
+    for (const [propName, propInput] of Object.entries(accessors)) {
+      assignAccessor({
+        props,
+        propName,
+        propInput,
+        geomCoordOffsets: geomOffsets,
+      });
     }
 
-    return layers;
+    return new TripsLayer(props);
   }
 }

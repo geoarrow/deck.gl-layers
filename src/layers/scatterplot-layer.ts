@@ -23,18 +23,14 @@ import {
   invertOffsets,
   isGeomSeparate,
 } from "../utils/utils";
-import {
-  GeoArrowExtraPickingProps,
-  computeChunkOffsets,
-  getPickingInfo,
-} from "../utils/picking";
+import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
 import { EXTENSION_NAME } from "../constants";
 import { validateAccessors } from "../utils/validate";
 
 /** All properties supported by GeoArrowScatterplotLayer */
 export type GeoArrowScatterplotLayerProps = Omit<
-  ScatterplotLayerProps<arrow.Table>,
+  ScatterplotLayerProps<arrow.RecordBatch>,
   "data" | "getPosition" | "getRadius" | "getFillColor" | "getLineColor"
 > &
   _GeoArrowScatterplotLayerProps &

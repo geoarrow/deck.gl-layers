@@ -204,8 +204,6 @@ type AssignAccessorProps = {
   propName: string;
   /** The user-supplied input to the layer. Must either be a scalar value or a reference to a column in the table. */
   propInput: any;
-  /** Numeric index in the table */
-  chunkIdx: number;
   /** a map from the geometry index to the coord offsets for that geometry. */
   geomCoordOffsets?: Int32Array | null;
 };
@@ -251,14 +249,14 @@ function wrapAccessorFunction<In, Out>(
  *
  */
 export function assignAccessor(args: AssignAccessorProps) {
-  const { props, propName, propInput, chunkIdx, geomCoordOffsets } = args;
+  const { props, propName, propInput, geomCoordOffsets } = args;
 
   if (propInput === undefined) {
     return;
   }
 
-  if (propInput instanceof arrow.Vector) {
-    const columnData = propInput.data[chunkIdx];
+  if (propInput instanceof arrow.Data) {
+    const columnData = propInput;
 
     if (arrow.DataType.isFixedSizeList(columnData)) {
       assert(columnData.children.length === 1);
@@ -349,12 +347,12 @@ export function expandArrayToCoords<T extends TypedArray>(
 /**
  * Get a geometry vector with the specified extension type name from the table.
  */
-export function getGeometryVector(
-  table: arrow.Table,
+export function getGeometryData(
+  batch: arrow.RecordBatch,
   geoarrowTypeName: string,
-): arrow.Vector | null {
+): arrow.Data | null {
   const geometryColumnIdx = findGeometryColumnIndex(
-    table.schema,
+    batch.schema,
     geoarrowTypeName,
   );
 
@@ -363,7 +361,9 @@ export function getGeometryVector(
     // throw new Error(`No column found with extension type ${geoarrowTypeName}`);
   }
 
-  return table.getChildAt(geometryColumnIdx);
+  let vector = batch.getChildAt(geometryColumnIdx);
+  assert(vector?.data.length === 1);
+  return vector.data[0];
 }
 
 export function getListNestingLevels(data: arrow.Data): number {
