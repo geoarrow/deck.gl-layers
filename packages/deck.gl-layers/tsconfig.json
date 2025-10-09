@@ -1,0 +1,21 @@
+{
+  "$comment": "Ideally we wouldn't have a tsconfig both in this dir and at the root, but this is needed to get tsc to output files to the right place",
+  "include": ["src"],
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "allowJs": true,
+    "declaration": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "noEmitOnError": false,
+    "outDir": "dist",
+    "strict": true,
+    "strictNullChecks": true
+    // "lib": [
+    //   "es2019.array", "es6", "dom"
+    // ]
+  }
+}

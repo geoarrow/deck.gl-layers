@@ -6,10 +6,8 @@
     "examples/*"
   ],
   "scripts": {
-    "build:rollup": "rollup -c rollup.config.js",
-    "build:tsc": "tsc",
-    "build": "npm run build:tsc && npm run build:rollup",
-    "clean": "rimraf dist",
+    "build": "cd packages/deck.gl-layers && npm run build",
+    "clean": "rimraf dist packages/deck.gl-layers/dist",
     "docs:build": "typedoc",
     "docs:publish": "gh-pages -d docs_build",
     "fmt:check": "prettier '**/*.ts' --check",
