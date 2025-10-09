@@ -28,7 +28,6 @@
     "fmt": "prettier './src/**/*.ts' --write",
     "prepublishOnly": "npm run clean && npm run build",
     "test": "vitest run",
-    "typecheck": "tsc --build",
     "watch": "tsc --watch"
   },
   "files": [

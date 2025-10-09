@@ -1,5 +1,5 @@
 {
-  "include": ["src"],
+  "include": ["packages/deck.gl-layers/src"],
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
