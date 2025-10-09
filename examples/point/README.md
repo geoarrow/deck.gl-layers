@@ -2,6 +2,8 @@
 
 ## Data for example:
 
+Install [`uv`](https://docs.astral.sh/uv/), then run
+
 ```
 uv run generate_data.py
 ```
