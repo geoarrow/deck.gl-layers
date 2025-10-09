@@ -49,13 +49,14 @@ function Root() {
 
   const layers: Layer[] = [];
 
-  table &&
+  let batchIndex = 0;
+  for (const batch of table?.batches ?? []) {
     layers.push(
       new GeoArrowScatterplotLayer({
-        id: "geoarrow-points",
-        data: table,
+        id: `geoarrow-points-${batchIndex}`,
+        data: batch,
         // Pre-computed colors in the original table
-        getFillColor: table.getChild("colors")!,
+        getFillColor: batch.getChild("colors")!.data[0],
         opacity: 0.1,
         getRadius: ({ index, data }) => {
           const recordBatch = data.data;
@@ -66,6 +67,8 @@ function Root() {
         pickable: true,
       }),
     );
+    batchIndex += 1;
+  }
 
   return (
     <DeckGL
