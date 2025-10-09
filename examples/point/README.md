@@ -14,13 +14,7 @@ npx http-server --cors
 
 ## Usage
 
-To install dependencies:
-
-```bash
-npm install
-# or
-yarn
-```
+To install dependencies, run `npm install` at the top level of this workspace, not in this directory.
 
 Commands:
 
