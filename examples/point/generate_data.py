@@ -1,9 +1,23 @@
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "geopandas",
+#     "lonboard",
+#     "matplotlib",
+#     "palettable",
+#     "pandas",
+#     "pyarrow",
+#     "requests",
+#     "shapely",
+# ]
+# ///
 from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
 import pyarrow as pa
 import pyarrow.feather as feather
+import requests
 import shapely
 from lonboard._geoarrow.geopandas_interop import geopandas_to_geoarrow
 from lonboard.colormap import apply_continuous_cmap
@@ -16,8 +30,11 @@ path = Path("2019-01-01_performance_mobile_tiles.parquet")
 
 def main():
     if not path.exists():
-        msg = f"Please download file to this directory from {url=}."
-        raise ValueError(msg)
+        print(f"Downloading data from {url=}")
+
+        r = requests.get(url)
+        with open(path, "wb") as f:
+            f.write(r.content)
 
     df = pd.read_parquet(path)
     centroids = shapely.centroid(shapely.from_wkt(df["tile"]))
@@ -28,7 +45,7 @@ def main():
         df[col] = pd.to_numeric(df[col], downcast="unsigned")
 
     gdf = gpd.GeoDataFrame(df[df_cols], geometry=centroids)
-    table = geopandas_to_geoarrow(gdf, preserve_index=False)
+    table = pa.table(geopandas_to_geoarrow(gdf, preserve_index=False))
 
     min_bound = 5000
     max_bound = 50000
