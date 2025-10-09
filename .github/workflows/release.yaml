@@ -15,10 +15,10 @@ jobs:
       # Setup .npmrc file to publish to npm
       - uses: actions/setup-node@v3
         with:
-          node-version: '20.8.0'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "22.20.0"
+          registry-url: "https://registry.npmjs.org"
 
       - run: npm ci
-      - run: npm publish
+      - run: cd packages/deck.gl-layers && npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
