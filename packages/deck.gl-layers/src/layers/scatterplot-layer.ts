@@ -19,22 +19,18 @@ import {
   assignAccessor,
   convertStructToFixedSizeList,
   extractAccessorsFromProps,
-  getGeometryVector,
+  getGeometryData,
   invertOffsets,
   isGeomSeparate,
 } from "../utils/utils";
-import {
-  GeoArrowExtraPickingProps,
-  computeChunkOffsets,
-  getPickingInfo,
-} from "../utils/picking";
+import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
 import { EXTENSION_NAME } from "../constants";
 import { validateAccessors } from "../utils/validate";
 
 /** All properties supported by GeoArrowScatterplotLayer */
 export type GeoArrowScatterplotLayerProps = Omit<
-  ScatterplotLayerProps<arrow.Table>,
+  ScatterplotLayerProps<arrow.RecordBatch>,
   "data" | "getPosition" | "getRadius" | "getFillColor" | "getLineColor"
 > &
   _GeoArrowScatterplotLayerProps &
@@ -42,7 +38,7 @@ export type GeoArrowScatterplotLayerProps = Omit<
 
 /** Properties added by GeoArrowScatterplotLayer */
 type _GeoArrowScatterplotLayerProps = {
-  data: arrow.Table;
+  data: arrow.RecordBatch;
 
   /**
    * If `true`, validate the arrays provided (e.g. chunk lengths)
@@ -54,7 +50,7 @@ type _GeoArrowScatterplotLayerProps = {
    * If not provided, will be inferred by finding a column with extension type
    * `"geoarrow.point"` or `"geoarrow.multipoint"`.
    */
-  getPosition?: ga.vector.PointVector | ga.vector.MultiPointVector;
+  getPosition?: ga.data.PointData | ga.data.MultiPointData;
   /**
    * Radius accessor.
    * @default 1
@@ -110,189 +106,147 @@ export class GeoArrowScatterplotLayer<
   }
 
   renderLayers(): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
 
     if (this.props.getPosition !== undefined) {
-      const geometryColumn = this.props.getPosition;
-      if (
-        geometryColumn !== undefined &&
-        ga.vector.isPointVector(geometryColumn)
-      ) {
-        return this._renderLayersPoint(geometryColumn);
+      const geometryData = this.props.getPosition;
+      if (geometryData !== undefined && ga.data.isPointData(geometryData)) {
+        return this._renderPointLayer(geometryData);
       }
 
       if (
-        geometryColumn !== undefined &&
-        ga.vector.isMultiPointVector(geometryColumn)
+        geometryData !== undefined &&
+        ga.data.isMultiPointData(geometryData)
       ) {
-        return this._renderLayersMultiPoint(geometryColumn);
+        return this._renderMultiPointLayer(geometryData);
       }
 
       throw new Error(
-        "getPosition should pass in an arrow Vector of Point or MultiPoint type",
+        "getPosition should pass in an arrow Data of Point or MultiPoint type",
       );
     } else {
-      const pointVector = getGeometryVector(table, EXTENSION_NAME.POINT);
-      if (pointVector !== null) {
-        return this._renderLayersPoint(pointVector);
+      const pointData = getGeometryData(batch, EXTENSION_NAME.POINT);
+      if (pointData !== null && ga.data.isPointData(pointData)) {
+        return this._renderPointLayer(pointData);
       }
 
-      const multiPointVector = getGeometryVector(
-        table,
-        EXTENSION_NAME.MULTIPOINT,
-      );
-      if (multiPointVector !== null) {
-        return this._renderLayersMultiPoint(multiPointVector);
+      const multiPointData = getGeometryData(batch, EXTENSION_NAME.MULTIPOINT);
+      if (multiPointData !== null && ga.data.isMultiPointData(multiPointData)) {
+        return this._renderMultiPointLayer(multiPointData);
       }
     }
 
     throw new Error("getPosition not GeoArrow point or multipoint");
   }
 
-  _renderLayersPoint(
-    geometryColumn: ga.vector.PointVector,
-  ): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+  _renderPointLayer(geometryData: ga.data.PointData): Layer | null {
+    const { data: batch } = this.props;
 
     if (this.props._validate) {
-      assert(ga.vector.isPointVector(geometryColumn));
-      validateAccessors(this.props, table);
+      assert(ga.data.isPointData(geometryData));
+      validateAccessors(this.props, batch);
     }
 
     // Exclude manually-set accessors
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPosition",
     ]);
-    const tableOffsets = computeChunkOffsets(table.data);
 
-    const layers: ScatterplotLayer[] = [];
-    for (
-      let recordBatchIdx = 0;
-      recordBatchIdx < table.batches.length;
-      recordBatchIdx++
-    ) {
-      let geometryData = geometryColumn.data[recordBatchIdx];
-      if (isGeomSeparate(geometryData)) {
-        geometryData = convertStructToFixedSizeList(geometryData);
-      }
-      const flatCoordsData = ga.child.getPointChild(geometryData);
-      const flatCoordinateArray = flatCoordsData.values;
+    if (isGeomSeparate(geometryData)) {
+      geometryData = convertStructToFixedSizeList(geometryData);
+    }
+    const flatCoordsData = ga.child.getPointChild(geometryData);
+    const flatCoordinateArray = flatCoordsData.values;
 
-      const props: ScatterplotLayerProps = {
-        // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in our defaultProps
-        ...ourDefaultProps,
-        ...otherProps,
+    const props: ScatterplotLayerProps = {
+      // Note: because this is a composite layer and not doing the rendering
+      // itself, we still have to pass in our defaultProps
+      ...ourDefaultProps,
+      ...otherProps,
 
-        // used for picking purposes
-        recordBatchIdx,
-        tableOffsets,
-
-        id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,
-        data: {
-          // @ts-expect-error passed through to enable use by function accessors
-          data: table.batches[recordBatchIdx],
-          length: geometryData.length,
-          attributes: {
-            getPosition: {
-              value: flatCoordinateArray,
-              size: geometryData.type.listSize,
-            },
+      id: `${this.props.id}-geoarrow-scatterplot`,
+      data: {
+        // @ts-expect-error passed through to enable use by function accessors
+        data: batch,
+        length: geometryData.length,
+        attributes: {
+          getPosition: {
+            value: flatCoordinateArray,
+            size: geometryData.type.listSize,
           },
         },
-      };
+      },
+    };
 
-      for (const [propName, propInput] of Object.entries(accessors)) {
-        assignAccessor({
-          props,
-          propName,
-          propInput,
-          chunkIdx: recordBatchIdx,
-        });
-      }
-
-      const layer = new ScatterplotLayer(this.getSubLayerProps(props));
-      layers.push(layer);
+    for (const [propName, propInput] of Object.entries(accessors)) {
+      assignAccessor({
+        props,
+        propName,
+        propInput,
+      });
     }
 
-    return layers;
+    return new ScatterplotLayer(this.getSubLayerProps(props));
   }
 
-  _renderLayersMultiPoint(
-    geometryColumn: ga.vector.MultiPointVector,
-  ): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+  _renderMultiPointLayer(
+    multiPointData: ga.data.MultiPointData,
+  ): Layer<{}> | null {
+    const { data: batch } = this.props;
 
     // TODO: validate that if nested, accessor props have the same nesting
     // structure as the main geometry column.
     if (this.props._validate) {
-      assert(ga.vector.isMultiPointVector(geometryColumn));
-      validateAccessors(this.props, table);
+      assert(ga.data.isMultiPointData(multiPointData));
+      validateAccessors(this.props, batch);
     }
 
     // Exclude manually-set accessors
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPosition",
     ]);
-    const tableOffsets = computeChunkOffsets(table.data);
 
-    const layers: ScatterplotLayer[] = [];
-    for (
-      let recordBatchIdx = 0;
-      recordBatchIdx < table.batches.length;
-      recordBatchIdx++
-    ) {
-      const multiPointData = geometryColumn.data[recordBatchIdx];
-      let pointData = ga.child.getMultiPointChild(multiPointData);
-      if (isGeomSeparate(pointData)) {
-        pointData = convertStructToFixedSizeList(pointData);
-      }
-      const geomOffsets = multiPointData.valueOffsets;
-      const flatCoordsData = ga.child.getPointChild(pointData);
-      const flatCoordinateArray = flatCoordsData.values;
+    let pointData = ga.child.getMultiPointChild(multiPointData);
+    if (isGeomSeparate(pointData)) {
+      pointData = convertStructToFixedSizeList(pointData);
+    }
+    const geomOffsets = multiPointData.valueOffsets;
+    const flatCoordsData = ga.child.getPointChild(pointData);
+    const flatCoordinateArray = flatCoordsData.values;
 
-      const props: ScatterplotLayerProps = {
-        // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in our defaultProps
-        ...ourDefaultProps,
-        ...otherProps,
+    const props: ScatterplotLayerProps = {
+      // Note: because this is a composite layer and not doing the rendering
+      // itself, we still have to pass in our defaultProps
+      ...ourDefaultProps,
+      ...otherProps,
 
-        // used for picking purposes
-        recordBatchIdx,
-        tableOffsets,
-
-        id: `${this.props.id}-geoarrow-scatterplot-${recordBatchIdx}`,
-        data: {
-          // @ts-expect-error passed through to enable use by function accessors
-          data: table.batches[recordBatchIdx],
-          // Map from expanded multi-geometry index to original index
-          // Used both in picking and for function callbacks
-          invertedGeomOffsets: invertOffsets(geomOffsets),
-          // Note: this needs to be the length one level down.
-          length: pointData.length,
-          attributes: {
-            getPosition: {
-              value: flatCoordinateArray,
-              size: pointData.type.listSize,
-            },
+      id: `${this.props.id}-geoarrow-scatterplot`,
+      data: {
+        // @ts-expect-error passed through to enable use by function accessors
+        data: batch,
+        // Map from expanded multi-geometry index to original index
+        // Used both in picking and for function callbacks
+        invertedGeomOffsets: invertOffsets(geomOffsets),
+        // Note: this needs to be the length one level down.
+        length: pointData.length,
+        attributes: {
+          getPosition: {
+            value: flatCoordinateArray,
+            size: pointData.type.listSize,
           },
         },
-      };
+      },
+    };
 
-      for (const [propName, propInput] of Object.entries(accessors)) {
-        assignAccessor({
-          props,
-          propName,
-          propInput,
-          chunkIdx: recordBatchIdx,
-          geomCoordOffsets: geomOffsets,
-        });
-      }
-
-      const layer = new ScatterplotLayer(this.getSubLayerProps(props));
-      layers.push(layer);
+    for (const [propName, propInput] of Object.entries(accessors)) {
+      assignAccessor({
+        props,
+        propName,
+        propInput,
+        geomCoordOffsets: geomOffsets,
+      });
     }
 
-    return layers;
+    return new ScatterplotLayer(this.getSubLayerProps(props));
   }
 }

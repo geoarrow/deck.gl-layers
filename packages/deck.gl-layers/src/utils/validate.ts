@@ -7,15 +7,15 @@ import * as arrow from "apache-arrow";
 
 export function validateAccessors(
   props: Record<string, any>,
-  table: arrow.Table,
+  batch: arrow.RecordBatch,
 ): void {
-  const vectorAccessors: arrow.Vector[] = [];
-  const colorVectorAccessors: arrow.Vector[] = [];
+  const vectorAccessors: arrow.Data[] = [];
+  const colorVectorAccessors: arrow.Data[] = [];
   for (const [accessorName, accessorValue] of Object.entries(props)) {
     // Is it an accessor
     if (accessorName.startsWith("get")) {
       // Is it a vector accessor
-      if (accessorValue instanceof arrow.Vector) {
+      if (accessorValue instanceof arrow.Data) {
         vectorAccessors.push(accessorValue);
 
         // Is it a color vector accessor
@@ -26,7 +26,7 @@ export function validateAccessors(
     }
   }
 
-  validateVectorAccessors(table, vectorAccessors);
+  validateVectorAccessors(batch, vectorAccessors);
   for (const colorVectorAccessor of colorVectorAccessors) {
     validateColorVector(colorVectorAccessor);
   }
@@ -41,23 +41,16 @@ export function validateAccessors(
  *
  */
 export function validateVectorAccessors(
-  table: arrow.Table,
-  vectorAccessors: arrow.Vector[],
+  batch: arrow.RecordBatch,
+  vectorAccessors: arrow.Data[],
 ) {
   // Check the same number of chunks as the table's batches
   for (const vectorAccessor of vectorAccessors) {
-    assert(table.batches.length === vectorAccessor.data.length);
-  }
-
-  // Check that each table batch/vector data has the same number of rows
-  for (const vectorAccessor of vectorAccessors) {
-    for (let i = 0; i < table.batches.length; i++) {
-      assert(table.batches[i].numRows === vectorAccessor.data[i].length);
-    }
+    assert(batch.numRows === vectorAccessor.length);
   }
 }
 
-export function validateColorVector(vector: arrow.Vector) {
+export function validateColorVector(vector: arrow.Data) {
   // Assert the color vector is a FixedSizeList
   assert(arrow.DataType.isFixedSizeList(vector.type));
 

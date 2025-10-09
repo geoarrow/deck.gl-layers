@@ -10,8 +10,6 @@ import {
   Layer,
   LayersList,
   assert,
-  Unit,
-  Material,
 } from "@deck.gl/core";
 import { PointCloudLayer } from "@deck.gl/layers";
 import type { PointCloudLayerProps } from "@deck.gl/layers";
@@ -21,21 +19,17 @@ import {
   assignAccessor,
   convertStructToFixedSizeList,
   extractAccessorsFromProps,
-  getGeometryVector,
+  getGeometryData,
   isGeomSeparate,
 } from "../utils/utils";
-import {
-  GeoArrowExtraPickingProps,
-  computeChunkOffsets,
-  getPickingInfo,
-} from "../utils/picking";
+import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
 import { ColorAccessor, GeoArrowPickingInfo, NormalAccessor } from "../types";
 import { EXTENSION_NAME } from "../constants";
 import { validateAccessors } from "../utils/validate";
 
 /* All properties supported by GeoArrowPointCloudLayer */
 export type GeoArrowPointCloudLayerProps = Omit<
-  PointCloudLayerProps<arrow.Table>,
+  PointCloudLayerProps<arrow.RecordBatch>,
   "data" | "getPosition" | "getNormal" | "getColor"
 > &
   _GeoArrowPointCloudLayerProps &
@@ -44,7 +38,7 @@ export type GeoArrowPointCloudLayerProps = Omit<
 /* All properties added by GeoArrowPointCloudLayer */
 type _GeoArrowPointCloudLayerProps = {
   // data
-  data: arrow.Table;
+  data: arrow.RecordBatch;
 
   /**
    * If `true`, validate the arrays provided (e.g. chunk lengths)
@@ -57,7 +51,7 @@ type _GeoArrowPointCloudLayerProps = {
    * If not provided, will be inferred by finding a column with extension type
    * `"geoarrow.point"`
    */
-  getPosition?: ga.vector.PointVector;
+  getPosition?: ga.data.PointData;
 
   /**
    * The normal of each object, in `[nx, ny, nz]`.
@@ -105,100 +99,79 @@ export class GeoArrowPointCloudLayer<
   }
 
   renderLayers(): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
 
     if (this.props.getPosition !== undefined) {
       const geometryColumn = this.props.getPosition;
-      if (
-        geometryColumn !== undefined &&
-        ga.vector.isPointVector(geometryColumn)
-      ) {
-        return this._renderLayersPoint(geometryColumn);
+      if (geometryColumn !== undefined && ga.data.isPointData(geometryColumn)) {
+        return this._renderPointLayer(geometryColumn);
       }
 
-      throw new Error(
-        "getPosition should pass in an arrow Vector of Point type",
-      );
+      throw new Error("getPosition should pass in an arrow Data of Point type");
     } else {
-      const pointVector = getGeometryVector(table, EXTENSION_NAME.POINT);
-      if (pointVector !== null) {
-        return this._renderLayersPoint(pointVector);
+      const pointData = getGeometryData(batch, EXTENSION_NAME.POINT);
+      if (pointData !== null && ga.data.isPointData(pointData)) {
+        return this._renderPointLayer(pointData);
       }
     }
 
     throw new Error("getPosition not GeoArrow point");
   }
 
-  _renderLayersPoint(
-    geometryColumn: ga.vector.PointVector,
+  _renderPointLayer(
+    geometryData: ga.data.PointData,
   ): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
 
     if (this.props._validate) {
       assert(
-        ga.vector.isPointVector(geometryColumn),
+        ga.data.isPointData(geometryData),
         "The geometry column is not a valid PointVector.",
       );
       assert(
-        geometryColumn.type.listSize === 3,
+        geometryData.type.listSize === 3,
         "Points of a PointCloudLayer in the geometry column must be three-dimensional.",
       );
-      validateAccessors(this.props, table);
+      validateAccessors(this.props, batch);
     }
 
     // Exclude manually-set accessors
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPosition",
     ]);
-    const tableOffsets = computeChunkOffsets(table.data);
 
-    const layers: PointCloudLayer[] = [];
-    for (
-      let recordBatchIdx = 0;
-      recordBatchIdx < table.batches.length;
-      recordBatchIdx++
-    ) {
-      let geometryData = geometryColumn.data[recordBatchIdx];
-      if (isGeomSeparate(geometryData)) {
-        geometryData = convertStructToFixedSizeList(geometryData);
-      }
-      const flatCoordsData = ga.child.getPointChild(geometryData);
-      const flatCoordinateArray = flatCoordsData.values;
+    if (isGeomSeparate(geometryData)) {
+      geometryData = convertStructToFixedSizeList(geometryData);
+    }
+    const flatCoordsData = ga.child.getPointChild(geometryData);
+    const flatCoordinateArray = flatCoordsData.values;
 
-      const props: PointCloudLayerProps = {
-        // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in our defaultProps
-        ...ourDefaultProps,
-        ...otherProps,
+    const props: PointCloudLayerProps = {
+      // Note: because this is a composite layer and not doing the rendering
+      // itself, we still have to pass in our defaultProps
+      ...ourDefaultProps,
+      ...otherProps,
 
-        // used for picking purposes
-        recordBatchIdx,
-        tableOffsets,
-
-        id: `${this.props.id}-geoarrow-pointcloud-${recordBatchIdx}`,
-        data: {
-          // @ts-expect-error passed through to enable use by function accessors
-          data: table.batches[recordBatchIdx],
-          length: geometryData.length,
-          attributes: {
-            getPosition: {
-              value: flatCoordinateArray,
-              size: geometryData.type.listSize,
-            },
+      id: `${this.props.id}-geoarrow-pointcloud`,
+      data: {
+        // @ts-expect-error passed through to enable use by function accessors
+        data: batch,
+        length: geometryData.length,
+        attributes: {
+          getPosition: {
+            value: flatCoordinateArray,
+            size: geometryData.type.listSize,
           },
         },
-      };
-      for (const [propName, propInput] of Object.entries(accessors)) {
-        assignAccessor({
-          props,
-          propName,
-          propInput,
-          chunkIdx: recordBatchIdx,
-        });
-      }
-      const layer = new PointCloudLayer(this.getSubLayerProps(props));
-      layers.push(layer);
+      },
+    };
+    for (const [propName, propInput] of Object.entries(accessors)) {
+      assignAccessor({
+        props,
+        propName,
+        propInput,
+      });
     }
-    return layers;
+    return new PointCloudLayer(this.getSubLayerProps(props));
   }
 }

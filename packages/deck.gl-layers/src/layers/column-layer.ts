@@ -14,26 +14,23 @@ import {
 import { ColumnLayer } from "@deck.gl/layers";
 import type { ColumnLayerProps } from "@deck.gl/layers";
 import * as arrow from "apache-arrow";
+import type { RecordBatch } from "apache-arrow";
 import {
   assignAccessor,
   convertStructToFixedSizeList,
   extractAccessorsFromProps,
-  getGeometryVector,
+  getGeometryData,
   isGeomSeparate,
 } from "../utils/utils";
 import * as ga from "@geoarrow/geoarrow-js";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
 import { EXTENSION_NAME } from "../constants";
-import {
-  GeoArrowExtraPickingProps,
-  computeChunkOffsets,
-  getPickingInfo,
-} from "../utils/picking";
+import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
 import { validateAccessors } from "../utils/validate";
 
 /** All properties supported by GeoArrowColumnLayer */
 export type GeoArrowColumnLayerProps = Omit<
-  ColumnLayerProps<arrow.Table>,
+  ColumnLayerProps<arrow.RecordBatch>,
   | "data"
   | "getPosition"
   | "getFillColor"
@@ -46,12 +43,12 @@ export type GeoArrowColumnLayerProps = Omit<
 
 /** Properties added by GeoArrowColumnLayer */
 type _GeoArrowColumnLayerProps = {
-  data: arrow.Table;
+  data: RecordBatch;
 
   /**
    * Method called to retrieve the position of each column.
    */
-  getPosition?: ga.vector.PointVector;
+  getPosition?: ga.data.PointData;
 
   /**
    * Fill color value or accessor.
@@ -123,90 +120,70 @@ export class GeoArrowColumnLayer<
   }
 
   renderLayers(): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
 
-    const pointVector = getGeometryVector(table, EXTENSION_NAME.POINT);
-    if (pointVector !== null) {
-      return this._renderLayersPoint(pointVector);
+    const geometryData = getGeometryData(batch, EXTENSION_NAME.POINT);
+    if (geometryData !== null && ga.data.isPointData(geometryData)) {
+      return this._renderPointLayer(geometryData);
     }
 
     const geometryColumn = this.props.getPosition;
-    if (
-      geometryColumn !== undefined &&
-      ga.vector.isPointVector(geometryColumn)
-    ) {
-      return this._renderLayersPoint(geometryColumn);
+    if (geometryColumn !== undefined && ga.data.isPointData(geometryColumn)) {
+      return this._renderPointLayer(geometryColumn);
     }
 
     throw new Error("getPosition not GeoArrow point");
   }
 
-  _renderLayersPoint(
-    geometryColumn: ga.vector.PointVector,
+  _renderPointLayer(
+    geometryData: ga.data.PointData,
   ): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
 
     if (this.props._validate) {
-      assert(ga.vector.isPointVector(geometryColumn));
-      validateAccessors(this.props, table);
+      assert(ga.data.isPointData(geometryData));
+      validateAccessors(this.props, batch);
     }
 
     // Exclude manually-set accessors
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPosition",
     ]);
-    const tableOffsets = computeChunkOffsets(table.data);
 
-    const layers: ColumnLayer[] = [];
-    for (
-      let recordBatchIdx = 0;
-      recordBatchIdx < table.batches.length;
-      recordBatchIdx++
-    ) {
-      let geometryData = geometryColumn.data[recordBatchIdx];
-      if (isGeomSeparate(geometryData)) {
-        geometryData = convertStructToFixedSizeList(geometryData);
-      }
-      const flatCoordsData = ga.child.getPointChild(geometryData);
-      const flatCoordinateArray = flatCoordsData.values;
+    if (isGeomSeparate(geometryData)) {
+      geometryData = convertStructToFixedSizeList(geometryData);
+    }
+    const flatCoordsData = ga.child.getPointChild(geometryData);
+    const flatCoordinateArray = flatCoordsData.values;
 
-      const props: ColumnLayerProps = {
-        // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in our defaultProps
-        ...ourDefaultProps,
-        ...otherProps,
+    const props: ColumnLayerProps = {
+      // Note: because this is a composite layer and not doing the rendering
+      // itself, we still have to pass in our defaultProps
+      ...ourDefaultProps,
+      ...otherProps,
 
-        // used for picking purposes
-        recordBatchIdx,
-        tableOffsets,
-
-        id: `${this.props.id}-geoarrow-column-${recordBatchIdx}`,
-        data: {
-          // @ts-expect-error passed through to enable use by function accessors
-          data: table.batches[recordBatchIdx],
-          length: geometryData.length,
-          attributes: {
-            getPosition: {
-              value: flatCoordinateArray,
-              size: geometryData.type.listSize,
-            },
+      id: `${this.props.id}-geoarrow-column`,
+      data: {
+        // @ts-expect-error passed through to enable use by function accessors
+        data: batch,
+        length: geometryData.length,
+        attributes: {
+          getPosition: {
+            value: flatCoordinateArray,
+            size: geometryData.type.listSize,
           },
         },
-      };
+      },
+    };
 
-      for (const [propName, propInput] of Object.entries(accessors)) {
-        assignAccessor({
-          props,
-          propName,
-          propInput,
-          chunkIdx: recordBatchIdx,
-        });
-      }
-
-      const layer = new ColumnLayer(this.getSubLayerProps(props));
-      layers.push(layer);
+    for (const [propName, propInput] of Object.entries(accessors)) {
+      assignAccessor({
+        props,
+        propName,
+        propInput,
+      });
     }
 
-    return layers;
+    return new ColumnLayer(this.getSubLayerProps(props));
   }
 }

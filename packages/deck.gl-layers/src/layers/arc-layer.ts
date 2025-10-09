@@ -13,7 +13,7 @@ import {
 } from "@deck.gl/core";
 import { ArcLayer } from "@deck.gl/layers";
 import type { ArcLayerProps } from "@deck.gl/layers";
-import * as arrow from "apache-arrow";
+import type { RecordBatch } from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
 import {
   assignAccessor,
@@ -22,11 +22,7 @@ import {
   isGeomSeparate,
 } from "../utils/utils";
 import { child } from "@geoarrow/geoarrow-js";
-import {
-  GeoArrowExtraPickingProps,
-  computeChunkOffsets,
-  getPickingInfo,
-} from "../utils/picking";
+import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
 import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
 import { validateAccessors } from "../utils/validate";
 
@@ -47,17 +43,17 @@ export type GeoArrowArcLayerProps = Omit<
 
 /** Properties added by GeoArrowArcLayer */
 type _GeoArrowArcLayerProps = {
-  data: arrow.Table;
+  data: RecordBatch;
 
   /**
    * Method called to retrieve the source position of each object.
    */
-  getSourcePosition: ga.vector.PointVector;
+  getSourcePosition: ga.data.PointData;
 
   /**
    * Method called to retrieve the target position of each object.
    */
-  getTargetPosition: ga.vector.PointVector;
+  getTargetPosition: ga.data.PointData;
 
   /**
    * The rgba color is in the format of `[r, g, b, [a]]`.
@@ -134,19 +130,17 @@ export class GeoArrowArcLayer<
   }
 
   _renderLayersPoint(): Layer<{}> | LayersList | null {
-    const {
-      data: table,
-      getSourcePosition: sourcePosition,
-      getTargetPosition: targetPosition,
-    } = this.props;
+    const { data: batch } = this.props;
+    let { getSourcePosition: sourceData, getTargetPosition: targetData } =
+      this.props;
 
     if (this.props._validate) {
-      validateAccessors(this.props, table);
+      validateAccessors(this.props, batch);
 
       // Note: below we iterate over table batches anyways, so this layer won't
       // work as-is if data/table is null
-      assert(ga.vector.isPointVector(sourcePosition));
-      assert(ga.vector.isPointVector(targetPosition));
+      assert(ga.data.isPointData(sourceData));
+      assert(ga.data.isPointData(targetData));
     }
 
     // Exclude manually-set accessors
@@ -154,66 +148,49 @@ export class GeoArrowArcLayer<
       "getSourcePosition",
       "getTargetPosition",
     ]);
-    const tableOffsets = computeChunkOffsets(table.data);
 
-    const layers: ArcLayer[] = [];
-    for (
-      let recordBatchIdx = 0;
-      recordBatchIdx < table.batches.length;
-      recordBatchIdx++
-    ) {
-      let sourceData = sourcePosition.data[recordBatchIdx];
-      if (isGeomSeparate(sourceData)) {
-        sourceData = convertStructToFixedSizeList(sourceData);
-      }
-      const sourceValues = child.getPointChild(sourceData).values;
-      let targetData = targetPosition.data[recordBatchIdx];
-      if (isGeomSeparate(targetData)) {
-        targetData = convertStructToFixedSizeList(targetData);
-      }
-      const targetValues = child.getPointChild(targetData).values;
+    if (isGeomSeparate(sourceData)) {
+      sourceData = convertStructToFixedSizeList(sourceData);
+    }
+    const sourceValues = child.getPointChild(sourceData).values;
 
-      const props: ArcLayerProps = {
-        // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in our defaultProps
-        ...ourDefaultProps,
-        ...otherProps,
+    if (isGeomSeparate(targetData)) {
+      targetData = convertStructToFixedSizeList(targetData);
+    }
+    const targetValues = child.getPointChild(targetData).values;
 
-        // used for picking purposes
-        recordBatchIdx,
-        tableOffsets,
+    const props: ArcLayerProps = {
+      // Note: because this is a composite layer and not doing the rendering
+      // itself, we still have to pass in our defaultProps
+      ...ourDefaultProps,
+      ...otherProps,
 
-        id: `${this.props.id}-geoarrow-arc-${recordBatchIdx}`,
-        data: {
-          // @ts-expect-error passed through to enable use by function accessors
-          data: table.batches[recordBatchIdx],
-          length: sourceData.length,
-          attributes: {
-            getSourcePosition: {
-              value: sourceValues,
-              size: sourceData.type.listSize,
-            },
-            getTargetPosition: {
-              value: targetValues,
-              size: targetData.type.listSize,
-            },
+      id: `${this.props.id}-geoarrow-arc`,
+      data: {
+        // @ts-expect-error passed through to enable use by function accessors
+        data: batch,
+        length: sourceData.length,
+        attributes: {
+          getSourcePosition: {
+            value: sourceValues,
+            size: sourceData.type.listSize,
+          },
+          getTargetPosition: {
+            value: targetValues,
+            size: targetData.type.listSize,
           },
         },
-      };
+      },
+    };
 
-      for (const [propName, propInput] of Object.entries(accessors)) {
-        assignAccessor({
-          props,
-          propName,
-          propInput,
-          chunkIdx: recordBatchIdx,
-        });
-      }
-
-      const layer = new ArcLayer(this.getSubLayerProps(props));
-      layers.push(layer);
+    for (const [propName, propInput] of Object.entries(accessors)) {
+      assignAccessor({
+        props,
+        propName,
+        propInput,
+      });
     }
 
-    return layers;
+    return new ArcLayer(this.getSubLayerProps(props));
   }
 }

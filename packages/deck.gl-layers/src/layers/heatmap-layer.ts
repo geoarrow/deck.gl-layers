@@ -18,13 +18,12 @@ import {
   assignAccessor,
   convertStructToFixedSizeList,
   extractAccessorsFromProps,
-  getGeometryVector,
+  getGeometryData,
   isGeomSeparate,
 } from "../utils/utils";
 import { FloatAccessor } from "../types";
 import { EXTENSION_NAME } from "../constants";
 import { validateAccessors } from "../utils/validate";
-import { computeChunkOffsets } from "../utils/picking";
 
 /** All properties supported by GeoArrowHeatmapLayer */
 export type GeoArrowHeatmapLayerProps = Omit<
@@ -36,14 +35,14 @@ export type GeoArrowHeatmapLayerProps = Omit<
 
 /** Properties added by GeoArrowHeatmapLayer */
 type _GeoArrowHeatmapLayerProps = {
-  data: arrow.Table;
+  data: arrow.RecordBatch;
 
   /**
    * Method called to retrieve the position of each object.
    *
    * @default d => d.position
    */
-  getPosition?: ga.vector.PointVector;
+  getPosition?: ga.data.PointData;
 
   /**
    * The weight of each object.
@@ -84,96 +83,74 @@ export class GeoArrowHeatmapLayer<
   static layerName = "GeoArrowHeatmapLayer";
 
   renderLayers(): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
 
     if (this.props.getPosition !== undefined) {
-      const geometryColumn = this.props.getPosition;
-      if (
-        geometryColumn !== undefined &&
-        ga.vector.isPointVector(geometryColumn)
-      ) {
-        return this._renderLayersPoint(geometryColumn);
+      const geometryData = this.props.getPosition;
+      if (geometryData !== undefined && ga.data.isPointData(geometryData)) {
+        return this._renderPointLayer(geometryData);
       }
 
-      throw new Error(
-        "getPosition should pass in an arrow Vector of Point type",
-      );
+      throw new Error("getPosition should pass in an arrow Data of Point type");
     } else {
-      const pointVector = getGeometryVector(table, EXTENSION_NAME.POINT);
-      if (pointVector !== null) {
-        return this._renderLayersPoint(pointVector);
+      const pointData = getGeometryData(batch, EXTENSION_NAME.POINT);
+      if (pointData !== null && ga.data.isPointData(pointData)) {
+        return this._renderPointLayer(pointData);
       }
     }
 
     throw new Error("getPosition not GeoArrow point");
   }
 
-  _renderLayersPoint(
-    geometryColumn: ga.vector.PointVector,
+  _renderPointLayer(
+    geometryData: ga.data.PointData,
   ): Layer<{}> | LayersList | null {
-    const { data: table } = this.props;
+    const { data: batch } = this.props;
 
     if (this.props._validate) {
-      assert(ga.vector.isPointVector(geometryColumn));
-      validateAccessors(this.props, table);
+      assert(ga.data.isPointData(geometryData));
+      validateAccessors(this.props, batch);
     }
 
     // Exclude manually-set accessors
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getPosition",
     ]);
-    const tableOffsets = computeChunkOffsets(table.data);
 
-    const layers: HeatmapLayer[] = [];
-    for (
-      let recordBatchIdx = 0;
-      recordBatchIdx < table.batches.length;
-      recordBatchIdx++
-    ) {
-      let geometryData = geometryColumn.data[recordBatchIdx];
-      if (isGeomSeparate(geometryData)) {
-        geometryData = convertStructToFixedSizeList(geometryData);
-      }
-      const flatCoordsData = ga.child.getPointChild(geometryData);
-      const flatCoordinateArray = flatCoordsData.values;
+    if (isGeomSeparate(geometryData)) {
+      geometryData = convertStructToFixedSizeList(geometryData);
+    }
+    const flatCoordsData = ga.child.getPointChild(geometryData);
+    const flatCoordinateArray = flatCoordsData.values;
 
-      const props: HeatmapLayerProps = {
-        // Note: because this is a composite layer and not doing the rendering
-        // itself, we still have to pass in our defaultProps
-        ...ourDefaultProps,
-        ...otherProps,
+    const props: HeatmapLayerProps = {
+      // Note: because this is a composite layer and not doing the rendering
+      // itself, we still have to pass in our defaultProps
+      ...ourDefaultProps,
+      ...otherProps,
 
-        // used for picking purposes
-        recordBatchIdx,
-        tableOffsets,
-
-        id: `${this.props.id}-geoarrow-heatmap-${recordBatchIdx}`,
-        data: {
-          // @ts-expect-error passed through to enable use by function accessors
-          data: table.batches[recordBatchIdx],
-          length: geometryData.length,
-          attributes: {
-            getPosition: {
-              value: flatCoordinateArray,
-              size: geometryData.type.listSize,
-            },
+      id: `${this.props.id}-geoarrow-heatmap`,
+      data: {
+        // @ts-expect-error passed through to enable use by function accessors
+        data: batch,
+        length: geometryData.length,
+        attributes: {
+          getPosition: {
+            value: flatCoordinateArray,
+            size: geometryData.type.listSize,
           },
         },
-      };
+      },
+    };
 
-      for (const [propName, propInput] of Object.entries(accessors)) {
-        assignAccessor({
-          props,
-          propName,
-          propInput,
-          chunkIdx: recordBatchIdx,
-        });
-      }
-
-      const layer = new HeatmapLayer(this.getSubLayerProps(props));
-      layers.push(layer);
+    for (const [propName, propInput] of Object.entries(accessors)) {
+      assignAccessor({
+        props,
+        propName,
+        propInput,
+      });
     }
 
-    return layers;
+    return new HeatmapLayer(this.getSubLayerProps(props));
   }
 }

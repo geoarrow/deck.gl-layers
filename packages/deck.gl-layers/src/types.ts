@@ -5,6 +5,7 @@
 import type { BinaryAttribute, Color, PickingInfo } from "@deck.gl/core";
 import { TypedArray } from "@deck.gl/core/dist/types/types";
 import * as arrow from "apache-arrow";
+import type { Data } from "apache-arrow";
 
 /**
  * An individual layer's data
@@ -61,12 +62,12 @@ export type GeoArrowPickingInfo = PickingInfo & {
 };
 
 export type FloatAccessor =
-  | arrow.Vector<arrow.Float>
+  | Data<arrow.Float>
   | Accessor<arrow.RecordBatch, number>;
-export type TimestampAccessor = arrow.Vector<arrow.List<arrow.Float>>;
+export type TimestampAccessor = arrow.Data<arrow.List<arrow.Float>>;
 export type ColorAccessor =
-  | arrow.Vector<arrow.FixedSizeList<arrow.Uint8>>
+  | arrow.Data<arrow.FixedSizeList<arrow.Uint8>>
   | Accessor<arrow.RecordBatch, Color | Color[]>;
 export type NormalAccessor =
-  | arrow.Vector<arrow.FixedSizeList<arrow.Float32>>
-  | Accessor<arrow.Table, arrow.Vector<arrow.FixedSizeList<arrow.Float32>>>;
+  | arrow.Data<arrow.FixedSizeList<arrow.Float32>>
+  | Accessor<arrow.RecordBatch, arrow.Data<arrow.FixedSizeList<arrow.Float32>>>;
