@@ -33,6 +33,44 @@ import { EXTENSION_NAME } from "../constants";
 import { validateAccessors } from "../utils/validate";
 import { spawn, Transfer, BlobWorker, Pool } from "threads";
 import type { FunctionThread } from "threads";
+import type { PoolOptions } from "threads/dist/master/pool";
+
+/** A helper function to initialize a worker threadpool for earcut */
+export async function initEarcutPool(
+  earcutWorkerUrl?: string | URL | null,
+  optionsOrSize?: number | PoolOptions,
+): Promise<Pool<FunctionThread> | null> {
+  const earcutWorkerText =
+    earcutWorkerUrl === null || earcutWorkerUrl === undefined
+      ? null
+      : await fetch(earcutWorkerUrl).then((resp) => resp.text());
+
+  if (!earcutWorkerText) {
+    return null;
+  }
+
+  // Some environments are not able to execute `importScripts`
+  // E.g. on a non-served HTML file (e.g. from lonboard export) you get
+  // Uncaught DOMException: Failed to execute 'importScripts' on
+  // 'WorkerGlobalScope': The script at
+  // 'blob:null/4ffb0b98-d1bd-4d9e-be52-998f50829723' failed to load.
+  //
+  // Additionally, it appears impossible to _catch_ this exception (at least
+  // on Chrome), so we'll hack around this by additionally checking if the
+  // current file is served from file://
+  if (window?.location?.href.startsWith("file://")) {
+    return null;
+  }
+
+  try {
+    return Pool<FunctionThread>(
+      () => spawn(BlobWorker.fromText(earcutWorkerText)),
+      optionsOrSize || 8,
+    );
+  } catch (err) {
+    return null;
+  }
+}
 
 /** All properties supported by GeoArrowSolidPolygonLayer */
 export type GeoArrowSolidPolygonLayerProps = Omit<
@@ -74,6 +112,21 @@ type _GeoArrowSolidPolygonLayerProps = {
    * triangulation.
    */
   metrics?: boolean;
+
+  /** A worker pool for earcut triangulation.
+   *
+   * You can use the `initEarcutPool` helper function to create a pool. This is
+   * helpful if you're rendering many Polygon layers and want to share a pool
+   * between them.
+   *
+   * If not provided, a pool will be created automatically.
+   *
+   * As of v0.4, layers have been refactored to take in a _RecordBatch_ as
+   * input, instead of a table. This means that if a worker pool is created as
+   * part of this layer, it will only be used once. To take advantage of the
+   * pool, ideally you should create it externally and pass it in via this prop.
+   */
+  earcutWorkerPool?: Pool<FunctionThread> | null;
 
   /**
    * URL to worker that performs earcut triangulation.
@@ -119,7 +172,10 @@ const ourDefaultProps: Pick<
   earcutWorkerUrl:
     "https://cdn.jsdelivr.net/npm/@geoarrow/geoarrow-js@0.3.0/dist/earcut-worker.min.js",
 
-  earcutWorkerPoolSize: 8,
+  // The default is set to 1 because we don't iterate over chunks of a table
+  // inside the layer anymore. We only run earcut on a **single** Arrow Polygon
+  // array, so we only run a single post message to a thread.
+  earcutWorkerPoolSize: 1,
 };
 
 // @ts-expect-error Type error in merging default props with ours
@@ -150,7 +206,7 @@ export class GeoArrowSolidPolygonLayer<
         this.props.earcutWorkerUrl === undefined
           ? null
           : fetch(this.props.earcutWorkerUrl).then((resp) => resp.text()),
-      earcutWorkerPool: null,
+      earcutWorkerPool: this.props.earcutWorkerPool || null,
     };
   }
 
@@ -180,7 +236,7 @@ export class GeoArrowSolidPolygonLayer<
     try {
       const pool = Pool<FunctionThread>(
         () => spawn(BlobWorker.fromText(workerText)),
-        8,
+        this.props.earcutWorkerPoolSize || 1,
       );
       this.state.earcutWorkerPool = pool;
       return this.state.earcutWorkerPool;
