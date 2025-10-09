@@ -2,8 +2,8 @@
   "name": "deck.gl-layers-monorepo",
   "private": true,
   "workspaces": [
-    "packages/deck.gl-layers",
-    "packages/examples/*"
+    "packages/*",
+    "examples/*"
   ],
   "scripts": {
     "build:rollup": "rollup -c rollup.config.js",
@@ -46,8 +46,13 @@
   "overrides": {
     "@deck.gl/aggregation-layers": "^9.2.1",
     "@deck.gl/core": "^9.2.1",
+    "@deck.gl/extensions": "^9.2.1",
     "@deck.gl/geo-layers": "^9.2.1",
-    "@deck.gl/layers": "^9.2.1"
+    "@deck.gl/layers": "^9.2.1",
+    "@luma.gl/constants": "^9.2.1",
+    "@luma.gl/core": "^9.2.1",
+    "@luma.gl/engine": "^9.2.1",
+    "@luma.gl/shadertools": "^9.2.1"
   },
   "volta": {
     "node": "22.20.0",

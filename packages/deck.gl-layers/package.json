@@ -39,19 +39,19 @@
   "author": "Kyle Barron <kylebarron2@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "@deck.gl/aggregation-layers": "^9.0.12",
-    "@deck.gl/core": "^9.0.12",
-    "@deck.gl/geo-layers": "^9.0.12",
-    "@deck.gl/layers": "^9.0.12",
-    "@math.gl/polygon": "^3.6.2",
+    "@deck.gl/aggregation-layers": "^9.2.1",
+    "@deck.gl/core": "^9.2.1",
+    "@deck.gl/geo-layers": "^9.2.1",
+    "@deck.gl/layers": "^9.2.1",
+    "@math.gl/polygon": "^4.1.0",
     "apache-arrow": ">=15"
   },
   "devDependencies": {
-    "@deck.gl/aggregation-layers": "^9.0.12",
-    "@deck.gl/core": "^9.0.12",
-    "@deck.gl/geo-layers": "^9.0.12",
-    "@deck.gl/layers": "^9.0.12",
-    "@math.gl/polygon": "^3.6.2",
+    "@deck.gl/aggregation-layers": "^9.2.1",
+    "@deck.gl/core": "^9.2.1",
+    "@deck.gl/geo-layers": "^9.2.1",
+    "@deck.gl/layers": "^9.2.1",
+    "@math.gl/polygon": "^4.1.0",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.3",
@@ -67,14 +67,8 @@
     "typescript": "^5.2.2",
     "vitest": "^0.33.0"
   },
-  "resolutions": {
-    "@luma.gl/constants": "^9.0.11",
-    "@luma.gl/core": "^9.0.11",
-    "@luma.gl/webgl": "^9.0.11"
-  },
   "volta": {
-    "node": "20.8.0",
-    "npm": "10.2.0"
+    "extends": "../../package.json"
   },
   "dependencies": {
     "@geoarrow/geoarrow-js": "^0.3.0",
