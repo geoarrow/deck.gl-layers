@@ -1,14 +1,10 @@
-[tool.poetry]
+[project]
 name = "geoarrow-example-point"
 version = "0.1.0"
-description = ""
-authors = []
+description = "Add your description here"
 readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
 
-[tool.poetry.dependencies]
-python = "^3.9"
-lonboard = "^0.3.0"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[dependency-groups]
+dev = ["ipykernel>=6.30.1"]
