@@ -12,8 +12,8 @@
     "clean": "rimraf dist",
     "docs:build": "typedoc",
     "docs:publish": "gh-pages -d docs_build",
-    "fmt:check": "prettier './src/**/*.ts' --check",
-    "fmt": "prettier './src/**/*.ts' --write",
+    "fmt:check": "prettier '**/*.ts' --check",
+    "fmt": "prettier '**/*.ts' --write",
     "prepublishOnly": "npm run clean && npm run build",
     "test": "vitest run",
     "typecheck": "tsc --build",
@@ -27,12 +27,10 @@
   "author": "Kyle Barron <kylebarron2@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@math.gl/polygon": "^3.6.2",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.3",
     "@rollup/plugin-typescript": "^11.1.2",
-    "apache-arrow": ">=15",
     "gh-pages": "^6.1.0",
     "prettier": "^3.1.0",
     "rimraf": "^5.0.5",
@@ -52,7 +50,8 @@
     "@luma.gl/constants": "^9.2.1",
     "@luma.gl/core": "^9.2.1",
     "@luma.gl/engine": "^9.2.1",
-    "@luma.gl/shadertools": "^9.2.1"
+    "@luma.gl/shadertools": "^9.2.1",
+    "apache-arrow": ">=21"
   },
   "volta": {
     "node": "22.20.0",
