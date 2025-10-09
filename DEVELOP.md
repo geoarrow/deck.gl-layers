@@ -8,6 +8,17 @@ npm install
 
 and Volta will automatically install the pinned versions of Node and NPM and install dependencies. If you need to change the pinned version of Node or NPM, you can do that in the `"volta"` section of `package.json`.
 
+
+## Workspace
+
+You should only run `npm install` at the root of the repository. The packages in `packages/` are managed by the root `package.json` and should not be installed separately.
+
+To run an example, you can `cd` into the example directory and run
+
+```
+npm run start
+```
+
 ## Building/Bundling
 
 First, let me state that JavaScript bundling is hard, so if you aren't able to use the generated bundle for some reason, open an issue or make a PR! It probably doesn't work out of ignorance, not intent.
