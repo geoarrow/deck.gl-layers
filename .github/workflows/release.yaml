@@ -19,6 +19,14 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - run: npm ci
-      - run: cd packages/deck.gl-layers && npm publish
+      - name: Read version and publish
+        run: |
+          VERSION=$(jq -r .version package.json)
+          if [[ "$VERSION" == *alpha* || "$VERSION" == *beta* ]]; then
+            npm publish --tag beta
+          else
+            npm publish
+          fi
+        working-directory: packages/deck.gl-layers
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
