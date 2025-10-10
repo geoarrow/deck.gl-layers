@@ -8,8 +8,8 @@ export { GeoArrowArcLayer } from "./layers/arc-layer.js";
 export type { GeoArrowColumnLayerProps } from "./layers/column-layer.js";
 export { GeoArrowColumnLayer } from "./layers/column-layer.js";
 
-export type { GeoArrowH3HexagonLayerProps as _GeoArrowH3HexagonLayerProps } from "./layers/h3-hexagon-layer.js";
-export { GeoArrowH3HexagonLayer as _GeoArrowH3HexagonLayer } from "./layers/h3-hexagon-layer.js";
+export type { GeoArrowH3HexagonLayerProps } from "./layers/h3-hexagon-layer.js";
+export { GeoArrowH3HexagonLayer } from "./layers/h3-hexagon-layer.js";
 
 export type { GeoArrowHeatmapLayerProps } from "./layers/heatmap-layer.js";
 export { GeoArrowHeatmapLayer } from "./layers/heatmap-layer.js";
