@@ -31,7 +31,12 @@ import { validateAccessors } from "../utils/validate";
 /** All properties supported by GeoArrowScatterplotLayer */
 export type GeoArrowScatterplotLayerProps = Omit<
   ScatterplotLayerProps<arrow.RecordBatch>,
-  "data" | "getPosition" | "getRadius" | "getFillColor" | "getLineColor"
+  | "data"
+  | "getPosition"
+  | "getRadius"
+  | "getFillColor"
+  | "getLineColor"
+  | "getLineWidth"
 > &
   _GeoArrowScatterplotLayerProps &
   CompositeLayerProps;
