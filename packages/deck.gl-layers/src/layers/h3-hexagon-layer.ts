@@ -22,7 +22,12 @@ import { validateAccessors } from "../utils/validate";
 /** All properties supported by GeoArrowH3HexagonLayer */
 export type GeoArrowH3HexagonLayerProps = Omit<
   H3HexagonLayerProps,
-  "data" | "getHexagon"
+  | "data"
+  | "getHexagon"
+  | "getFillColor"
+  | "getLineColor"
+  | "getLineWidth"
+  | "getElevation"
 > &
   _GeoArrowH3HexagonLayerProps &
   // Omit<GeoArrowPolygonLayerProps, "getPolygon"> &
@@ -35,7 +40,7 @@ type _GeoArrowH3HexagonLayerProps = {
   /**
    * Called for each data object to retrieve the quadkey string identifier.
    */
-  getHexagon: arrow.Data<arrow.Utf8>;
+  getHexagon: arrow.Data<arrow.Utf8 | arrow.Uint64>;
 
   /** Fill color accessor.
    * @default [0, 0, 0, 255]
@@ -103,10 +108,10 @@ export class GeoArrowH3HexagonLayer<
   }
 
   renderLayers(): Layer<{}> | LayersList | null {
-    return this._renderLayersPoint();
+    return this._renderLayer();
   }
 
-  _renderLayersPoint(): Layer<{}> | LayersList | null {
+  _renderLayer(): Layer<{}> | LayersList | null {
     const { data: batch, getHexagon: hexData } = this.props;
 
     if (this.props._validate) {
@@ -117,6 +122,7 @@ export class GeoArrowH3HexagonLayer<
     const [accessors, otherProps] = extractAccessorsFromProps(this.props, [
       "getHexagon",
     ]);
+    const hexVector = new arrow.Vector([hexData]);
 
     const props: H3HexagonLayerProps = {
       // Note: because this is a composite layer and not doing the rendering
@@ -130,13 +136,15 @@ export class GeoArrowH3HexagonLayer<
         // @ts-expect-error passed through to enable use by function accessors
         data: batch,
         length: hexData.length,
-        attributes: {
-          getHexagon: {
-            value: hexData.values,
-            // h3 cells should always be 15 characters
-            size: 15,
-          },
-        },
+      },
+      // Unfortunately we must load back to pure JS strings
+      getHexagon: (_, objectInfo) => {
+        const value = hexVector.get(objectInfo.index)!;
+        if (typeof value === "string") {
+          return value;
+        } else {
+          return value.toString(16);
+        }
       },
     };
 
