@@ -6,21 +6,22 @@ import {
   CompositeLayer,
   CompositeLayerProps,
   DefaultProps,
+  GetPickingInfoParams,
   Layer,
   LayersList,
-  GetPickingInfoParams,
   assert,
 } from "@deck.gl/core";
-import { PolygonLayer } from "@deck.gl/layers";
 import type { PolygonLayerProps } from "@deck.gl/layers";
-import * as arrow from "apache-arrow";
+import { PolygonLayer } from "@deck.gl/layers";
 import * as ga from "@geoarrow/geoarrow-js";
-import { getGeometryData } from "../utils/utils";
-import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
+import * as arrow from "apache-arrow";
+import type { FunctionThread, Pool } from "threads";
 import { EXTENSION_NAME } from "../constants";
-import { GeoArrowSolidPolygonLayer } from "./solid-polygon-layer";
+import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
+import { GeoArrowExtraPickingProps } from "../utils/picking";
+import { getGeometryData } from "../utils/utils";
 import { GeoArrowPathLayer } from "./path-layer";
+import { GeoArrowSolidPolygonLayer } from "./solid-polygon-layer";
 
 /**
  * Get the exterior of a PolygonVector or PolygonData as a MultiLineString
@@ -135,6 +136,34 @@ type _GeoArrowPolygonLayerProps = {
    * @default 1000
    */
   getElevation?: FloatAccessor;
+
+  /** A worker pool for earcut triangulation.
+   *
+   * You can use the `initEarcutPool` helper function to create a pool. This is
+   * helpful if you're rendering many Polygon layers and want to share a pool
+   * between them.
+   *
+   * If not provided, a pool will be created automatically.
+   *
+   * As of v0.4, layers have been refactored to take in a _RecordBatch_ as
+   * input, instead of a table. This means that if a worker pool is created as
+   * part of this layer, it will only be used once. To take advantage of the
+   * pool, ideally you should create it externally and pass it in via this prop.
+   */
+  earcutWorkerPool?: Pool<FunctionThread> | null;
+
+  /**
+   * URL to worker that performs earcut triangulation.
+   *
+   * By default this loads from the jsdelivr CDN, but end users may want to host
+   * this on their own domain.
+   */
+  earcutWorkerUrl?: string | URL | null;
+
+  /**
+   * The number of workers used for the earcut thread pool.
+   */
+  earcutWorkerPoolSize?: number;
 
   /**
    * If `true`, validate the arrays provided (e.g. chunk lengths)
@@ -282,6 +311,9 @@ export class GeoArrowPolygonLayer<
       getPolygon,
       updateTriggers,
       material,
+      earcutWorkerPool,
+      earcutWorkerPoolSize,
+      earcutWorkerUrl,
     } = this.props;
 
     const FillLayer = this.getSubLayerClass("fill", GeoArrowSolidPolygonLayer);
@@ -305,6 +337,10 @@ export class GeoArrowPolygonLayer<
 
         material,
         transitions,
+
+        earcutWorkerPool,
+        earcutWorkerPoolSize,
+        earcutWorkerUrl,
       },
       this.getSubLayerProps({
         id: "fill",
