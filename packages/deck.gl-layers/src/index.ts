@@ -27,7 +27,10 @@ export type { GeoArrowScatterplotLayerProps } from "./layers/scatterplot-layer.j
 export { GeoArrowScatterplotLayer } from "./layers/scatterplot-layer.js";
 
 export type { GeoArrowSolidPolygonLayerProps } from "./layers/solid-polygon-layer.js";
-export { GeoArrowSolidPolygonLayer } from "./layers/solid-polygon-layer.js";
+export {
+  GeoArrowSolidPolygonLayer,
+  initEarcutPool,
+} from "./layers/solid-polygon-layer.js";
 
 export type { GeoArrowTextLayerProps as _GeoArrowTextLayerProps } from "./layers/text-layer.js";
 export { GeoArrowTextLayer as _GeoArrowTextLayer } from "./layers/text-layer.js";
