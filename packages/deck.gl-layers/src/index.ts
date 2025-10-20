@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) vis.gl contributors
 
+export type { GeoArrowA5LayerProps } from "./layers/a5-layer.js";
+export { GeoArrowA5Layer } from "./layers/a5-layer.js";
+
 export type { GeoArrowArcLayerProps } from "./layers/arc-layer.js";
 export { GeoArrowArcLayer } from "./layers/arc-layer.js";
 
