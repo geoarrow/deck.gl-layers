@@ -178,7 +178,7 @@ export class GeoArrowPathLayer<
       ...ourDefaultProps,
       ...otherProps,
 
-      id: `${this.props.id}-geoarrow-path`,
+      id: `${this.props.id}-geoarrow-path-linestring`,
       data: {
         // @ts-expect-error passed through to enable use by function accessors
         data: batch,
@@ -240,7 +240,7 @@ export class GeoArrowPathLayer<
       ...ourDefaultProps,
       ...otherProps,
 
-      id: `${this.props.id}-geoarrow-path`,
+      id: `${this.props.id}-geoarrow-path-multilinestring`,
       data: {
         // @ts-expect-error passed through to enable use by function accessors
         data: batch,

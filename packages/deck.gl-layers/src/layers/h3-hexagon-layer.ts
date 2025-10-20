@@ -130,7 +130,7 @@ export class GeoArrowH3HexagonLayer<
       ...ourDefaultProps,
       ...otherProps,
 
-      id: `${this.props.id}-geoarrow-arc`,
+      id: `${this.props.id}-geoarrow-h3`,
 
       data: {
         // @ts-expect-error passed through to enable use by function accessors
