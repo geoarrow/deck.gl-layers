@@ -210,7 +210,7 @@ export class GeoArrowTextLayer<
       ...ourDefaultProps,
       ...otherProps,
 
-      id: `${this.props.id}-geoarrow-heatmap`,
+      id: `${this.props.id}-geoarrow-text`,
       data: {
         // @ts-expect-error passed through to enable use by function accessors
         data: batch,

@@ -169,7 +169,7 @@ export class GeoArrowScatterplotLayer<
       ...ourDefaultProps,
       ...otherProps,
 
-      id: `${this.props.id}-geoarrow-scatterplot`,
+      id: `${this.props.id}-geoarrow-scatterplot-point`,
       data: {
         // @ts-expect-error passed through to enable use by function accessors
         data: batch,
@@ -225,7 +225,7 @@ export class GeoArrowScatterplotLayer<
       ...ourDefaultProps,
       ...otherProps,
 
-      id: `${this.props.id}-geoarrow-scatterplot`,
+      id: `${this.props.id}-geoarrow-scatterplot-multipoint`,
       data: {
         // @ts-expect-error passed through to enable use by function accessors
         data: batch,

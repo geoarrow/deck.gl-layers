@@ -496,7 +496,7 @@ export class GeoArrowSolidPolygonLayer<
       ...ourDefaultProps,
       ...otherProps,
 
-      id: `${this.props.id}-geoarrow-point`,
+      id: `${this.props.id}-geoarrow-solid-polygon`,
       data: {
         // @ts-expect-error passed through to enable use by function accessors
         data: batch,
