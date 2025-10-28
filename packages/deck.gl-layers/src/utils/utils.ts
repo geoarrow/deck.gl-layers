@@ -255,6 +255,8 @@ export function assignAccessor(args: AssignAccessorProps) {
     return;
   }
 
+  props.data.attributes = props.data.attributes || {};
+
   if (propInput instanceof arrow.Data) {
     const columnData = propInput;
 
