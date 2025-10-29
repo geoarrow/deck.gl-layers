@@ -1,6 +1,6 @@
 {
   "name": "@geoarrow/deck.gl-layers",
-  "version": "0.4.0-beta.4",
+  "version": "0.4.0-beta.5",
   "type": "module",
   "description": "",
   "source": "src/index.ts",
