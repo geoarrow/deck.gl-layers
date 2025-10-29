@@ -11,6 +11,9 @@ export { GeoArrowArcLayer } from "./layers/arc-layer.js";
 export type { GeoArrowColumnLayerProps } from "./layers/column-layer.js";
 export { GeoArrowColumnLayer } from "./layers/column-layer.js";
 
+export type { GeoArrowGeohashLayerProps } from "./layers/geohash-layer.js";
+export { GeoArrowGeohashLayer } from "./layers/geohash-layer.js";
+
 export type { GeoArrowH3HexagonLayerProps } from "./layers/h3-hexagon-layer.js";
 export { GeoArrowH3HexagonLayer } from "./layers/h3-hexagon-layer.js";
 
@@ -25,6 +28,9 @@ export { GeoArrowPointCloudLayer } from "./layers/point-cloud-layer.js";
 
 export type { GeoArrowPolygonLayerProps } from "./layers/polygon-layer.js";
 export { GeoArrowPolygonLayer } from "./layers/polygon-layer.js";
+
+export type { GeoArrowS2LayerProps } from "./layers/s2-layer.js";
+export { GeoArrowS2Layer } from "./layers/s2-layer.js";
 
 export type { GeoArrowScatterplotLayerProps } from "./layers/scatterplot-layer.js";
 export { GeoArrowScatterplotLayer } from "./layers/scatterplot-layer.js";
