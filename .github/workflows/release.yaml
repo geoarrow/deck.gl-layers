@@ -6,8 +6,13 @@ on:
     tags:
       - "v*"
 
+permissions:
+  id-token: write # Required for OIDC
+  contents: read
+
 jobs:
-  build:
+  build-publish:
+    environment: npm-release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,5 +33,3 @@ jobs:
             npm publish
           fi
         working-directory: packages/deck.gl-layers
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
