@@ -94,7 +94,9 @@ const defaultProps: DefaultProps<GeoArrowS2LayerProps> = {
   ...ourDefaultProps,
 };
 
-export class GeoArrowS2Layer<ExtraProps extends {} = {}> extends CompositeLayer<
+export class GeoArrowS2Layer<
+  ExtraProps extends object = Record<string, never>,
+> extends CompositeLayer<
   GeoArrowS2LayerProps & ExtraProps
 > {
   static defaultProps = defaultProps;
@@ -108,11 +110,11 @@ export class GeoArrowS2Layer<ExtraProps extends {} = {}> extends CompositeLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     return this._renderLayer();
   }
 
-  _renderLayer(): Layer<{}> | LayersList | null {
+  _renderLayer(): Layer<object> | LayersList | null {
     const { data: batch, getS2Token } = this.props;
 
     if (this.props._validate) {

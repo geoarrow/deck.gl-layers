@@ -148,7 +148,7 @@ const defaultProps: DefaultProps<GeoArrowTextLayerProps> = {
 };
 
 export class GeoArrowTextLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowTextLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowTextLayer";
@@ -161,7 +161,7 @@ export class GeoArrowTextLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     if (this.props.getPosition !== undefined) {
@@ -184,7 +184,7 @@ export class GeoArrowTextLayer<
   _renderTextLayer(
     geometryData: ga.data.PointData,
     textData: arrow.Data<arrow.Utf8>,
-  ): Layer<{}> | LayersList | null {
+  ): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     if (this.props._validate) {

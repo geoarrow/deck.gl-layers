@@ -2,7 +2,7 @@ import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 import type { Layer } from "deck.gl";
 import DeckGL from "deck.gl";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { MapContext, NavigationControl, StaticMap } from "react-map-gl";
 
@@ -76,6 +76,7 @@ function Root() {
       layers={layers}
       // @ts-expect-error
       ContextProvider={MapContext.Provider}
+      onClick={onClick}
     >
       <StaticMap mapStyle={MAP_STYLE} />
       <NavigationControl style={NAV_CONTROL_STYLE} />

@@ -101,7 +101,7 @@ const defaultProps: DefaultProps<GeoArrowScatterplotLayerProps> = {
 };
 
 export class GeoArrowScatterplotLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowScatterplotLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowScatterplotLayer";
@@ -114,7 +114,7 @@ export class GeoArrowScatterplotLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     if (this.props.getPosition !== undefined) {
@@ -200,7 +200,7 @@ export class GeoArrowScatterplotLayer<
 
   _renderMultiPointLayer(
     multiPointData: ga.data.MultiPointData,
-  ): Layer<{}> | null {
+  ): Layer<object> | null {
     const { data: batch } = this.props;
 
     // TODO: validate that if nested, accessor props have the same nesting

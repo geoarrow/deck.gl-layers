@@ -89,12 +89,12 @@ const defaultProps: DefaultProps<GeoArrowTripsLayerProps> = {
 
 /** Render animated paths that represent vehicle trips. */
 export class GeoArrowTripsLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowTripsLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowTripsLayer";
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     const { data: batch, getTimestamps } = this.props;
 
     if (this.props.getPath !== undefined) {
@@ -120,7 +120,7 @@ export class GeoArrowTripsLayer<
   _renderLineStringLayer(
     lineStringData: ga.data.LineStringData,
     timestampData: TimestampAccessor,
-  ): Layer<{}> | LayersList | null {
+  ): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     if (this.props._validate) {

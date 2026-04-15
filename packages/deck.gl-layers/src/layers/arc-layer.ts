@@ -116,7 +116,7 @@ const defaultProps: DefaultProps<GeoArrowArcLayerProps> = {
 };
 
 export class GeoArrowArcLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowArcLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowArcLayer";
@@ -129,11 +129,11 @@ export class GeoArrowArcLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     return this._renderLayersPoint();
   }
 
-  _renderLayersPoint(): Layer<{}> | LayersList | null {
+  _renderLayersPoint(): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
     let { getSourcePosition: sourceData, getTargetPosition: targetData } =
       this.props;

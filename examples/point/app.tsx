@@ -2,7 +2,7 @@ import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 import type { Layer, PickingInfo } from "deck.gl";
 import DeckGL from "deck.gl";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { MapContext, NavigationControl, StaticMap } from "react-map-gl";
 
@@ -62,7 +62,7 @@ function Root() {
         getRadius: ({ index, data }) => {
           const recordBatch = data.data;
           const row = recordBatch.get(index)!;
-          return row["avg_d_kbps"] / 50;
+          return row.avg_d_kbps / 50;
         },
         radiusMinPixels: 0.1,
         pickable: true,

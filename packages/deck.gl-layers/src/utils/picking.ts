@@ -3,7 +3,7 @@
 // Copyright (c) vis.gl contributors
 
 import type { GetPickingInfoParams } from "@deck.gl/core";
-import type { Data, DataType, RecordBatch } from "apache-arrow";
+import type { RecordBatch } from "apache-arrow";
 import type { GeoArrowPickingInfo } from "../types";
 
 export interface GeoArrowExtraPickingProps {

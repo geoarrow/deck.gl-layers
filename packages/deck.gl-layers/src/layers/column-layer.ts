@@ -110,7 +110,7 @@ const defaultProps: DefaultProps<GeoArrowColumnLayerProps> = {
  * coordinates.
  */
 export class GeoArrowColumnLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowColumnLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowColumnLayer";
@@ -123,7 +123,7 @@ export class GeoArrowColumnLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     const geometryData = getGeometryData(batch, EXTENSION_NAME.POINT);
@@ -141,7 +141,7 @@ export class GeoArrowColumnLayer<
 
   _renderPointLayer(
     geometryData: ga.data.PointData,
-  ): Layer<{}> | LayersList | null {
+  ): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     if (this.props._validate) {

@@ -76,12 +76,12 @@ const defaultProps: DefaultProps<GeoArrowHeatmapLayerProps> = {
 };
 
 export class GeoArrowHeatmapLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowHeatmapLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowHeatmapLayer";
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     if (this.props.getPosition !== undefined) {
@@ -103,7 +103,7 @@ export class GeoArrowHeatmapLayer<
 
   _renderPointLayer(
     geometryData: ga.data.PointData,
-  ): Layer<{}> | LayersList | null {
+  ): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     if (this.props._validate) {

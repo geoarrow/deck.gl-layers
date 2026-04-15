@@ -99,7 +99,7 @@ const defaultProps: DefaultProps<GeoArrowH3HexagonLayerProps> = {
 };
 
 export class GeoArrowH3HexagonLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowH3HexagonLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowH3HexagonLayer";
@@ -112,11 +112,11 @@ export class GeoArrowH3HexagonLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     return this._renderLayer();
   }
 
-  _renderLayer(): Layer<{}> | LayersList | null {
+  _renderLayer(): Layer<object> | LayersList | null {
     const { data: batch, getHexagon: hexData } = this.props;
 
     if (this.props._validate) {

@@ -71,7 +71,7 @@ export async function initEarcutPool(
       () => spawn(BlobWorker.fromText(earcutWorkerText)),
       optionsOrSize || 8,
     );
-  } catch (err) {
+  } catch (_err) {
     return null;
   }
 }
@@ -189,7 +189,7 @@ const defaultProps: DefaultProps<GeoArrowSolidPolygonLayerProps> = {
 };
 
 export class GeoArrowSolidPolygonLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowSolidPolygonLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowSolidPolygonLayer";
@@ -244,12 +244,12 @@ export class GeoArrowSolidPolygonLayer<
       );
       this.state.earcutWorkerPool = pool;
       return this.state.earcutWorkerPool;
-    } catch (err) {
+    } catch (_err) {
       return null;
     }
   }
 
-  async finalizeState(context: LayerContext): Promise<void> {
+  async finalizeState(_context: LayerContext): Promise<void> {
     await this.state?.earcutWorkerPool?.terminate();
     console.log("terminated");
   }
@@ -401,7 +401,7 @@ export class GeoArrowSolidPolygonLayer<
     return ga.algorithm.earcut(polygonData);
   }
 
-  updateState({ props, changeFlags }: UpdateParameters<this>): void {
+  updateState({ changeFlags }: UpdateParameters<this>): void {
     if (changeFlags.dataChanged) {
       this.updateData();
     }
@@ -415,7 +415,7 @@ export class GeoArrowSolidPolygonLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     const { batch } = this.state;
     if (!batch) return null;
 
@@ -461,7 +461,7 @@ export class GeoArrowSolidPolygonLayer<
 
   _renderPolygonLayer(
     polygonData: ga.data.PolygonData,
-  ): Layer<{}> | LayersList | null {
+  ): Layer<object> | LayersList | null {
     const { batch } = this.state;
     if (!batch) return null;
 
@@ -529,7 +529,7 @@ export class GeoArrowSolidPolygonLayer<
 
   _renderMultiPolygonLayer(
     multiPolygonData: ga.data.MultiPolygonData,
-  ): Layer<{}> | LayersList | null {
+  ): Layer<object> | LayersList | null {
     const { batch } = this.state;
     if (!batch) return null;
 
@@ -626,7 +626,7 @@ export class GeoArrowSolidPolygonLayer<
   }
 }
 
-function encodePickingColors(
+function _encodePickingColors(
   geomToCoordOffsets: Int32Array,
   encodePickingColor: (id: number, result: number[]) => void,
 ): Uint8ClampedArray {

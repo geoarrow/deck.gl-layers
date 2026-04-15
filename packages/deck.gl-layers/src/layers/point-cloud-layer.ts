@@ -89,7 +89,7 @@ const defaultProps: DefaultProps<GeoArrowPointCloudLayerProps> = {
 };
 
 export class GeoArrowPointCloudLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowPointCloudLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowPointCloudLayer";
@@ -102,7 +102,7 @@ export class GeoArrowPointCloudLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     if (this.props.getPosition !== undefined) {
@@ -124,7 +124,7 @@ export class GeoArrowPointCloudLayer<
 
   _renderPointLayer(
     geometryData: ga.data.PointData,
-  ): Layer<{}> | LayersList | null {
+  ): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     if (this.props._validate) {

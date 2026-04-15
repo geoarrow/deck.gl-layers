@@ -2,7 +2,7 @@ import { GeoArrowTripsLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
 import type { Layer, PickingInfo } from "deck.gl";
 import DeckGL from "deck.gl";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { MapContext, NavigationControl, StaticMap } from "react-map-gl";
 
@@ -33,12 +33,12 @@ function Root() {
   const [time, setTime] = useState(0);
   const [animation] = useState<{ id: number }>({ id: 0 });
 
-  const animate = () => {
-    setTime((t) => (t + animationSpeed) % loopLength);
-    animation.id = window.requestAnimationFrame(animate);
-  };
-
   useEffect(() => {
+    const animate = () => {
+      setTime((t) => (t + animationSpeed) % loopLength);
+      animation.id = window.requestAnimationFrame(animate);
+    };
+
     animation.id = window.requestAnimationFrame(animate);
     return () => window.cancelAnimationFrame(animation.id);
   }, [animation]);

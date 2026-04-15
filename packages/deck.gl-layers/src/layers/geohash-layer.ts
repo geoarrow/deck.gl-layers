@@ -95,7 +95,7 @@ const defaultProps: DefaultProps<GeoArrowGeohashLayerProps> = {
 };
 
 export class GeoArrowGeohashLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowGeohashLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowGeohashLayer";
@@ -108,11 +108,11 @@ export class GeoArrowGeohashLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     return this._renderLayer();
   }
 
-  _renderLayer(): Layer<{}> | LayersList | null {
+  _renderLayer(): Layer<object> | LayersList | null {
     const { data: batch, getGeohash } = this.props;
 
     if (this.props._validate) {

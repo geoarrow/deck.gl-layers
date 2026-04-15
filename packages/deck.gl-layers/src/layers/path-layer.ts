@@ -94,7 +94,7 @@ export const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
  * Render lists of coordinate points as extruded polylines with mitering.
  */
 export class GeoArrowPathLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowPathLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowPathLayer";
@@ -107,7 +107,7 @@ export class GeoArrowPathLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     if (this.props.getPath !== undefined) {
@@ -152,7 +152,7 @@ export class GeoArrowPathLayer<
 
   _renderLineStringLayer(
     lineStringData: ga.data.LineStringData,
-  ): Layer<{}> | LayersList | null {
+  ): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     // TODO: validate that if nested, accessor props have the same nesting
@@ -208,7 +208,7 @@ export class GeoArrowPathLayer<
 
   _renderMultiLineStringLayer(
     multiLineStringData: ga.data.MultiLineStringData,
-  ): Layer<{}> | LayersList | null {
+  ): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     // TODO: validate that if nested, accessor props have the same nesting
