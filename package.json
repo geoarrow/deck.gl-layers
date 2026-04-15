@@ -17,7 +17,7 @@
     "prepublishOnly": "pnpm clean && pnpm build",
     "test": "vitest run",
     "typecheck": "tsc --build",
-    "watch": "tsc --watch"
+    "watch": "tsc --build --watch"
   },
   "files": [
     "dist/",

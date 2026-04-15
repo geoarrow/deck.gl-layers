@@ -103,10 +103,10 @@ const defaultProps: DefaultProps<GeoArrowScatterplotLayerProps> = {
 export class GeoArrowScatterplotLayer<
   ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowScatterplotLayerProps & ExtraProps> {
-  static defaultProps = defaultProps;
-  static layerName = "GeoArrowScatterplotLayer";
+  static override defaultProps = defaultProps;
+  static override layerName = "GeoArrowScatterplotLayer";
 
-  getPickingInfo(
+  override getPickingInfo(
     params: GetPickingInfoParams & {
       sourceLayer: { props: GeoArrowExtraPickingProps };
     },

@@ -212,10 +212,10 @@ const defaultLineColor: [number, number, number, number] = [0, 0, 0, 255];
 export class GeoArrowPolygonLayer<
   ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<Required<GeoArrowPolygonLayerProps> & ExtraProps> {
-  static defaultProps = defaultProps;
-  static layerName = "GeoArrowPolygonLayer";
+  static override defaultProps = defaultProps;
+  static override layerName = "GeoArrowPolygonLayer";
 
-  getPickingInfo(
+  override getPickingInfo(
     params: GetPickingInfoParams & {
       sourceLayer: { props: GeoArrowExtraPickingProps };
     },
@@ -281,7 +281,6 @@ export class GeoArrowPolygonLayer<
     // Layer composition props
     const {
       data,
-      _dataDiff,
       stroked,
       filled,
       extruded,

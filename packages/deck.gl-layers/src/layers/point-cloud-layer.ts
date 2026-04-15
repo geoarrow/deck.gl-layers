@@ -91,10 +91,10 @@ const defaultProps: DefaultProps<GeoArrowPointCloudLayerProps> = {
 export class GeoArrowPointCloudLayer<
   ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowPointCloudLayerProps & ExtraProps> {
-  static defaultProps = defaultProps;
-  static layerName = "GeoArrowPointCloudLayer";
+  static override defaultProps = defaultProps;
+  static override layerName = "GeoArrowPointCloudLayer";
 
-  getPickingInfo(
+  override getPickingInfo(
     params: GetPickingInfoParams & {
       sourceLayer: { props: GeoArrowExtraPickingProps };
     },

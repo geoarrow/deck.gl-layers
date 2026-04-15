@@ -112,10 +112,10 @@ const defaultProps: DefaultProps<GeoArrowColumnLayerProps> = {
 export class GeoArrowColumnLayer<
   ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowColumnLayerProps & ExtraProps> {
-  static defaultProps = defaultProps;
-  static layerName = "GeoArrowColumnLayer";
+  static override defaultProps = defaultProps;
+  static override layerName = "GeoArrowColumnLayer";
 
-  getPickingInfo(
+  override getPickingInfo(
     params: GetPickingInfoParams & {
       sourceLayer: { props: GeoArrowExtraPickingProps };
     },

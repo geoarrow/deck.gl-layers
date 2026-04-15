@@ -101,10 +101,10 @@ const defaultProps: DefaultProps<GeoArrowH3HexagonLayerProps> = {
 export class GeoArrowH3HexagonLayer<
   ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowH3HexagonLayerProps & ExtraProps> {
-  static defaultProps = defaultProps;
-  static layerName = "GeoArrowH3HexagonLayer";
+  static override defaultProps = defaultProps;
+  static override layerName = "GeoArrowH3HexagonLayer";
 
-  getPickingInfo(
+  override getPickingInfo(
     params: GetPickingInfoParams & {
       sourceLayer: { props: GeoArrowExtraPickingProps };
     },

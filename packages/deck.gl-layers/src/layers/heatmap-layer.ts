@@ -78,8 +78,8 @@ const defaultProps: DefaultProps<GeoArrowHeatmapLayerProps> = {
 export class GeoArrowHeatmapLayer<
   ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowHeatmapLayerProps & ExtraProps> {
-  static defaultProps = defaultProps;
-  static layerName = "GeoArrowHeatmapLayer";
+  static override defaultProps = defaultProps;
+  static override layerName = "GeoArrowHeatmapLayer";
 
   renderLayers(): Layer<object> | LayersList | null {
     const { data: batch } = this.props;

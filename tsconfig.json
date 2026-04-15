@@ -1,20 +1,30 @@
 {
-  "include": ["packages/deck.gl-layers/src"],
   "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "moduleResolution": "node",
-    "allowJs": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM"],
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowJs": false,
+    "checkJs": false,
     "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    // TODO: enable
+    // "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "noEmitOnError": false,
-    "outDir": "dist",
-    "strict": true,
-    "strictNullChecks": true
-    // "lib": [
-    //   "es2019.array", "es6", "dom"
-    // ]
-  }
+    "isolatedModules": true
+  },
+  "exclude": ["node_modules"],
+  "files": [],
+  "references": [{ "path": "packages/deck.gl-layers/tsconfig.build.json" }]
 }

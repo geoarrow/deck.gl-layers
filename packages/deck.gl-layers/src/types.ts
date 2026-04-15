@@ -3,9 +3,19 @@
 // Copyright (c) vis.gl contributors
 
 import type { BinaryAttribute, Color, PickingInfo } from "@deck.gl/core";
-import type { TypedArray } from "@deck.gl/core/dist/types/types";
 import type * as arrow from "apache-arrow";
 import type { Data } from "apache-arrow";
+
+type TypedArray =
+  | Int8Array
+  | Uint8Array
+  | Uint8ClampedArray
+  | Int16Array
+  | Uint16Array
+  | Int32Array
+  | Uint32Array
+  | Float32Array
+  | Float64Array;
 
 /**
  * An individual layer's data
@@ -13,7 +23,7 @@ import type { Data } from "apache-arrow";
 export type GeoArrowLayerData<T> = {
   data: T;
   length: number;
-  attributes?: Record<string, TypedArray | Buffer | BinaryAttribute>;
+  attributes?: Record<string, TypedArray | BinaryAttribute>;
 };
 
 /**

@@ -172,8 +172,8 @@ importers:
   examples/point:
     dependencies:
       '@geoarrow/deck.gl-layers':
-        specifier: '*'
-        version: 0.3.2(f6af68d0f0ac31d08fe01a1ddceacc68)
+        specifier: workspace:^
+        version: link:../../packages/deck.gl-layers
       '@loaders.gl/compression':
         specifier: ^4.1.4
         version: 4.4.1(@loaders.gl/core@4.4.1)
