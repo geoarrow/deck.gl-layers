@@ -8,7 +8,7 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@geoarrow/deck.gl-layers": "*",
+    "@geoarrow/deck.gl-layers": "file:../../packages/deck.gl-layers",
     "@loaders.gl/compression": "^4.1.4",
     "@loaders.gl/crypto": "^4.1.4",
     "apache-arrow": ">=14",
