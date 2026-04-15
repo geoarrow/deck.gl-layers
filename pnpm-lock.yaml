@@ -26,9 +26,9 @@ importers:
 
   examples/linestring:
     dependencies:
-      '@geoarrow/deck.gl-layers':
-        specifier: '*'
-        version: 0.3.2(f6af68d0f0ac31d08fe01a1ddceacc68)
+      '@geoarrow/deck.gl-geoarrow':
+        specifier: workspace:*
+        version: link:../../packages/deck.gl-geoarrow
       apache-arrow:
         specifier: '>=14'
         version: 21.1.0
@@ -85,9 +85,9 @@ importers:
 
   examples/multipoint:
     dependencies:
-      '@geoarrow/deck.gl-layers':
-        specifier: '*'
-        version: 0.3.2(f6af68d0f0ac31d08fe01a1ddceacc68)
+      '@geoarrow/deck.gl-geoarrow':
+        specifier: workspace:*
+        version: link:../../packages/deck.gl-geoarrow
       apache-arrow:
         specifier: '>=14'
         version: 21.1.0
@@ -116,9 +116,9 @@ importers:
 
   examples/multipolygon:
     dependencies:
-      '@geoarrow/deck.gl-layers':
-        specifier: '*'
-        version: 0.3.2(f6af68d0f0ac31d08fe01a1ddceacc68)
+      '@geoarrow/deck.gl-geoarrow':
+        specifier: workspace:*
+        version: link:../../packages/deck.gl-geoarrow
       apache-arrow:
         specifier: '>=14'
         version: 21.1.0
@@ -156,9 +156,9 @@ importers:
       '@deck.gl/mapbox':
         specifier: ^9.3.0
         version: 9.3.0(@deck.gl/core@9.3.0)(@luma.gl/core@9.3.2)(@math.gl/web-mercator@4.1.0)
-      '@geoarrow/deck.gl-layers':
+      '@geoarrow/deck.gl-geoarrow':
         specifier: workspace:^
-        version: link:../../packages/deck.gl-layers
+        version: link:../../packages/deck.gl-geoarrow
       '@loaders.gl/compression':
         specifier: ^4.1.4
         version: 4.4.1(@loaders.gl/core@4.4.1)
@@ -199,9 +199,9 @@ importers:
 
   examples/polygon:
     dependencies:
-      '@geoarrow/deck.gl-layers':
-        specifier: '*'
-        version: 0.3.2(f6af68d0f0ac31d08fe01a1ddceacc68)
+      '@geoarrow/deck.gl-geoarrow':
+        specifier: workspace:*
+        version: link:../../packages/deck.gl-geoarrow
       apache-arrow:
         specifier: '>=14'
         version: 21.1.0
@@ -230,9 +230,9 @@ importers:
 
   examples/text:
     dependencies:
-      '@geoarrow/deck.gl-layers':
-        specifier: '*'
-        version: 0.3.2(f6af68d0f0ac31d08fe01a1ddceacc68)
+      '@geoarrow/deck.gl-geoarrow':
+        specifier: workspace:*
+        version: link:../../packages/deck.gl-geoarrow
       apache-arrow:
         specifier: '>=14'
         version: 21.1.0
@@ -261,9 +261,9 @@ importers:
 
   examples/trips:
     dependencies:
-      '@geoarrow/deck.gl-layers':
-        specifier: '*'
-        version: 0.3.2(f6af68d0f0ac31d08fe01a1ddceacc68)
+      '@geoarrow/deck.gl-geoarrow':
+        specifier: workspace:*
+        version: link:../../packages/deck.gl-geoarrow
       apache-arrow:
         specifier: '>=14'
         version: 21.1.0
@@ -290,7 +290,7 @@ importers:
         specifier: ^4.0.0
         version: 4.5.14(@types/node@25.6.0)(lightningcss@1.32.0)(terser@5.46.1)
 
-  packages/deck.gl-layers:
+  packages/deck.gl-geoarrow:
     dependencies:
       '@geoarrow/geoarrow-js':
         specifier: ^0.3.0
@@ -917,16 +917,6 @@ packages:
 
   '@foliojs-fork/restructure@2.0.2':
     resolution: {integrity: sha512-59SgoZ3EXbkfSX7b63tsou/SDGzwUEK6MuB5sKqgVK1/XE0fxmpsOb9DQI8LXW3KfGnAjImCGhhEb7uPPAUVNA==}
-
-  '@geoarrow/deck.gl-layers@0.3.2':
-    resolution: {integrity: sha512-GWepG0iNSU1X1rdkcuYIR6ZQaUJ67XesLjzk2gUxvbxuQgKZBFra7goOh53ziyMercy0hVRrXEqE0M+DJmYDDA==}
-    peerDependencies:
-      '@deck.gl/aggregation-layers': ^9.0.12
-      '@deck.gl/core': ^9.0.12
-      '@deck.gl/geo-layers': ^9.0.12
-      '@deck.gl/layers': ^9.0.12
-      '@math.gl/polygon': ^3.6.2
-      apache-arrow: '>=15'
 
   '@geoarrow/geoarrow-js@0.3.3':
     resolution: {integrity: sha512-mtVzYisEqa0FbxgybFut/1w3tu7Ay2L8LwyGGVFo2l0Q3iDQgop7dgEaFFfdxpoManHML6Nm0r3HQJ3EncS2ug==}
@@ -3842,19 +3832,6 @@ snapshots:
       png-js: 1.1.0
 
   '@foliojs-fork/restructure@2.0.2': {}
-
-  '@geoarrow/deck.gl-layers@0.3.2(f6af68d0f0ac31d08fe01a1ddceacc68)':
-    dependencies:
-      '@deck.gl/aggregation-layers': 9.3.0(@deck.gl/core@9.3.0)(@deck.gl/layers@9.3.0(@deck.gl/core@9.3.0)(@loaders.gl/core@4.4.1)(@luma.gl/core@9.3.2)(@luma.gl/engine@9.3.2(@luma.gl/core@9.3.2)(@luma.gl/shadertools@9.3.2(@luma.gl/core@9.3.2))))(@luma.gl/core@9.3.2)(@luma.gl/engine@9.3.2(@luma.gl/core@9.3.2)(@luma.gl/shadertools@9.3.2(@luma.gl/core@9.3.2)))
-      '@deck.gl/core': 9.3.0
-      '@deck.gl/geo-layers': 9.3.0(@deck.gl/core@9.3.0)(@deck.gl/extensions@9.3.0(@deck.gl/core@9.3.0)(@luma.gl/core@9.3.2)(@luma.gl/engine@9.3.2(@luma.gl/core@9.3.2)(@luma.gl/shadertools@9.3.2(@luma.gl/core@9.3.2))))(@deck.gl/layers@9.3.0(@deck.gl/core@9.3.0)(@loaders.gl/core@4.4.1)(@luma.gl/core@9.3.2)(@luma.gl/engine@9.3.2(@luma.gl/core@9.3.2)(@luma.gl/shadertools@9.3.2(@luma.gl/core@9.3.2))))(@deck.gl/mesh-layers@9.3.0(@deck.gl/core@9.3.0)(@loaders.gl/core@4.4.1)(@luma.gl/core@9.3.2)(@luma.gl/engine@9.3.2(@luma.gl/core@9.3.2)(@luma.gl/shadertools@9.3.2(@luma.gl/core@9.3.2)))(@luma.gl/gltf@9.3.2(@luma.gl/core@9.3.2)(@luma.gl/engine@9.3.2(@luma.gl/core@9.3.2)(@luma.gl/shadertools@9.3.2(@luma.gl/core@9.3.2)))(@luma.gl/shadertools@9.3.2(@luma.gl/core@9.3.2)))(@luma.gl/shadertools@9.3.2(@luma.gl/core@9.3.2)))(@loaders.gl/core@4.4.1)(@luma.gl/core@9.3.2)(@luma.gl/engine@9.3.2(@luma.gl/core@9.3.2)(@luma.gl/shadertools@9.3.2(@luma.gl/core@9.3.2)))
-      '@deck.gl/layers': 9.3.0(@deck.gl/core@9.3.0)(@loaders.gl/core@4.4.1)(@luma.gl/core@9.3.2)(@luma.gl/engine@9.3.2(@luma.gl/core@9.3.2)(@luma.gl/shadertools@9.3.2(@luma.gl/core@9.3.2)))
-      '@geoarrow/geoarrow-js': 0.3.3(apache-arrow@21.1.0)
-      '@math.gl/polygon': 4.1.0
-      apache-arrow: 21.1.0
-      threads: 1.7.0
-    transitivePeerDependencies:
-      - supports-color
 
   '@geoarrow/geoarrow-js@0.3.3(apache-arrow@21.1.0)':
     dependencies:

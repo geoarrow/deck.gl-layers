@@ -1,4 +1,4 @@
-import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
+import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-geoarrow";
 import * as arrow from "apache-arrow";
 import type { Layer } from "deck.gl";
 import DeckGL from "deck.gl";

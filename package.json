@@ -1,5 +1,5 @@
 {
-  "name": "deck.gl-layers-monorepo",
+  "name": "deck.gl-geoarrow-monorepo",
   "private": true,
   "scripts": {
     "build": "pnpm --recursive --filter \"./packages/*\" build",
@@ -14,7 +14,7 @@
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck"
   },
-  "repository": "https://github.com/geoarrow/deck.gl-layers",
+  "repository": "https://github.com/geoarrow/deck.gl-geoarrow",
   "author": "Kyle Barron <kylebarron2@gmail.com>",
   "license": "MIT",
   "devDependencies": {

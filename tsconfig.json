@@ -26,5 +26,5 @@
   },
   "exclude": ["node_modules"],
   "files": [],
-  "references": [{ "path": "packages/deck.gl-layers/tsconfig.build.json" }]
+  "references": [{ "path": "packages/deck.gl-geoarrow/tsconfig.build.json" }]
 }

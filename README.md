@@ -1,8 +1,8 @@
-# @geoarrow/deck.gl-layers
+# @geoarrow/deck.gl-geoarrow
 
 The easiest, most efficient way to render large geospatial datasets in [deck.gl](https://deck.gl), via [GeoArrow](https://geoarrow.org).
 
-This is just a _glue library_ to deck.gl. It generates the same layer objects as upstream deck.gl does, but uses a [low-level binary interface](https://deck.gl/docs/developer-guide/performance#supply-attributes-directly) for best performance. Using the binary interface directly is really easy to mess up. Instead, the layer classes exposed by `@geoarrow/deck.gl-layers` focus on making the process easy to use and validating user input, and under the hood pass buffers to deck.gl's binary interface.
+This is just a _glue library_ to deck.gl. It generates the same layer objects as upstream deck.gl does, but uses a [low-level binary interface](https://deck.gl/docs/developer-guide/performance#supply-attributes-directly) for best performance. Using the binary interface directly is really easy to mess up. Instead, the layer classes exposed by `@geoarrow/deck.gl-geoarrow` focus on making the process easy to use and validating user input, and under the hood pass buffers to deck.gl's binary interface.
 
 ![](assets/hero.jpg)
 
@@ -27,7 +27,7 @@ More hosted examples on Observable are planned.
 
 All deck.gl layers have two types of properties: ["Render Options"](https://deck.gl/docs/api-reference/layers/scatterplot-layer#render-options) — constant properties across a layer — and "Data Accessors" — properties that can vary across rows. An accessor is any property prefixed with `get`, like `GeoArrowScatterplotLayer`'s `getFillColor`.
 
-With `@geoarrow/deck.gl-layers` specifically, there are two ways to pass these data accessors, either as pre-computed columns or with function callbacks on Arrow data.
+With `@geoarrow/deck.gl-geoarrow` specifically, there are two ways to pass these data accessors, either as pre-computed columns or with function callbacks on Arrow data.
 
 ### Pre-computed Arrow columns
 
@@ -35,7 +35,7 @@ If you have an Arrow column ([`Vector`](https://arrow.apache.org/docs/js/classes
 
 ```ts
 import { Table } from "apache-arrow";
-import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
+import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-geoarrow";
 
 const table = new Table(...);
 const deckLayer = new GeoArrowScatterplotLayer({
@@ -82,7 +82,7 @@ If you already have Arrow IPC files (also called Feather files) with a GeoArrow 
 
 ```ts
 import { tableFromIPC } from "apache-arrow";
-import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
+import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-geoarrow";
 
 const resp = await fetch("url/to/file.arrow");
 const jsTable = await tableFromIPC(resp);
@@ -103,7 +103,7 @@ If you have a Parquet file where the geometry column is stored as _GeoArrow_ enc
 ```ts
 import { readParquet } from "parquet-wasm"
 import { tableFromIPC } from "apache-arrow";
-import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
+import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-geoarrow";
 
 const resp = await fetch("url/to/file.parquet");
 const arrayBuffer = await resp.arrayBuffer();
@@ -117,7 +117,7 @@ const deckLayer = new GeoArrowScatterplotLayer({
 });
 ```
 
-See below for instructions to load GeoParquet 1.0 files, which have WKB-encoded geometries that need to be decoded before they can be used with `@geoarrow/deck.gl-layers`.
+See below for instructions to load GeoParquet 1.0 files, which have WKB-encoded geometries that need to be decoded before they can be used with `@geoarrow/deck.gl-geoarrow`.
 
 ### GeoParquet
 
@@ -126,7 +126,7 @@ An initial version of the [`@geoarrow/geoparquet-wasm`](https://www.npmjs.com/pa
 ```ts
 import { readGeoParquet } from "@geoarrow/geoparquet-wasm";
 import { tableFromIPC } from "apache-arrow";
-import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
+import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-geoarrow";
 
 const resp = await fetch("url/to/file.parquet");
 const arrayBuffer = await resp.arrayBuffer();
@@ -149,7 +149,7 @@ An initial version of the [`@geoarrow/flatgeobuf-wasm`](https://www.npmjs.com/pa
 ```ts
 import { readFlatGeobuf } from "@geoarrow/flatgeobuf-wasm";
 import { tableFromIPC } from "apache-arrow";
-import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
+import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-geoarrow";
 
 const resp = await fetch("url/to/file.fgb");
 const arrayBuffer = await resp.arrayBuffer();
