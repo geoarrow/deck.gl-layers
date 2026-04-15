@@ -1,21 +1,15 @@
 {
-  "$comment": "Ideally we wouldn't have a tsconfig both in this dir and at the root, but this is needed to get tsc to output files to the right place",
+  "extends": "../../tsconfig.base.json",
   "include": ["src"],
   "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "moduleResolution": "node",
-    "allowJs": true,
-    "declaration": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "noEmitOnError": false,
-    "outDir": "dist",
-    "strict": true,
-    "strictNullChecks": true
-    // "lib": [
-    //   "es2019.array", "es6", "dom"
-    // ]
+    "baseUrl": ".",
+    "noEmit": true,
+    "paths": {
+      "threads": ["../../node_modules/threads/dist/index.d.ts"],
+      "threads/worker": ["../../node_modules/threads/worker.d.ts"],
+      "threads/dist/master/pool": [
+        "../../node_modules/threads/dist/master/pool.d.ts"
+      ]
+    }
   }
 }

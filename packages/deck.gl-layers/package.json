@@ -19,7 +19,7 @@
   },
   "scripts": {
     "build:rollup": "rollup -c rollup.config.js",
-    "build:tsc": "tsc",
+    "build:tsc": "tsc --project tsconfig.build.json",
     "build": "npm run build:tsc && npm run build:rollup",
     "clean": "rimraf dist",
     "docs:build": "typedoc",
@@ -28,7 +28,7 @@
     "fmt": "prettier './src/**/*.ts' --write",
     "prepublishOnly": "npm run clean && npm run build",
     "test": "vitest run",
-    "watch": "tsc --watch"
+    "watch": "tsc --project tsconfig.build.json --watch"
   },
   "files": [
     "dist/",

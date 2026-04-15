@@ -1,20 +1,4 @@
 {
-  "include": ["packages/deck.gl-layers/src"],
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "moduleResolution": "node",
-    "allowJs": true,
-    "declaration": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "noEmitOnError": false,
-    "outDir": "dist",
-    "strict": true,
-    "strictNullChecks": true
-    // "lib": [
-    //   "es2019.array", "es6", "dom"
-    // ]
-  }
+  "files": [],
+  "references": [{ "path": "packages/deck.gl-layers/tsconfig.build.json" }]
 }

@@ -319,7 +319,7 @@ export class GeoArrowSolidPolygonLayer<
       polygonData,
       true,
     );
-    pool.queue(async (earcutWorker) => {
+    pool.queue(async (earcutWorker: FunctionThread<[unknown], Uint32Array>) => {
       const earcutTriangles = await earcutWorker(
         Transfer(preparedPolygonData, arrayBuffers),
       );
@@ -372,7 +372,7 @@ export class GeoArrowSolidPolygonLayer<
       polygonData,
       true,
     );
-    pool.queue(async (earcutWorker) => {
+    pool.queue(async (earcutWorker: FunctionThread<[unknown], Uint32Array>) => {
       const earcutTriangles = await earcutWorker(
         Transfer(preparedPolygonData, arrayBuffers),
       );
