@@ -1,18 +1,23 @@
-import {
-  CompositeLayer,
+import type {
   CompositeLayerProps,
   DefaultProps,
   GetPickingInfoParams,
   Layer,
   LayersList,
 } from "@deck.gl/core";
+import { CompositeLayer } from "@deck.gl/core";
 import type { GeohashLayerProps } from "@deck.gl/geo-layers";
 import { GeohashLayer } from "@deck.gl/geo-layers";
 import * as arrow from "apache-arrow";
 
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
+import type {
+  ColorAccessor,
+  FloatAccessor,
+  GeoArrowPickingInfo,
+} from "../types";
+import type { GeoArrowExtraPickingProps } from "../utils/picking";
+import { getPickingInfo } from "../utils/picking";
 import { assignAccessor, extractAccessorsFromProps } from "../utils/utils";
-import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
 import { validateAccessors } from "../utils/validate";
 
 /** All properties supported by GeoArrowGeohashLayer */
@@ -90,7 +95,7 @@ const defaultProps: DefaultProps<GeoArrowGeohashLayerProps> = {
 };
 
 export class GeoArrowGeohashLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowGeohashLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowGeohashLayer";
@@ -103,11 +108,11 @@ export class GeoArrowGeohashLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     return this._renderLayer();
   }
 
-  _renderLayer(): Layer<{}> | LayersList | null {
+  _renderLayer(): Layer<object> | LayersList | null {
     const { data: batch, getGeohash } = this.props;
 
     if (this.props._validate) {

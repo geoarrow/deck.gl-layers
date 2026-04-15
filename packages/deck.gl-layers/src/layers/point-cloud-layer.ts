@@ -2,19 +2,26 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) vis.gl contributors
 
-import {
-  CompositeLayer,
+import type {
   CompositeLayerProps,
   DefaultProps,
   GetPickingInfoParams,
   Layer,
   LayersList,
-  assert,
 } from "@deck.gl/core";
-import { PointCloudLayer } from "@deck.gl/layers";
+import { assert, CompositeLayer } from "@deck.gl/core";
 import type { PointCloudLayerProps } from "@deck.gl/layers";
-import * as arrow from "apache-arrow";
+import { PointCloudLayer } from "@deck.gl/layers";
 import * as ga from "@geoarrow/geoarrow-js";
+import type * as arrow from "apache-arrow";
+import { EXTENSION_NAME } from "../constants";
+import type {
+  ColorAccessor,
+  GeoArrowPickingInfo,
+  NormalAccessor,
+} from "../types";
+import type { GeoArrowExtraPickingProps } from "../utils/picking";
+import { getPickingInfo } from "../utils/picking";
 import {
   assignAccessor,
   convertStructToFixedSizeList,
@@ -22,9 +29,6 @@ import {
   getGeometryData,
   isGeomSeparate,
 } from "../utils/utils";
-import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
-import { ColorAccessor, GeoArrowPickingInfo, NormalAccessor } from "../types";
-import { EXTENSION_NAME } from "../constants";
 import { validateAccessors } from "../utils/validate";
 
 /* All properties supported by GeoArrowPointCloudLayer */
@@ -85,7 +89,7 @@ const defaultProps: DefaultProps<GeoArrowPointCloudLayerProps> = {
 };
 
 export class GeoArrowPointCloudLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowPointCloudLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowPointCloudLayer";
@@ -98,7 +102,7 @@ export class GeoArrowPointCloudLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     if (this.props.getPosition !== undefined) {
@@ -120,7 +124,7 @@ export class GeoArrowPointCloudLayer<
 
   _renderPointLayer(
     geometryData: ga.data.PointData,
-  ): Layer<{}> | LayersList | null {
+  ): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     if (this.props._validate) {

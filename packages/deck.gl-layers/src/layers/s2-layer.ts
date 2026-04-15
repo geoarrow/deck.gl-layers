@@ -1,18 +1,23 @@
-import {
-  CompositeLayer,
+import type {
   CompositeLayerProps,
   DefaultProps,
   GetPickingInfoParams,
   Layer,
   LayersList,
 } from "@deck.gl/core";
+import { CompositeLayer } from "@deck.gl/core";
 import type { S2LayerProps } from "@deck.gl/geo-layers";
 import { S2Layer } from "@deck.gl/geo-layers";
 import * as arrow from "apache-arrow";
 
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
+import type {
+  ColorAccessor,
+  FloatAccessor,
+  GeoArrowPickingInfo,
+} from "../types";
+import type { GeoArrowExtraPickingProps } from "../utils/picking";
+import { getPickingInfo } from "../utils/picking";
 import { assignAccessor, extractAccessorsFromProps } from "../utils/utils";
-import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
 import { validateAccessors } from "../utils/validate";
 
 /** All properties supported by GeoArrowS2Layer */
@@ -89,9 +94,9 @@ const defaultProps: DefaultProps<GeoArrowS2LayerProps> = {
   ...ourDefaultProps,
 };
 
-export class GeoArrowS2Layer<ExtraProps extends {} = {}> extends CompositeLayer<
-  GeoArrowS2LayerProps & ExtraProps
-> {
+export class GeoArrowS2Layer<
+  ExtraProps extends object = Record<string, never>,
+> extends CompositeLayer<GeoArrowS2LayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowS2Layer";
 
@@ -103,11 +108,11 @@ export class GeoArrowS2Layer<ExtraProps extends {} = {}> extends CompositeLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     return this._renderLayer();
   }
 
-  _renderLayer(): Layer<{}> | LayersList | null {
+  _renderLayer(): Layer<object> | LayersList | null {
     const { data: batch, getS2Token } = this.props;
 
     if (this.props._validate) {

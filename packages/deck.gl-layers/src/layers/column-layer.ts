@@ -2,19 +2,27 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) vis.gl contributors
 
-import {
-  CompositeLayer,
+import type {
   CompositeLayerProps,
   DefaultProps,
   GetPickingInfoParams,
   Layer,
   LayersList,
-  assert,
 } from "@deck.gl/core";
-import { ColumnLayer } from "@deck.gl/layers";
+import { assert, CompositeLayer } from "@deck.gl/core";
 import type { ColumnLayerProps } from "@deck.gl/layers";
-import * as arrow from "apache-arrow";
+import { ColumnLayer } from "@deck.gl/layers";
+import * as ga from "@geoarrow/geoarrow-js";
+import type * as arrow from "apache-arrow";
 import type { RecordBatch } from "apache-arrow";
+import { EXTENSION_NAME } from "../constants";
+import type {
+  ColorAccessor,
+  FloatAccessor,
+  GeoArrowPickingInfo,
+} from "../types";
+import type { GeoArrowExtraPickingProps } from "../utils/picking";
+import { getPickingInfo } from "../utils/picking";
 import {
   assignAccessor,
   convertStructToFixedSizeList,
@@ -22,10 +30,6 @@ import {
   getGeometryData,
   isGeomSeparate,
 } from "../utils/utils";
-import * as ga from "@geoarrow/geoarrow-js";
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
-import { EXTENSION_NAME } from "../constants";
-import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
 import { validateAccessors } from "../utils/validate";
 
 /** All properties supported by GeoArrowColumnLayer */
@@ -106,7 +110,7 @@ const defaultProps: DefaultProps<GeoArrowColumnLayerProps> = {
  * coordinates.
  */
 export class GeoArrowColumnLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowColumnLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowColumnLayer";
@@ -119,7 +123,7 @@ export class GeoArrowColumnLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     const geometryData = getGeometryData(batch, EXTENSION_NAME.POINT);
@@ -137,7 +141,7 @@ export class GeoArrowColumnLayer<
 
   _renderPointLayer(
     geometryData: ga.data.PointData,
-  ): Layer<{}> | LayersList | null {
+  ): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     if (this.props._validate) {

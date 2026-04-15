@@ -3,8 +3,8 @@
 // Copyright (c) vis.gl contributors
 
 import type { BinaryAttribute, Color, PickingInfo } from "@deck.gl/core";
-import { TypedArray } from "@deck.gl/core/dist/types/types";
-import * as arrow from "apache-arrow";
+import type { TypedArray } from "@deck.gl/core/dist/types/types";
+import type * as arrow from "apache-arrow";
 import type { Data } from "apache-arrow";
 
 /**

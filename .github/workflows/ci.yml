@@ -25,11 +25,15 @@ jobs:
           # pnpm test
           # pnpm publint
 
-      - name: Prettier check
-        run: pnpm fmt:check
-
       - name: Type check
         run: pnpm typecheck
 
       - name: Test
         run: pnpm test
+
+  Lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: biomejs/setup-biome@4c91541eaada48f67d7dbd7833600ce162b68f51 # v2
+      - run: biome ci .

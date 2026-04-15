@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { createRoot } from "react-dom/client";
-import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
-import DeckGL, { Layer, PickingInfo } from "deck.gl";
 import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
+import type { Layer, PickingInfo } from "deck.gl";
+import DeckGL from "deck.gl";
+import { useEffect, useState } from "react";
+import { createRoot } from "react-dom/client";
+import { MapContext, NavigationControl, StaticMap } from "react-map-gl";
 
 const GEOARROW_POINT_DATA =
   "http://localhost:8080/2019-01-01_performance_mobile_tiles.feather";
@@ -61,7 +62,7 @@ function Root() {
         getRadius: ({ index, data }) => {
           const recordBatch = data.data;
           const row = recordBatch.get(index)!;
-          return row["avg_d_kbps"] / 50;
+          return row.avg_d_kbps / 50;
         },
         radiusMinPixels: 0.1,
         pickable: true,

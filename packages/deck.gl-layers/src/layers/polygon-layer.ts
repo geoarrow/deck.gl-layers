@@ -2,23 +2,26 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) vis.gl contributors
 
-import {
-  CompositeLayer,
+import type {
   CompositeLayerProps,
   DefaultProps,
   GetPickingInfoParams,
   Layer,
   LayersList,
-  assert,
 } from "@deck.gl/core";
+import { assert, CompositeLayer } from "@deck.gl/core";
 import type { PolygonLayerProps } from "@deck.gl/layers";
 import { PolygonLayer } from "@deck.gl/layers";
 import * as ga from "@geoarrow/geoarrow-js";
 import * as arrow from "apache-arrow";
 import type { FunctionThread, Pool } from "threads";
 import { EXTENSION_NAME } from "../constants";
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
-import { GeoArrowExtraPickingProps } from "../utils/picking";
+import type {
+  ColorAccessor,
+  FloatAccessor,
+  GeoArrowPickingInfo,
+} from "../types";
+import type { GeoArrowExtraPickingProps } from "../utils/picking";
 import { getGeometryData } from "../utils/utils";
 import { GeoArrowPathLayer } from "./path-layer";
 import { GeoArrowSolidPolygonLayer } from "./solid-polygon-layer";
@@ -200,7 +203,6 @@ const defaultProps: DefaultProps<GeoArrowPolygonLayerProps> = {
 };
 
 const defaultLineColor: [number, number, number, number] = [0, 0, 0, 255];
-const defaultFillColor: [number, number, number, number] = [0, 0, 0, 255];
 
 /** The `GeoArrowPolygonLayer` renders filled, stroked and/or extruded polygons.
  *
@@ -208,7 +210,7 @@ const defaultFillColor: [number, number, number, number] = [0, 0, 0, 255];
  * GeoArrowSolidPolygonLayer and the GeoArrowPathLayer.
  */
 export class GeoArrowPolygonLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<Required<GeoArrowPolygonLayerProps> & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowPolygonLayer";
@@ -222,7 +224,7 @@ export class GeoArrowPolygonLayer<
     return params.info;
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     if (this.props.getPolygon !== undefined) {
@@ -264,7 +266,7 @@ export class GeoArrowPolygonLayer<
   // support multi-* and single- geometries.
   _renderLayers(
     geometryColumn: ga.data.PolygonData | ga.data.MultiPolygonData,
-  ): Layer<{}> | LayersList | null {
+  ): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     let getPath: ga.data.MultiLineStringData;

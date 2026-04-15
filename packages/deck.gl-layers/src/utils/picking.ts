@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) vis.gl contributors
 
-import type { RecordBatch, Data, DataType } from "apache-arrow";
-import { GetPickingInfoParams } from "@deck.gl/core";
-import { GeoArrowPickingInfo } from "../types";
+import type { GetPickingInfoParams } from "@deck.gl/core";
+import type { RecordBatch } from "apache-arrow";
+import type { GeoArrowPickingInfo } from "../types";
 
 export interface GeoArrowExtraPickingProps {
   data: {

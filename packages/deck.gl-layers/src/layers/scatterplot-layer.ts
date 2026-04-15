@@ -2,19 +2,26 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) vis.gl contributors
 
-import {
-  CompositeLayer,
+import type {
   CompositeLayerProps,
   DefaultProps,
   GetPickingInfoParams,
   Layer,
   LayersList,
-  assert,
 } from "@deck.gl/core";
-import { ScatterplotLayer } from "@deck.gl/layers";
+import { assert, CompositeLayer } from "@deck.gl/core";
 import type { ScatterplotLayerProps } from "@deck.gl/layers";
-import * as arrow from "apache-arrow";
+import { ScatterplotLayer } from "@deck.gl/layers";
 import * as ga from "@geoarrow/geoarrow-js";
+import type * as arrow from "apache-arrow";
+import { EXTENSION_NAME } from "../constants";
+import type {
+  ColorAccessor,
+  FloatAccessor,
+  GeoArrowPickingInfo,
+} from "../types";
+import type { GeoArrowExtraPickingProps } from "../utils/picking";
+import { getPickingInfo } from "../utils/picking";
 import {
   assignAccessor,
   convertStructToFixedSizeList,
@@ -23,9 +30,6 @@ import {
   invertOffsets,
   isGeomSeparate,
 } from "../utils/utils";
-import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
-import { EXTENSION_NAME } from "../constants";
 import { validateAccessors } from "../utils/validate";
 
 /** All properties supported by GeoArrowScatterplotLayer */
@@ -97,7 +101,7 @@ const defaultProps: DefaultProps<GeoArrowScatterplotLayerProps> = {
 };
 
 export class GeoArrowScatterplotLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowScatterplotLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowScatterplotLayer";
@@ -110,7 +114,7 @@ export class GeoArrowScatterplotLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     if (this.props.getPosition !== undefined) {
@@ -196,7 +200,7 @@ export class GeoArrowScatterplotLayer<
 
   _renderMultiPointLayer(
     multiPointData: ga.data.MultiPointData,
-  ): Layer<{}> | null {
+  ): Layer<object> | null {
     const { data: batch } = this.props;
 
     // TODO: validate that if nested, accessor props have the same nesting

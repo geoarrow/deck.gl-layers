@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { expandArrayToCoords } from "../src/utils/utils.js";
 import { arraysEqual } from "./utils.js";
 
-describe("linestring vertex expansion", (t) => {
+describe("linestring vertex expansion", () => {
   it("expands correctly (size = 1)", () => {
     const input = new Uint8Array([1, 2, 3, 4]);
     const size = 1;

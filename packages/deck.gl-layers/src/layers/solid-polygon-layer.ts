@@ -2,21 +2,31 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) vis.gl contributors
 
-import {
-  CompositeLayer,
+import type {
   CompositeLayerProps,
   DefaultProps,
-  Layer,
-  LayersList,
   GetPickingInfoParams,
-  assert,
+  Layer,
   LayerContext,
+  LayersList,
   UpdateParameters,
 } from "@deck.gl/core";
-import { SolidPolygonLayer } from "@deck.gl/layers";
+import { assert, CompositeLayer } from "@deck.gl/core";
 import type { SolidPolygonLayerProps } from "@deck.gl/layers";
-import * as arrow from "apache-arrow";
+import { SolidPolygonLayer } from "@deck.gl/layers";
 import * as ga from "@geoarrow/geoarrow-js";
+import type * as arrow from "apache-arrow";
+import type { FunctionThread } from "threads";
+import { BlobWorker, Pool, spawn, Transfer } from "threads";
+import type { PoolOptions } from "threads/dist/master/pool";
+import { EXTENSION_NAME } from "../constants";
+import type {
+  ColorAccessor,
+  FloatAccessor,
+  GeoArrowPickingInfo,
+} from "../types";
+import type { GeoArrowExtraPickingProps } from "../utils/picking";
+import { getPickingInfo } from "../utils/picking";
 import {
   assignAccessor,
   extractAccessorsFromProps,
@@ -27,13 +37,7 @@ import {
   invertOffsets,
   isGeomSeparate,
 } from "../utils/utils";
-import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
-import { EXTENSION_NAME } from "../constants";
 import { validateAccessors } from "../utils/validate";
-import { spawn, Transfer, BlobWorker, Pool } from "threads";
-import type { FunctionThread } from "threads";
-import type { PoolOptions } from "threads/dist/master/pool";
 
 /** A helper function to initialize a worker threadpool for earcut */
 export async function initEarcutPool(
@@ -67,7 +71,7 @@ export async function initEarcutPool(
       () => spawn(BlobWorker.fromText(earcutWorkerText)),
       optionsOrSize || 8,
     );
-  } catch (err) {
+  } catch (_err) {
     return null;
   }
 }
@@ -185,7 +189,7 @@ const defaultProps: DefaultProps<GeoArrowSolidPolygonLayerProps> = {
 };
 
 export class GeoArrowSolidPolygonLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowSolidPolygonLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowSolidPolygonLayer";
@@ -240,12 +244,12 @@ export class GeoArrowSolidPolygonLayer<
       );
       this.state.earcutWorkerPool = pool;
       return this.state.earcutWorkerPool;
-    } catch (err) {
+    } catch (_err) {
       return null;
     }
   }
 
-  async finalizeState(context: LayerContext): Promise<void> {
+  async finalizeState(_context: LayerContext): Promise<void> {
     await this.state?.earcutWorkerPool?.terminate();
     console.log("terminated");
   }
@@ -397,7 +401,7 @@ export class GeoArrowSolidPolygonLayer<
     return ga.algorithm.earcut(polygonData);
   }
 
-  updateState({ props, changeFlags }: UpdateParameters<this>): void {
+  updateState({ changeFlags }: UpdateParameters<this>): void {
     if (changeFlags.dataChanged) {
       this.updateData();
     }
@@ -411,7 +415,7 @@ export class GeoArrowSolidPolygonLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     const { batch } = this.state;
     if (!batch) return null;
 
@@ -457,7 +461,7 @@ export class GeoArrowSolidPolygonLayer<
 
   _renderPolygonLayer(
     polygonData: ga.data.PolygonData,
-  ): Layer<{}> | LayersList | null {
+  ): Layer<object> | LayersList | null {
     const { batch } = this.state;
     if (!batch) return null;
 
@@ -525,7 +529,7 @@ export class GeoArrowSolidPolygonLayer<
 
   _renderMultiPolygonLayer(
     multiPolygonData: ga.data.MultiPolygonData,
-  ): Layer<{}> | LayersList | null {
+  ): Layer<object> | LayersList | null {
     const { batch } = this.state;
     if (!batch) return null;
 
@@ -622,7 +626,7 @@ export class GeoArrowSolidPolygonLayer<
   }
 }
 
-function encodePickingColors(
+function _encodePickingColors(
   geomToCoordOffsets: Int32Array,
   encodePickingColor: (id: number, result: number[]) => void,
 ): Uint8ClampedArray {

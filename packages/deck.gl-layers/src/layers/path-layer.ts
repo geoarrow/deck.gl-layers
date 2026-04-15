@@ -2,19 +2,26 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) vis.gl contributors
 
-import {
-  CompositeLayer,
+import type {
   CompositeLayerProps,
   DefaultProps,
   GetPickingInfoParams,
   Layer,
   LayersList,
-  assert,
 } from "@deck.gl/core";
-import { PathLayer } from "@deck.gl/layers";
+import { assert, CompositeLayer } from "@deck.gl/core";
 import type { PathLayerProps } from "@deck.gl/layers";
-import * as arrow from "apache-arrow";
+import { PathLayer } from "@deck.gl/layers";
 import * as ga from "@geoarrow/geoarrow-js";
+import type * as arrow from "apache-arrow";
+import { EXTENSION_NAME } from "../constants";
+import type {
+  ColorAccessor,
+  FloatAccessor,
+  GeoArrowPickingInfo,
+} from "../types";
+import type { GeoArrowExtraPickingProps } from "../utils/picking";
+import { getPickingInfo } from "../utils/picking";
 import {
   assignAccessor,
   extractAccessorsFromProps,
@@ -24,9 +31,6 @@ import {
   invertOffsets,
   isGeomSeparate,
 } from "../utils/utils";
-import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
-import { EXTENSION_NAME } from "../constants";
 import { validateAccessors } from "../utils/validate";
 
 /** All properties supported by GeoArrowPathLayer */
@@ -90,7 +94,7 @@ export const defaultProps: DefaultProps<GeoArrowPathLayerProps> = {
  * Render lists of coordinate points as extruded polylines with mitering.
  */
 export class GeoArrowPathLayer<
-  ExtraProps extends {} = {},
+  ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowPathLayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowPathLayer";
@@ -103,7 +107,7 @@ export class GeoArrowPathLayer<
     return getPickingInfo(params, this.props.data);
   }
 
-  renderLayers(): Layer<{}> | LayersList | null {
+  renderLayers(): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     if (this.props.getPath !== undefined) {
@@ -148,7 +152,7 @@ export class GeoArrowPathLayer<
 
   _renderLineStringLayer(
     lineStringData: ga.data.LineStringData,
-  ): Layer<{}> | LayersList | null {
+  ): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     // TODO: validate that if nested, accessor props have the same nesting
@@ -204,7 +208,7 @@ export class GeoArrowPathLayer<
 
   _renderMultiLineStringLayer(
     multiLineStringData: ga.data.MultiLineStringData,
-  ): Layer<{}> | LayersList | null {
+  ): Layer<object> | LayersList | null {
     const { data: batch } = this.props;
 
     // TODO: validate that if nested, accessor props have the same nesting
