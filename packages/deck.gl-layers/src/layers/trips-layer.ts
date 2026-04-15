@@ -91,8 +91,8 @@ const defaultProps: DefaultProps<GeoArrowTripsLayerProps> = {
 export class GeoArrowTripsLayer<
   ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowTripsLayerProps & ExtraProps> {
-  static defaultProps = defaultProps;
-  static layerName = "GeoArrowTripsLayer";
+  static override defaultProps = defaultProps;
+  static override layerName = "GeoArrowTripsLayer";
 
   renderLayers(): Layer<object> | LayersList | null {
     const { data: batch, getTimestamps } = this.props;

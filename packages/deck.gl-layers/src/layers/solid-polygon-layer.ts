@@ -191,8 +191,8 @@ const defaultProps: DefaultProps<GeoArrowSolidPolygonLayerProps> = {
 export class GeoArrowSolidPolygonLayer<
   ExtraProps extends object = Record<string, never>,
 > extends CompositeLayer<GeoArrowSolidPolygonLayerProps & ExtraProps> {
-  static defaultProps = defaultProps;
-  static layerName = "GeoArrowSolidPolygonLayer";
+  static override defaultProps = defaultProps;
+  static override layerName = "GeoArrowSolidPolygonLayer";
 
   declare state: CompositeLayer["state"] & {
     batch: arrow.RecordBatch | null;
@@ -201,7 +201,7 @@ export class GeoArrowSolidPolygonLayer<
     earcutWorkerRequest: Promise<string> | null;
   };
 
-  initializeState(_context: LayerContext): void {
+  override initializeState(_context: LayerContext): void {
     this.state = {
       batch: null,
       triangles: null,
@@ -249,7 +249,7 @@ export class GeoArrowSolidPolygonLayer<
     }
   }
 
-  async finalizeState(_context: LayerContext): Promise<void> {
+  override async finalizeState(_context: LayerContext): Promise<void> {
     await this.state?.earcutWorkerPool?.terminate();
     console.log("terminated");
   }
@@ -401,13 +401,13 @@ export class GeoArrowSolidPolygonLayer<
     return ga.algorithm.earcut(polygonData);
   }
 
-  updateState({ changeFlags }: UpdateParameters<this>): void {
+  override updateState({ changeFlags }: UpdateParameters<this>): void {
     if (changeFlags.dataChanged) {
       this.updateData();
     }
   }
 
-  getPickingInfo(
+  override getPickingInfo(
     params: GetPickingInfoParams & {
       sourceLayer: { props: GeoArrowExtraPickingProps };
     },
@@ -626,27 +626,3 @@ export class GeoArrowSolidPolygonLayer<
   }
 }
 
-function _encodePickingColors(
-  geomToCoordOffsets: Int32Array,
-  encodePickingColor: (id: number, result: number[]) => void,
-): Uint8ClampedArray {
-  const largestOffset = geomToCoordOffsets[geomToCoordOffsets.length - 1];
-  const pickingColors = new Uint8ClampedArray(largestOffset);
-
-  const pickingColor: number[] = [];
-  for (let arrayIdx = 0; arrayIdx < geomToCoordOffsets.length - 1; arrayIdx++) {
-    const thisOffset = geomToCoordOffsets[arrayIdx];
-    const nextOffset = geomToCoordOffsets[arrayIdx + 1];
-
-    // Note: we encode the picking color once per _feature_, but then assign it
-    // to the color array once per _vertex_
-    encodePickingColor(arrayIdx, pickingColor);
-    for (let offset = thisOffset; offset < nextOffset; offset++) {
-      pickingColors[offset * 3] = pickingColor[0];
-      pickingColors[offset * 3 + 1] = pickingColor[1];
-      pickingColors[offset * 3 + 2] = pickingColor[2];
-    }
-  }
-
-  return pickingColors;
-}

@@ -24,7 +24,17 @@ export default [
       format: "es",
       sourcemap,
     },
-    plugins: [nodeResolve(), commonjs(), typescript()],
+    plugins: [
+      nodeResolve(),
+      commonjs(),
+      typescript({
+        compilerOptions: {
+          composite: false,
+          declaration: false,
+          declarationMap: false,
+        },
+      }),
+    ],
     external,
   },
   {
@@ -33,7 +43,7 @@ export default [
       file: "dist/index.d.ts",
       format: "es",
     },
-    plugins: [dts()],
+    plugins: [dts({ compilerOptions: { composite: false } })],
     external,
   },
   {
@@ -43,7 +53,17 @@ export default [
       format: "cjs",
       sourcemap,
     },
-    plugins: [nodeResolve(), commonjs(), typescript()],
+    plugins: [
+      nodeResolve(),
+      commonjs(),
+      typescript({
+        compilerOptions: {
+          composite: false,
+          declaration: false,
+          declarationMap: false,
+        },
+      }),
+    ],
     external,
   },
   {
@@ -62,7 +82,16 @@ export default [
         "apache-arrow": "Arrow",
       },
     },
-    plugins: [typescript(), terser()],
+    plugins: [
+      typescript({
+        compilerOptions: {
+          composite: false,
+          declaration: false,
+          declarationMap: false,
+        },
+      }),
+      terser(),
+    ],
     external,
   },
 ];
