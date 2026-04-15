@@ -13,7 +13,7 @@
     "@deck.gl/core": "^9.3.0",
     "@deck.gl/layers": "^9.3.0",
     "@deck.gl/mapbox": "^9.3.0",
-    "@geoarrow/deck.gl-layers": "workspace:^",
+    "@geoarrow/deck.gl-geoarrow": "workspace:^",
     "@loaders.gl/compression": "^4.1.4",
     "@loaders.gl/crypto": "^4.1.4",
     "@luma.gl/core": "^9.3.0",

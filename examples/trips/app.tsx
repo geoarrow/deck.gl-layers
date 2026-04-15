@@ -1,4 +1,4 @@
-import { GeoArrowTripsLayer } from "@geoarrow/deck.gl-layers";
+import { GeoArrowTripsLayer } from "@geoarrow/deck.gl-geoarrow";
 import * as arrow from "apache-arrow";
 import type { Layer, PickingInfo } from "deck.gl";
 import DeckGL from "deck.gl";

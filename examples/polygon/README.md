@@ -1,4 +1,4 @@
-## Example: Use `@geoarrow/deck.gl-layers` with GeoArrow polygon data
+## Example: Use `@geoarrow/deck.gl-geoarrow` with GeoArrow polygon data
 
 ## Data for example:
 

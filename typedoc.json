@@ -1,5 +1,5 @@
 {
-  "name": "@geoarrow/deck.gl-layers",
+  "name": "@geoarrow/deck.gl-geoarrow",
   "cleanOutputDir": true,
   "darkHighlightTheme": "github-dark",
   "entryPoints": ["dist/index.d.ts"],

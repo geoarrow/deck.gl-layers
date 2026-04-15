@@ -1,7 +1,7 @@
 import type { Layer, PickingInfo } from "@deck.gl/core";
 import type { MapboxOverlayProps } from "@deck.gl/mapbox";
 import { MapboxOverlay } from "@deck.gl/mapbox";
-import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
+import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-geoarrow";
 import * as arrow from "apache-arrow";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useState } from "react";
