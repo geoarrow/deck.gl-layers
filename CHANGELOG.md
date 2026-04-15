@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.2] - 2026-04-15
+
+- Deprecate the name `@geoarrow/deck.gl-layers` and prepare the package for renaming to `@geoarrow/deck.gl-geoarrow`.
+
 ## [0.3.1] - 2025-07-17
 
 - fix: Only log metrics if desired, opt-in by @kylebarron in https://github.com/geoarrow/deck.gl-layers/pull/146

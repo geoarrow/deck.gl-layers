@@ -1,37 +1,38 @@
-# Developer Documentation
+# Developer documentation
 
-This project uses [Volta](https://volta.sh/) to manage the JavaScript toolchain. After installing Volta, you should be able to just run
+This is a monorepo managed with pnpm workspaces.
 
-```
-npm install
-```
+```bash
+# Install dependencies
+pnpm install
 
-and Volta will automatically install the pinned versions of Node and NPM and install dependencies. If you need to change the pinned version of Node or NPM, you can do that in the `"volta"` section of `package.json`.
+# Build all packages
+pnpm build
 
+# Watch mode for development
+pnpm build:watch
 
-## Workspace
+# Run tests in all packages
+pnpm test
 
-You should only run `npm install` at the root of the repository. The packages in `packages/` are managed by the root `package.json` and should not be installed separately.
+# Run tests in watch mode
+pnpm test:watch
 
-To run an example, you can `cd` into the example directory and run
+# Lint code
+pnpm lint
 
-```
-npm run start
-```
+# Format code
+pnpm format
 
-## Building/Bundling
-
-First, let me state that JavaScript bundling is hard, so if you aren't able to use the generated bundle for some reason, open an issue or make a PR! It probably doesn't work out of ignorance, not intent.
-
-This project uses `tsc` to generate ES-module JS code from the TypeScript source. It also uses rollup to generate other bundle formats.
-
-After running `npm install`, you can run
-
-```
-npm run build
+# Type check
+pnpm typecheck
 ```
 
-to perform both the tsc-based and rollup-based build steps. Or you can run `build:tsc` to run just `tsc` or `build:rollup` to run just rollup.
+## Publishing
+
+Publishing happens automatically when a new tag is pushed to the `main` branch with format `v*`.
+
+You must be part of the "release" environment in the repository settings to publish a new version.
 
 ## Examples
 

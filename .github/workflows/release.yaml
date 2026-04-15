@@ -17,19 +17,23 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      # Setup .npmrc file to publish to npm
-      - uses: actions/setup-node@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
-          node-version: "22.20.0"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
+          cache: "pnpm"
 
-      - run: npm ci
+      - run: pnpm install
+      - run: pnpm build
+      - run: pnpm test
+
+      # Might need --recursive in this publish command?
       - name: Read version and publish
         run: |
           VERSION=$(jq -r .version package.json)
           if [[ "$VERSION" == *alpha* || "$VERSION" == *beta* ]]; then
-            npm publish --tag beta
+            pnpm publish --no-git-checks --tag beta
           else
-            npm publish
+            pnpm publish --no-git-checks
           fi
-        working-directory: packages/deck.gl-layers
