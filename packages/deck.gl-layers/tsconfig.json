@@ -8,7 +8,9 @@
     "paths": {
       "threads": ["./node_modules/threads/dist/index.d.ts"],
       "threads/worker": ["./node_modules/threads/worker.d.ts"],
-      "threads/dist/master/pool": ["./node_modules/threads/dist/master/pool.d.ts"]
+      "threads/dist/master/pool": [
+        "./node_modules/threads/dist/master/pool.d.ts"
+      ]
     }
   },
   "include": ["src/**/*", "tests/**/*"],

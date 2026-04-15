@@ -625,4 +625,3 @@ export class GeoArrowSolidPolygonLayer<
     return new SolidPolygonLayer(finalProps);
   }
 }
-
