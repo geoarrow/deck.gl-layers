@@ -100,9 +100,7 @@ const defaultProps: DefaultProps<GeoArrowA5LayerProps> = {
 
 export class GeoArrowA5Layer<
   ExtraProps extends object = Record<string, never>,
-> extends CompositeLayer<
-  GeoArrowA5LayerProps & ExtraProps
-> {
+> extends CompositeLayer<GeoArrowA5LayerProps & ExtraProps> {
   static defaultProps = defaultProps;
   static layerName = "GeoArrowA5Layer";
 
