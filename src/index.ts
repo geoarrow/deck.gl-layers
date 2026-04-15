@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) vis.gl contributors
 
+console.warn(
+	"⚠️ `@geoarrow/deck.gl-layers` has been renamed to `@geoarrow/deck.gl-geoarrow`. No further releases will be published under the name `@geoarrow/deck.gl-layers`. Please update your dependencies.",
+);
+
 export type { GeoArrowArcLayerProps } from "./layers/arc-layer";
 export { GeoArrowArcLayer } from "./layers/arc-layer";
 
