@@ -72,7 +72,6 @@ type _GeoArrowGeohashLayerProps = {
 
 // Remove data from the upstream default props
 const {
-  // @ts-expect-error https://github.com/visgl/deck.gl/issues/9854
   data: _data,
   getGeohash: _getGeohash,
   ..._defaultProps
@@ -83,8 +82,7 @@ const ourDefaultProps = {
   _validate: true,
 };
 
-// Type errors from https://github.com/visgl/deck.gl/issues/9854
-// // @ts-expect-error getFillColor
+// @ts-expect-error
 const defaultProps: DefaultProps<GeoArrowGeohashLayerProps> = {
   // ..._polygonDefaultProps,
   ..._defaultProps,
@@ -128,13 +126,10 @@ export class GeoArrowGeohashLayer<
       ...ourDefaultProps,
       ...otherProps,
 
-      // type errors from https://github.com/visgl/deck.gl/issues/9854
-      // @ts-expect-error until above issue fixed.
       id: `${this.props.id}-geoarrow-geohash`,
 
       data: {
-        // type errors from https://github.com/visgl/deck.gl/issues/9854
-        // // @ts-expect-error passed through to enable use by function accessors
+        // @ts-expect-error passed through to enable use by function accessors
         data: batch,
         length: batch.numRows,
       },
