@@ -1,18 +1,14 @@
 {
   "name": "deck.gl-layers-monorepo",
   "private": true,
-  "workspaces": [
-    "packages/*",
-    "examples/*"
-  ],
   "scripts": {
-    "build": "cd packages/deck.gl-layers && npm run build",
+    "build": "cd packages/deck.gl-layers && pnpm build",
     "clean": "rimraf dist packages/deck.gl-layers/dist",
     "docs:build": "typedoc",
     "docs:publish": "gh-pages -d docs_build",
     "fmt:check": "prettier '**/*.ts' --check",
     "fmt": "prettier '**/*.ts' --write",
-    "prepublishOnly": "npm run clean && npm run build",
+    "prepublishOnly": "pnpm clean && pnpm build",
     "test": "vitest run",
     "typecheck": "tsc --build",
     "watch": "tsc --watch"
@@ -39,6 +35,7 @@
     "typescript": "^5.2.2",
     "vitest": "^0.33.0"
   },
+  "packageManager": "pnpm@10.25.0",
   "overrides": {
     "@deck.gl/aggregation-layers": "^9.2.1",
     "@deck.gl/core": "^9.2.1",
@@ -52,7 +49,6 @@
     "apache-arrow": ">=21"
   },
   "volta": {
-    "node": "22.20.0",
-    "npm": "11.6.2"
+    "node": "22.20.0"
   }
 }
