@@ -1,24 +1,38 @@
-## Example: Use `@geoarrow/deck.gl-layers` with GeoArrow point data
+# Example: GeoArrowScatterplotLayer
 
-## Data for example:
+Visualize point data from a GeoArrow table using `GeoArrowScatterplotLayer`.
+Data: Ookla mobile network performance tile centroids, 2019-01-01.
 
-Install [`uv`](https://docs.astral.sh/uv/), then run
+## Generate the data
+
+The example expects a local GeoArrow feather file. Install
+[`uv`](https://docs.astral.sh/uv/), then from this directory run:
 
 ```
 uv run generate_data.py
 ```
 
-## Serve data
+This downloads ~150MB of source data and writes
+`2019-01-01_performance_mobile_tiles.feather`.
+
+## Serve the data
+
+The file is served over HTTP so the browser can fetch it:
 
 ```
 npx http-server --cors
 ```
 
-## Usage
+## Run the example
 
-To install dependencies, run `npm install` at the top level of this workspace, not in this directory.
+From the repository root, install dependencies once:
 
-Commands:
+```
+pnpm install
+```
 
-* `npm run start` is the development target, to serve the app and hot reload.
-* `npm run build` is the production target, to create the final bundle and write to disk.
+Then from this directory:
+
+- `pnpm dev` — start the dev server (http://localhost:3000) with hot reload
+- `pnpm build` — build the production bundle
+- `pnpm preview` — preview the production build
