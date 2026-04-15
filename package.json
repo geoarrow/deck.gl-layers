@@ -5,6 +5,8 @@
     "build": "pnpm --recursive --filter \"./packages/*\" build",
     "check": "biome check .",
     "check:fix": "biome check --write .",
+    "docs:build": "typedoc",
+    "docs:publish": "gh-pages -d docs_build",
     "format": "biome format .",
     "format:fix": "biome format --write .",
     "lint": "biome lint .",
@@ -17,6 +19,9 @@
   "license": "MIT",
   "devDependencies": {
     "@biomejs/biome": "^2.4.11",
+    "gh-pages": "^6.1.0",
+    "typedoc": "^0.25.4",
+    "typedoc-plugin-missing-exports": "^2.1.0",
     "typescript": "^5.2.2"
   },
   "packageManager": "pnpm@10.25.0",
