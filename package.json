@@ -22,7 +22,7 @@
     "gh-pages": "^6.1.0",
     "typedoc": "^0.25.4",
     "typedoc-plugin-missing-exports": "^2.1.0",
-    "typescript": "^5.2.2"
+    "typescript": "^6.0.2"
   },
   "packageManager": "pnpm@10.25.0",
   "overrides": {

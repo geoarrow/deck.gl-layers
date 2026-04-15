@@ -43,8 +43,9 @@
     "@deck.gl/layers": "^9.2.1",
     "@math.gl/polygon": "^4.1.0",
     "apache-arrow": ">=15",
-    "typescript": "^5.2.2",
-    "vitest": "^0.33.0"
+    "typescript": "^6.0.2",
+    "vite": "^8.0.8",
+    "vitest": "^4.1.4"
   },
   "volta": {
     "extends": "../../package.json"
