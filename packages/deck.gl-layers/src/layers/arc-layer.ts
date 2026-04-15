@@ -2,28 +2,32 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) vis.gl contributors
 
-import {
-  CompositeLayer,
+import type {
   CompositeLayerProps,
   DefaultProps,
   GetPickingInfoParams,
   Layer,
   LayersList,
-  assert,
 } from "@deck.gl/core";
-import { ArcLayer } from "@deck.gl/layers";
+import { assert, CompositeLayer } from "@deck.gl/core";
 import type { ArcLayerProps } from "@deck.gl/layers";
-import type { RecordBatch } from "apache-arrow";
+import { ArcLayer } from "@deck.gl/layers";
 import * as ga from "@geoarrow/geoarrow-js";
+import { child } from "@geoarrow/geoarrow-js";
+import type { RecordBatch } from "apache-arrow";
+import type {
+  ColorAccessor,
+  FloatAccessor,
+  GeoArrowPickingInfo,
+} from "../types";
+import type { GeoArrowExtraPickingProps } from "../utils/picking";
+import { getPickingInfo } from "../utils/picking";
 import {
   assignAccessor,
   convertStructToFixedSizeList,
   extractAccessorsFromProps,
   isGeomSeparate,
 } from "../utils/utils";
-import { child } from "@geoarrow/geoarrow-js";
-import { GeoArrowExtraPickingProps, getPickingInfo } from "../utils/picking";
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
 import { validateAccessors } from "../utils/validate";
 
 /** All properties supported by GeoArrowArcLayer */

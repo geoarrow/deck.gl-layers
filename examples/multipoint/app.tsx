@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { createRoot } from "react-dom/client";
-import { StaticMap, MapContext, NavigationControl } from "react-map-gl";
-import DeckGL, { Layer } from "deck.gl";
 import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-layers";
 import * as arrow from "apache-arrow";
+import type { Layer } from "deck.gl";
+import DeckGL from "deck.gl";
+import React, { useEffect, useState } from "react";
+import { createRoot } from "react-dom/client";
+import { MapContext, NavigationControl, StaticMap } from "react-map-gl";
 
 const GEOARROW_MULTIPOINT_DATA =
   "http://localhost:8080/naturalearth_cities_multipoint.feather";

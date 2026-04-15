@@ -3,12 +3,12 @@
 // Copyright (c) vis.gl contributors
 
 import { assert } from "@deck.gl/core";
-import * as arrow from "apache-arrow";
 import * as ga from "@geoarrow/geoarrow-js";
-import {
+import * as arrow from "apache-arrow";
+import type {
+  _InternalAccessorContext,
   AccessorContext,
   AccessorFunction,
-  _InternalAccessorContext,
 } from "../types";
 
 export type TypedArray =
@@ -363,7 +363,7 @@ export function getGeometryData(
     // throw new Error(`No column found with extension type ${geoarrowTypeName}`);
   }
 
-  let vector = batch.getChildAt(geometryColumnIdx);
+  const vector = batch.getChildAt(geometryColumnIdx);
   assert(vector?.data.length === 1);
   return vector.data[0];
 }
@@ -438,9 +438,9 @@ export function invertOffsets(
   const largestOffset = offsets[offsets.length - 1];
 
   const arrayConstructor =
-    offsets.length < Math.pow(2, 8)
+    offsets.length < 2 ** 8
       ? Uint8Array
-      : offsets.length < Math.pow(2, 16)
+      : offsets.length < 2 ** 16
         ? Uint16Array
         : Uint32Array;
 

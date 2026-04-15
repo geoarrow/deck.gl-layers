@@ -2,18 +2,19 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) vis.gl contributors
 
-import {
-  CompositeLayer,
+import type { HeatmapLayerProps } from "@deck.gl/aggregation-layers";
+import { HeatmapLayer } from "@deck.gl/aggregation-layers";
+import type {
   CompositeLayerProps,
   DefaultProps,
   Layer,
   LayersList,
-  assert,
 } from "@deck.gl/core";
-import { HeatmapLayer } from "@deck.gl/aggregation-layers";
-import type { HeatmapLayerProps } from "@deck.gl/aggregation-layers";
-import * as arrow from "apache-arrow";
+import { assert, CompositeLayer } from "@deck.gl/core";
 import * as ga from "@geoarrow/geoarrow-js";
+import type * as arrow from "apache-arrow";
+import { EXTENSION_NAME } from "../constants";
+import type { FloatAccessor } from "../types";
 import {
   assignAccessor,
   convertStructToFixedSizeList,
@@ -21,8 +22,6 @@ import {
   getGeometryData,
   isGeomSeparate,
 } from "../utils/utils";
-import { FloatAccessor } from "../types";
-import { EXTENSION_NAME } from "../constants";
 import { validateAccessors } from "../utils/validate";
 
 /** All properties supported by GeoArrowHeatmapLayer */

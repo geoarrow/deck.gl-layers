@@ -2,23 +2,26 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) vis.gl contributors
 
-import {
-  CompositeLayer,
+import type {
   CompositeLayerProps,
   DefaultProps,
   GetPickingInfoParams,
   Layer,
   LayersList,
-  assert,
 } from "@deck.gl/core";
+import { assert, CompositeLayer } from "@deck.gl/core";
 import type { PolygonLayerProps } from "@deck.gl/layers";
 import { PolygonLayer } from "@deck.gl/layers";
 import * as ga from "@geoarrow/geoarrow-js";
 import * as arrow from "apache-arrow";
 import type { FunctionThread, Pool } from "threads";
 import { EXTENSION_NAME } from "../constants";
-import { ColorAccessor, FloatAccessor, GeoArrowPickingInfo } from "../types";
-import { GeoArrowExtraPickingProps } from "../utils/picking";
+import type {
+  ColorAccessor,
+  FloatAccessor,
+  GeoArrowPickingInfo,
+} from "../types";
+import type { GeoArrowExtraPickingProps } from "../utils/picking";
 import { getGeometryData } from "../utils/utils";
 import { GeoArrowPathLayer } from "./path-layer";
 import { GeoArrowSolidPolygonLayer } from "./solid-polygon-layer";

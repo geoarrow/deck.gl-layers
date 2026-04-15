@@ -2,17 +2,19 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) vis.gl contributors
 
-import {
-  CompositeLayer,
+import type {
   CompositeLayerProps,
   DefaultProps,
   Layer,
   LayersList,
-  assert,
 } from "@deck.gl/core";
-import { TripsLayer, TripsLayerProps } from "@deck.gl/geo-layers";
-import * as arrow from "apache-arrow";
+import { assert, CompositeLayer } from "@deck.gl/core";
+import type { TripsLayerProps } from "@deck.gl/geo-layers";
+import { TripsLayer } from "@deck.gl/geo-layers";
 import * as ga from "@geoarrow/geoarrow-js";
+import type * as arrow from "apache-arrow";
+import { EXTENSION_NAME } from "../constants";
+import type { ColorAccessor, FloatAccessor, TimestampAccessor } from "../types";
 import {
   assignAccessor,
   extractAccessorsFromProps,
@@ -20,10 +22,8 @@ import {
   getInterleavedLineString,
   isGeomSeparate,
 } from "../utils/utils";
-import { TimestampAccessor, ColorAccessor, FloatAccessor } from "../types";
-import { defaultProps as pathLayerDefaultProps } from "./path-layer";
 import { validateAccessors } from "../utils/validate";
-import { EXTENSION_NAME } from "../constants";
+import { defaultProps as pathLayerDefaultProps } from "./path-layer";
 
 /** All properties supported by GeoArrowTripsLayer */
 export type GeoArrowTripsLayerProps = Omit<
