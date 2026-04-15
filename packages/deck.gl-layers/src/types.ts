@@ -23,7 +23,7 @@ type TypedArray =
 export type GeoArrowLayerData<T> = {
   data: T;
   length: number;
-  attributes?: Record<string, TypedArray | Buffer | BinaryAttribute>;
+  attributes?: Record<string, TypedArray | BinaryAttribute>;
 };
 
 /**
