@@ -31,6 +31,11 @@ From the repository root, install dependencies once:
 pnpm install
 ```
 
+Then build the package so it can be imported in the examples.
+```
+pnpm build
+```
+
 Then from this directory:
 
 - `pnpm dev` — start the dev server (http://localhost:3000) with hot reload
