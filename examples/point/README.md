@@ -36,6 +36,11 @@ Then build the package so it can be imported in the examples.
 pnpm build
 ```
 
+You can also build the source in watch mode if you'd like to edit deck.gl-geoarrow source code:
+
+```
+pnpm build:watch
+```
 Then from this directory:
 
 - `pnpm dev` — start the dev server (http://localhost:3000) with hot reload
