@@ -27,6 +27,7 @@ import {
   convertStructToFixedSizeList,
   extractAccessorsFromProps,
   getGeometryData,
+  getValueOffsets,
   invertOffsets,
   isGeomSeparate,
 } from "../utils/utils";
@@ -219,7 +220,7 @@ export class GeoArrowScatterplotLayer<
     if (isGeomSeparate(pointData)) {
       pointData = convertStructToFixedSizeList(pointData);
     }
-    const geomOffsets = multiPointData.valueOffsets;
+    const geomOffsets = getValueOffsets(multiPointData);
     const flatCoordsData = ga.child.getPointChild(pointData);
     const flatCoordinateArray = flatCoordsData.values;
 

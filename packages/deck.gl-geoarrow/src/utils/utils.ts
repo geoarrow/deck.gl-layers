@@ -143,6 +143,26 @@ export function convertStructToFixedSizeList(
 }
 
 /**
+ * Get the logical offsets buffer for a list- or Utf8-typed Data.
+ *
+ * Per the Arrow Columnar Format spec, IPC producers pad each buffer to a
+ * 64-byte boundary; `apache-arrow` JS exposes the offsets buffer at its
+ * on-wire byte length, so `data.valueOffsets.length` can exceed
+ * `data.length + 1` and the trailing entries are padding zeros that must not
+ * be read.
+ *
+ * Returns a zero-copy `subarray` view over the `data.length + 1` logical
+ * offsets — safe to iterate, index, and pass to `startIndices` /
+ * `invertOffsets` / `expandArrayToCoords`.
+ */
+export function getValueOffsets(data: {
+  readonly valueOffsets: Int32Array;
+  readonly length: number;
+}): Int32Array {
+  return data.valueOffsets.subarray(0, data.length + 1);
+}
+
+/**
  * Get LineString Data with interleaved coordinates
  * from the given LineString Data with separated (struct) coordinates.
  */
@@ -370,7 +390,7 @@ export function getListNestingLevels(data: arrow.Data): number {
 export function getMultiLineStringResolvedOffsets(
   data: ga.data.MultiLineStringData,
 ): Int32Array {
-  const geomOffsets = data.valueOffsets;
+  const geomOffsets = getValueOffsets(data);
   const lineStringData = ga.child.getMultiLineStringChild(data);
   const ringOffsets = lineStringData.valueOffsets;
 
@@ -387,7 +407,7 @@ export function getMultiLineStringResolvedOffsets(
 export function getPolygonResolvedOffsets(
   data: ga.data.PolygonData,
 ): Int32Array {
-  const geomOffsets = data.valueOffsets;
+  const geomOffsets = getValueOffsets(data);
   const ringData = ga.child.getPolygonChild(data);
   const ringOffsets = ringData.valueOffsets;
 
@@ -407,7 +427,7 @@ export function getMultiPolygonResolvedOffsets(
   const polygonData = ga.child.getMultiPolygonChild(data);
   const ringData = ga.child.getPolygonChild(polygonData);
 
-  const geomOffsets = data.valueOffsets;
+  const geomOffsets = getValueOffsets(data);
   const polygonOffsets = polygonData.valueOffsets;
   const ringOffsets = ringData.valueOffsets;
 

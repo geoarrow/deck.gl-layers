@@ -20,6 +20,7 @@ import {
   extractAccessorsFromProps,
   getGeometryData,
   getInterleavedLineString,
+  getValueOffsets,
   isGeomSeparate,
 } from "../utils/utils";
 import { validateAccessors } from "../utils/validate";
@@ -137,7 +138,7 @@ export class GeoArrowTripsLayer<
     if (isGeomSeparate(lineStringData)) {
       lineStringData = getInterleavedLineString(lineStringData);
     }
-    const geomOffsets = lineStringData.valueOffsets;
+    const geomOffsets = getValueOffsets(lineStringData);
     const pointData = ga.child.getLineStringChild(lineStringData);
     const nDim = pointData.type.listSize;
     const coordData = ga.child.getPointChild(pointData);

@@ -22,7 +22,7 @@ import type {
   GeoArrowPickingInfo,
 } from "../types";
 import type { GeoArrowExtraPickingProps } from "../utils/picking";
-import { getGeometryData } from "../utils/utils";
+import { getGeometryData, getValueOffsets } from "../utils/utils";
 import { GeoArrowPathLayer } from "./path-layer";
 import { GeoArrowSolidPolygonLayer } from "./solid-polygon-layer";
 
@@ -78,7 +78,7 @@ export function getMultiPolygonExterior(
     );
   }
 
-  const geomOffsets: Int32Array = input.valueOffsets;
+  const geomOffsets: Int32Array = getValueOffsets(input);
   const polygonData = ga.child.getMultiPolygonChild(input);
   const polygonOffsets: Int32Array = polygonData.valueOffsets;
   const lineStringData = ga.child.getPolygonChild(polygonData);

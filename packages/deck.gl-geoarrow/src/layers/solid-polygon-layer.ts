@@ -34,6 +34,7 @@ import {
   getInterleavedPolygon,
   getMultiPolygonResolvedOffsets,
   getPolygonResolvedOffsets,
+  getValueOffsets,
   invertOffsets,
   isGeomSeparate,
 } from "../utils/utils";
@@ -558,7 +559,7 @@ export class GeoArrowSolidPolygonLayer<
 
     const nDim = pointData.type.listSize;
 
-    const geomOffsets = multiPolygonData.valueOffsets;
+    const geomOffsets = getValueOffsets(multiPolygonData);
     const flatCoordinateArray = coordData.values;
 
     if (!this.state.triangles) {

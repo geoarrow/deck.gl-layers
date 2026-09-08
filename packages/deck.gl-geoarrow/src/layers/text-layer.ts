@@ -28,6 +28,7 @@ import {
   expandArrayToCoords,
   extractAccessorsFromProps,
   getGeometryData,
+  getValueOffsets,
   isGeomSeparate,
 } from "../utils/utils";
 import { validateAccessors } from "../utils/validate";
@@ -206,7 +207,7 @@ export class GeoArrowTextLayer<
 
     // console.log(textData);
     const textValues = textData.values;
-    const characterOffsets = textData.valueOffsets;
+    const characterOffsets = getValueOffsets(textData);
 
     const props: TextLayerProps = {
       // Note: because this is a composite layer and not doing the rendering

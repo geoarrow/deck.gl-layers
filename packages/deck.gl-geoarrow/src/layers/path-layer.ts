@@ -28,6 +28,7 @@ import {
   getGeometryData,
   getInterleavedLineString,
   getMultiLineStringResolvedOffsets,
+  getValueOffsets,
   invertOffsets,
   isGeomSeparate,
 } from "../utils/utils";
@@ -170,7 +171,7 @@ export class GeoArrowPathLayer<
     if (isGeomSeparate(lineStringData)) {
       lineStringData = getInterleavedLineString(lineStringData);
     }
-    const geomOffsets = lineStringData.valueOffsets;
+    const geomOffsets = getValueOffsets(lineStringData);
     const pointData = ga.child.getLineStringChild(lineStringData);
     const nDim = pointData.type.listSize;
     const coordData = ga.child.getPointChild(pointData);
@@ -230,8 +231,8 @@ export class GeoArrowPathLayer<
     const pointData = ga.child.getLineStringChild(lineStringData);
     const coordData = ga.child.getPointChild(pointData);
 
-    const geomOffsets = multiLineStringData.valueOffsets;
-    const ringOffsets = lineStringData.valueOffsets;
+    const geomOffsets = getValueOffsets(multiLineStringData);
+    const ringOffsets = getValueOffsets(lineStringData);
 
     const nDim = pointData.type.listSize;
     const flatCoordinateArray = coordData.values;
