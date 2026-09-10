@@ -41,6 +41,14 @@
     "@math.gl/polygon": "^4.1.0",
     "apache-arrow": ">=15"
   },
+  "peerDependenciesMeta": {
+    "@deck.gl/aggregation-layers": {
+      "optional": true
+    },
+    "@deck.gl/geo-layers": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@deck.gl/aggregation-layers": "^9.2.1",
     "@deck.gl/core": "^9.2.1",

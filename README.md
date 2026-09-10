@@ -35,6 +35,8 @@ import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-geoarrow/layers/scat
 
 Importing from a subpath means your bundler only resolves the dependencies of the layers you use. For example, the imports above never load `@deck.gl/geo-layers` (used by the A5, Geohash, H3 hexagon, S2, and trips layers) or `@deck.gl/aggregation-layers` (used by the heatmap layer).
 
+`@deck.gl/geo-layers` and `@deck.gl/aggregation-layers` are optional peer dependencies, so package managers don't install them automatically. Install them yourself if you use a layer that needs them, or if you import anything from the package root, since the root entry point loads every layer.
+
 ## Providing accessors
 
 All deck.gl layers have two types of properties: ["Render Options"](https://deck.gl/docs/api-reference/layers/scatterplot-layer#render-options) — constant properties across a layer — and "Data Accessors" — properties that can vary across rows. An accessor is any property prefixed with `get`, like `GeoArrowScatterplotLayer`'s `getFillColor`.
