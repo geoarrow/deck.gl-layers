@@ -9,7 +9,12 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./layers/*": {
+      "types": "./dist/layers/*.d.ts",
+      "default": "./dist/layers/*.js"
+    },
+    "./layers/text-layer": null
   },
   "sideEffects": false,
   "files": [
@@ -35,6 +40,14 @@
     "@deck.gl/layers": "^9.0.0",
     "@math.gl/polygon": "^4.1.0",
     "apache-arrow": ">=15"
+  },
+  "peerDependenciesMeta": {
+    "@deck.gl/aggregation-layers": {
+      "optional": true
+    },
+    "@deck.gl/geo-layers": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@deck.gl/aggregation-layers": "^9.2.1",
