@@ -256,7 +256,6 @@ export class GeoArrowSolidPolygonLayer<
     if (this.state?.ownsEarcutWorkerPool) {
       await this.state?.earcutWorkerPool?.terminate();
     }
-    console.log("terminated");
   }
 
   async updateData() {
