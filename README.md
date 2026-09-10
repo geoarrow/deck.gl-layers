@@ -23,6 +23,18 @@ Standalone examples exist in the [`examples/`](examples/) directory. Create an i
 
 More hosted examples on Observable are planned.
 
+## Importing individual layers
+
+Every layer is exported from the package root. Each layer is also available from its own subpath, named after its module:
+
+```ts
+import { GeoArrowPathLayer } from "@geoarrow/deck.gl-geoarrow/layers/path-layer";
+import { GeoArrowPolygonLayer } from "@geoarrow/deck.gl-geoarrow/layers/polygon-layer";
+import { GeoArrowScatterplotLayer } from "@geoarrow/deck.gl-geoarrow/layers/scatterplot-layer";
+```
+
+Importing from a subpath means your bundler only resolves the dependencies of the layers you use. For example, the imports above never load `@deck.gl/geo-layers` (used by the A5, Geohash, H3 hexagon, S2, and trips layers) or `@deck.gl/aggregation-layers` (used by the heatmap layer).
+
 ## Providing accessors
 
 All deck.gl layers have two types of properties: ["Render Options"](https://deck.gl/docs/api-reference/layers/scatterplot-layer#render-options) — constant properties across a layer — and "Data Accessors" — properties that can vary across rows. An accessor is any property prefixed with `get`, like `GeoArrowScatterplotLayer`'s `getFillColor`.
